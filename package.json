@@ -1,6 +1,6 @@
 {
   "name": "eslint-rule-benchmark",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Benchmark ESLint rules with detailed performance metrics for CI and plugin development",
   "keywords": [
     "eslint",
@@ -18,6 +18,8 @@
     "ci",
     "tinybench"
   ],
+  "homepage": "https://github.com/azat-io/eslint-rule-benchmark",
+  "repository": "azat-io/eslint-rule-benchmark",
   "license": "MIT",
   "author": "Azat S. <to@azat.io>",
   "type": "module",
