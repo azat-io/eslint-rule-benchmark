@@ -1,0 +1,23 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`highlightImportantMetrics > should highlight important metrics 1`] = `
+[
+  "⚠️  Mean execution time (100.00 ms) exceeds threshold of 50 ms",
+  "⚠️  Max execution time (300.00 ms) is significantly high",
+  "ℹ️  Rule found 5 errors in test code",
+  "ℹ️  Rule found 10 warnings in test code",
+]
+`;
+
+exports[`highlightImportantMetrics > should highlight important metrics with custom slow threshold 1`] = `
+[
+  "ℹ️  Rule found 5 errors in test code",
+  "ℹ️  Rule found 10 warnings in test code",
+]
+`;
+
+exports[`highlightImportantMetrics > should highlight important metrics with no warnings or errors 1`] = `
+[
+  "✅ All metrics are within expected ranges",
+]
+`;

@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatTable > should format the table correctly 1`] = `
+"Rule Benchmark Results: rule-1
+
+Metric               Value
+===================================
+Mean time            100.00 ms
+Median time          200.00 ms
+Min time             50.00 ms
+Max time             300.00 ms
+Total samples        1000
+Total warnings       10
+Total errors         5"
+`;
+
+exports[`formatTable > should handle undefined values correctly 1`] = `
+"Rule Benchmark Results: rule-1
+
+Metric               Value
+===================================
+Mean time            N/A
+Median time          N/A
+Min time             N/A
+Max time             300.00 ms
+Total samples        1000
+Total warnings       10
+Total errors         5"
+`;
