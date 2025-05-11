@@ -12,9 +12,9 @@
 [![Code Coverage](https://img.shields.io/codecov/c/github/azat-io/eslint-rule-benchmark.svg?color=ffa500&labelColor=324cc2)](https://npmjs.com/package/eslint-rule-benchmark)
 [![GitHub License](https://img.shields.io/badge/license-MIT-232428.svg?color=ffa500&labelColor=324cc2)](https://github.com/azat-io/eslint-rule-benchmark/blob/main/license.md)
 
-Eslint Rule Benchmark is a specialized tool for accurately measuring the performance of ESLint rules, helping plugin developers identify optimization opportunities and detect regressions through comprehensive timing metrics available in console, JSON, and Markdown formats.
+ESLint Rule Benchmark is a tool that times individual ESLint rules, capturing ops /sec, mean and median runtimes, and rich latency percentiles to surface performance hotspots.
 
-Built for plugin authors, DevEx engineers, and CI workflows, it reports metrics like ops/sec, mean time, and percentiles.
+Allows to catch regressions and quantify optimization gains.
 
 ## Features
 
