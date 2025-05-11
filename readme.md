@@ -69,13 +69,13 @@ Rule Benchmark Results: sort-imports
 
 Metric               Value
 ===================================
-Mean time            27.38 ms
-Median time          21.56 ms
-Min time             20.10 ms
-Max time             1249.36 ms
-Total samples        52441
+Mean time            1.12 ms
+Median time          0.94 ms
+Min time             0.84 ms
+Max time             5.87 ms
+Total samples        82369
 Total warnings       0
-Total errors         687
+Total errors         287
 ```
 
 ## Versioning Policy
