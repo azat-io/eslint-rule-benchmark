@@ -49,6 +49,7 @@ export let runBenchmark = async (
     eslint = await createESLintInstance({
       rule,
     })
+    await eslint.lintText('/* eslint-disable */')
   } catch (error) {
     let { message } = error as Error
     for (let tc of testCases) {

@@ -157,6 +157,14 @@ describe('runBenchmark', () => {
       .fn()
       .mockResolvedValueOnce([
         {
+          fixableWarningCount: 0,
+          fixableErrorCount: 0,
+          warningCount: 0,
+          errorCount: 0,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
           fixableWarningCount: 1,
           fixableErrorCount: 0,
           warningCount: 2,
