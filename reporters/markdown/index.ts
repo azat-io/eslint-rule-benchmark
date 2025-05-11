@@ -1,3 +1,5 @@
+import type { TaskResult } from 'tinybench'
+
 import { writeFile, mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
@@ -6,30 +8,6 @@ import type {
   ReporterOptions,
 } from '../../types/benchmark-config'
 import type { SingleRuleResult } from '../../runners/run-single-rule'
-
-/** Summary statistics from benchmark runs. */
-interface BenchmarkSummary {
-  /** Total number of warnings reported by the linting rules. */
-  totalWarnings: number
-
-  /** Total number of code samples or iterations measured. */
-  totalSamples: number
-
-  /** Median execution time in milliseconds. */
-  medianTimeMs: number
-
-  /** Total number of errors reported by the linting rules. */
-  totalErrors: number
-
-  /** Mean (average) execution time in milliseconds. */
-  meanTimeMs: number
-
-  /** Minimum execution time in milliseconds across all samples. */
-  minTimeMs: number
-
-  /** Maximum execution time in milliseconds across all samples. */
-  maxTimeMs: number
-}
 
 /** Options for the Markdown reporter. */
 interface MarkdownReporterOptions {
@@ -80,12 +58,26 @@ let createMarkdownReport = (
   config: BenchmarkConfig,
 ): string => {
   let timestamp = new Date().toISOString()
-  let { summary, rule } = result
+  let { rule } = result
+  let benchmarkResult = result.result?.result
+
+  if (!benchmarkResult) {
+    return [
+      createHeader(config, rule, timestamp),
+      '## Error',
+      '',
+      'No benchmark results available.',
+      '',
+      createConfigSection(config),
+    ].join('\n\n')
+  }
 
   let sections = [
     createHeader(config, rule, timestamp),
-    createSummaryTable(summary),
+    createSummaryTable(benchmarkResult),
+    createPercentileDistribution(benchmarkResult),
     createConfigSection(config),
+    createSystemInfo(benchmarkResult),
   ]
 
   return sections.join('\n\n')
@@ -97,12 +89,13 @@ let createMarkdownReport = (
  * @param {BenchmarkConfig} config - The benchmark configuration.
  * @param {{ id: string }} rule - The ESLint rule information.
  * @param {string} rule.id - The ID of the ESLint rule.
+ * @param {string} rule.path - The path of the ESLint rule.
  * @param {string} timestamp - The timestamp of the report.
  * @returns {string} The formatted header section.
  */
 let createHeader = (
   config: BenchmarkConfig,
-  rule: { id: string },
+  rule: { path?: string; id: string },
   timestamp: string,
 ): string =>
   [
@@ -110,29 +103,64 @@ let createHeader = (
     `## ${config.name || 'Benchmark Results'}`,
     '',
     `**Rule ID:** \`${rule.id}\``,
+    rule.path ? `**Rule Path:** \`${rule.path}\`` : '',
     `**Generated:** ${new Date(timestamp).toLocaleString()}`,
   ].join('\n')
 
 /**
  * Creates a Markdown table with the summary of benchmark results.
  *
- * @param {BenchmarkSummary} summary - The summary of benchmark results.
+ * @param {TaskResult} benchmarkResult - The benchmark result data.
  * @returns {string} A formatted Markdown table.
  */
-let createSummaryTable = (summary: BenchmarkSummary): string =>
-  [
-    '## Summary',
+let createSummaryTable = (benchmarkResult: TaskResult): string => {
+  let formatMs = (ms: undefined | number): string =>
+    ms === undefined || !Number.isFinite(ms) ? 'N/A' : `${ms.toFixed(2)} ms`
+
+  return [
+    '## Performance Summary',
     '',
     '| Metric | Value |',
     '| ------ | ----- |',
-    `| Total Samples | ${summary.totalSamples} |`,
-    `| Median Time | ${summary.medianTimeMs.toFixed(2)} ms |`,
-    `| Mean Time | ${summary.meanTimeMs.toFixed(2)} ms |`,
-    `| Min Time | ${summary.minTimeMs.toFixed(2)} ms |`,
-    `| Max Time | ${summary.maxTimeMs.toFixed(2)} ms |`,
-    `| Total Warnings | ${summary.totalWarnings} |`,
-    `| Total Errors | ${summary.totalErrors} |`,
+    `| Operations per second | ${Math.round(benchmarkResult.throughput.mean)} |`,
+    `| Average time | ${formatMs(benchmarkResult.latency.mean)} |`,
+    `| Median time (P50) | ${formatMs(benchmarkResult.latency.p50)} |`,
+    `| Minimum time | ${formatMs(benchmarkResult.latency.min)} |`,
+    `| Maximum time | ${formatMs(benchmarkResult.latency.max)} |`,
+    `| P75 Percentile | ${formatMs(benchmarkResult.latency.p75)} |`,
+    `| P99 Percentile | ${formatMs(benchmarkResult.latency.p99)} |`,
+    `| Standard deviation | ${formatMs(benchmarkResult.latency.sd)} |`,
+    `| Relative margin of error | ±${benchmarkResult.latency.rme.toFixed(2)}% |`,
+    `| Total samples | ${benchmarkResult.latency.samples.length} |`,
   ].join('\n')
+}
+
+/**
+ * Creates a Markdown section with percentile distribution information.
+ *
+ * @param {TaskResult} benchmarkResult - The benchmark result data.
+ * @returns {string} A formatted Markdown section.
+ */
+let createPercentileDistribution = (benchmarkResult: TaskResult): string => {
+  let formatMs = (ms: undefined | number): string =>
+    ms === undefined || !Number.isFinite(ms) ? 'N/A' : `${ms.toFixed(2)} ms`
+
+  return [
+    '## Percentile Distribution',
+    '',
+    'The following table shows how execution time is distributed across percentiles:',
+    '',
+    '| Percentile | Time |',
+    '| ---------- | ---- |',
+    `| 50% (Median) | ${formatMs(benchmarkResult.latency.p50)} |`,
+    `| 75% | ${formatMs(benchmarkResult.latency.p75)} |`,
+    `| 99% | ${formatMs(benchmarkResult.latency.p99)} |`,
+    `| 99.5% | ${formatMs(benchmarkResult.latency.p995)} |`,
+    `| 99.9% | ${formatMs(benchmarkResult.latency.p999)} |`,
+    '',
+    '> *Note: These percentiles indicate the execution time that X% of samples performed better than.*',
+  ].join('\n')
+}
 
 /**
  * Creates a configuration section with benchmark settings.
@@ -142,7 +170,7 @@ let createSummaryTable = (summary: BenchmarkSummary): string =>
  */
 let createConfigSection = (config: BenchmarkConfig): string =>
   [
-    '## Configuration',
+    '## Benchmark Configuration',
     '',
     '| Setting | Value |',
     '| ------- | ----- |',
@@ -150,6 +178,23 @@ let createConfigSection = (config: BenchmarkConfig): string =>
     `| Timeout | ${config.timeout} ms |`,
     `| Warmup Enabled | ${config.warmup.enabled} |`,
     `| Warmup Iterations | ${config.warmup.iterations} |`,
+  ].join('\n')
+
+/**
+ * Creates a section with system information.
+ *
+ * @param {TaskResult} benchmarkResult - The benchmark result data.
+ * @returns {string} A formatted Markdown section with system information.
+ */
+let createSystemInfo = (benchmarkResult: TaskResult): string =>
+  [
+    '## System Information',
+    '',
+    '| Property | Value |',
+    '| -------- | ----- |',
+    `| Runtime | ${benchmarkResult.runtime} |`,
+    `| Runtime Version | ${benchmarkResult.runtimeVersion} |`,
+    `| Total Run Time | ${benchmarkResult.totalTime.toFixed(2)} ms |`,
   ].join('\n')
 
 /**

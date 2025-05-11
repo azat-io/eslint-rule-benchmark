@@ -12,9 +12,9 @@
 [![Code Coverage](https://img.shields.io/codecov/c/github/azat-io/eslint-rule-benchmark.svg?color=ffa500&labelColor=324cc2)](https://npmjs.com/package/eslint-rule-benchmark)
 [![GitHub License](https://img.shields.io/badge/license-MIT-232428.svg?color=ffa500&labelColor=324cc2)](https://github.com/azat-io/eslint-rule-benchmark/blob/main/license.md)
 
-Eslint Rule Benchmark is a tool for measuring the performance of custom ESLint rules, available both as a CLI and a programmatic API. It helps you identify slow rules, compare versions, and track performance regressions across updates.
+Eslint Rule Benchmark is a specialized tool for accurately measuring the performance of ESLint rules, helping plugin developers identify optimization opportunities and detect regressions through comprehensive timing metrics available in console, JSON, and Markdown formats.
 
-Built for plugin authors, DevEx engineers, and CI workflows, it benchmarks rules using real or synthetic ASTs and reports metrics like ops/sec, mean time, and percentiles, with output in table, JSON, or Markdown formats.
+Built for plugin authors, DevEx engineers, and CI workflows, it reports metrics like ops/sec, mean time, and percentiles.
 
 ## Features
 
@@ -39,19 +39,24 @@ eslint-rule-benchmark run --rule ./dist/rules/sort-imports.js --name sort-import
 
 ## Metrics and Output
 
-ESLint Rule Benchmark provides the following metrics:
+ESLint Rule Benchmark provides the following performance metrics:
 
-| Metric          | Description                             |
-| --------------- | --------------------------------------- |
-| Mean time       | Average execution time of the rule      |
-| Median time     | Median time (50th percentile)           |
-| Min time        | Minimum execution time                  |
-| Max time        | Maximum execution time                  |
-| 95th percentile | 95th percentile (resistant to outliers) |
-| Ops/sec         | Operations per second                   |
-| Total samples   | Number of measurements taken            |
-| Total warnings  | Number of warnings found by the rule    |
-| Total errors    | Number of errors found by the rule      |
+| Metric                | Description                                          |
+| --------------------- | ---------------------------------------------------- |
+| Operations per second | Number of operations per second                      |
+| Average time          | Average execution time of the rule                   |
+| Median time (P50)     | Median execution time (50th percentile)              |
+| Minimum time          | Minimum execution time                               |
+| Maximum time          | Maximum execution time                               |
+| P75 Percentile        | 75th percentile (time for 75% of fastest executions) |
+| P99 Percentile        | 99th percentile (time for 99% of fastest executions) |
+| Standard deviation    | Standard deviation (measure of time variability)     |
+| Margin of error       | Relative margin of error in measurements             |
+| Total samples         | Number of measurements taken during the benchmark    |
+| Total warnings        | Number of warnings found by the rule                 |
+| Total errors          | Number of errors found by the rule                   |
+
+Metrics are available in Console, JSON, and Markdown formats, allowing integration with various systems and workflows.
 
 ## How It Works
 
@@ -65,17 +70,20 @@ The tool uses [Tinybench](https://github.com/tinylibs/tinybench) for accurate an
 ### Example Output
 
 ```
-Rule Benchmark Results: sort-imports
-
-Metric               Value
-===================================
-Mean time            1.12 ms
-Median time          0.94 ms
-Min time             0.84 ms
-Max time             5.87 ms
-Total samples        82369
-Total warnings       0
-Total errors         287
+┌─────────────────────────────────────────────────────────────────┐
+│              Rule Benchmark Results: sort-imports               │
+│ Metric                                   │ Value                │
+│ Operations per second                    │ 989                  │
+│ Average time                             │ 1.10 ms              │
+│ Median time (P50)                        │ 0.94 ms              │
+│ Minimum time                             │ 0.87 ms              │
+│ Maximum time                             │ 3.78 ms              │
+│ P75 Percentile                           │ 1.01 ms              │
+│ P99 Percentile                           │ 2.62 ms              │
+│ Standard deviation                       │ 0.45 ms              │
+│ Relative margin of error                 │ ±4.86%               │
+│ Total samples                            │ 274                  │
+└──────────────────────────────────────────┴──────────────────────┘
 ```
 
 ## Versioning Policy

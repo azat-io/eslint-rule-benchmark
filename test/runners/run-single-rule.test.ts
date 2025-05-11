@@ -1,339 +1,119 @@
+import type { Task } from 'tinybench'
+
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { TestRunResult, CodeSample, TestCase } from '../../types/test-case'
-import type { SingleRuleResult } from '../../runners/run-single-rule'
+import type { CodeSample, RuleConfig, TestCase } from '../../types/test-case'
 import type { BenchmarkConfig } from '../../types/benchmark-config'
-import type { RuleConfig } from '../../types/test-case'
 
 import { createTestCase } from '../../core/test-case/create-test-case'
 import { runBenchmark } from '../../core/benchmark/run-benchmark'
 import { runSingleRule } from '../../runners/run-single-rule'
 
+vi.mock('../../core/test-case/create-test-case', () => ({
+  createTestCase: vi.fn(),
+}))
 vi.mock('../../core/benchmark/run-benchmark', () => ({
   runBenchmark: vi.fn(),
 }))
 
-vi.mock('../../core/test-case/create-test-case', () => ({
-  createTestCase: vi.fn(),
-}))
+let mockTask = { name: 'stub-task' } as unknown as Task
 
 describe('runSingleRule', () => {
-  let mockCodeSamples: CodeSample[]
-  let mockRule: RuleConfig
-  let mockConfig: BenchmarkConfig
-  let mockTestCase: TestCase
-  let mockTestRunResults: TestRunResult[]
-  let mockOnStart: ReturnType<typeof vi.fn>
-  let mockOnComplete: ReturnType<typeof vi.fn>
+  let samples: CodeSample[]
+  let rule: RuleConfig
+  let testCase: TestCase
+  let cfg: BenchmarkConfig
 
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mockCodeSamples = [
-      {
-        code: 'const x = 1;',
-        filename: 'test.js',
-      },
-      {
-        code: 'const y = 2;',
-        filename: 'test2.js',
-      },
+    samples = [
+      { code: 'const a = 1', filename: 'a.js' },
+      { code: 'const b = 2', filename: 'b.js' },
     ]
 
-    mockRule = {
-      ruleId: 'test-rule',
-      severity: 2,
-    }
+    rule = { ruleId: 'test/rule', severity: 2 }
 
-    mockTestCase = {
-      id: 'single-rule-test-rule-1234567890',
-      samples: mockCodeSamples,
-      name: 'Rule: test-rule',
+    testCase = {
+      id: 'single-rule-test-rule-123',
+      name: 'Rule: test/rule',
       iterationCount: 10,
-      rule: mockRule,
+      samples,
+      rule,
     }
 
-    mockConfig = {
-      reporters: [
-        {
-          format: 'console',
-        },
-      ],
-      warmup: { enabled: true, iterations: 2 },
-      name: 'Test Benchmark',
-      iterations: 10,
-      timeout: 1000,
+    cfg = {
+      warmup: { enabled: true, iterations: 3 },
+      reporters: [{ format: 'console' }],
+      name: 'Benchmark',
+      iterations: 20,
+      timeout: 500,
     }
 
-    mockTestRunResults = [
-      {
-        eslintResults: {
-          fixableWarningCount: 1,
-          fixableErrorCount: 0,
-          warningCount: 2,
-          errorCount: 1,
-        },
-        measurements: [
-          {
-            executionTimeMs: 50,
-            timestamp: 1050,
-          },
-        ],
-        testCaseId: mockTestCase.id,
-        totalTimeMs: 100,
-        startTime: 1000,
-        aborted: false,
-        endTime: 1100,
-      },
-    ]
+    vi.spyOn(Date, 'now').mockReturnValue(123)
 
-    mockOnStart = vi.fn()
-    mockOnComplete = vi.fn()
-
-    vi.mocked(createTestCase).mockReturnValue(mockTestCase)
-    vi.mocked(runBenchmark).mockResolvedValue(mockTestRunResults)
-
-    vi.spyOn(Date, 'now').mockReturnValue(1234567890)
+    vi.mocked(createTestCase).mockReturnValue(testCase)
+    vi.mocked(runBenchmark).mockResolvedValue(mockTask)
   })
 
-  it('should create a test case with the correct parameters', async () => {
-    await runSingleRule({
-      codeSamples: mockCodeSamples,
-      benchmarkConfig: mockConfig,
-      rule: mockRule,
-    })
+  it('creates TestCase with correct arguments', async () => {
+    await runSingleRule({ codeSamples: samples, benchmarkConfig: cfg, rule })
 
     expect(createTestCase).toHaveBeenCalledWith({
-      id: 'single-rule-test-rule-1234567890',
-      samples: mockCodeSamples,
-      name: 'Rule: test-rule',
-      rule: mockRule,
+      id: 'single-rule-test/rule-123',
+      name: 'Rule: test/rule',
+      samples,
+      rule,
     })
   })
 
-  it('should run the benchmark with the created test case', async () => {
-    await runSingleRule({
-      codeSamples: mockCodeSamples,
-      benchmarkConfig: mockConfig,
-      onComplete: mockOnComplete,
-      onStart: mockOnStart,
-      rule: mockRule,
-    })
+  it('runs runBenchmark with correct parameters', async () => {
+    await runSingleRule({ codeSamples: samples, benchmarkConfig: cfg, rule })
 
     expect(runBenchmark).toHaveBeenCalledWith({
-      onTestComplete: expect.any(Function) as (result: TestRunResult) => void,
-      testCases: [mockTestCase],
-      onTestStart: mockOnStart,
-      config: mockConfig,
+      testCases: [testCase],
+      config: cfg,
     })
   })
 
-  it('should use default benchmark config if none provided', async () => {
-    await runSingleRule({
-      codeSamples: mockCodeSamples,
-      rule: mockRule,
-    })
+  it('returns SingleRuleResult with rule data and Task', async () => {
+    let result = await runSingleRule({ codeSamples: samples, rule })
 
-    expect(runBenchmark).toHaveBeenCalledWith({
-      config: {
-        warmup: { iterations: 10, enabled: true },
-        reporters: [{ format: 'console' }],
-        name: 'Single Rule Benchmark',
-        iterations: 50,
-        timeout: 300,
-      },
-      onTestComplete: expect.any(Function) as (result: TestRunResult) => void,
-      testCases: [mockTestCase],
-      onTestStart: undefined,
-    })
+    expect(result).toEqual(
+      expect.objectContaining({
+        rule: { id: 'test/rule', path: undefined },
+        result: mockTask,
+      }),
+    )
   })
 
-  it('should handle rule references correctly', async () => {
-    let ruleReference: RuleConfig = {
-      options: [{ option1: 'value1' }],
-      path: '/path/to/rule.js',
-      ruleId: 'ref-rule',
+  it('extracts path from RuleReference', async () => {
+    let reference: RuleConfig = {
+      path: '/abs/path/to/rule.js',
+      ruleId: 'ref/rule',
       severity: 1,
     }
 
-    await runSingleRule({
-      codeSamples: mockCodeSamples,
-      rule: ruleReference,
-    })
+    await runSingleRule({ codeSamples: samples, rule: reference })
 
-    expect(createTestCase).toHaveBeenCalledWith({
-      rule: {
-        options: [{ option1: 'value1' }],
-        path: '/path/to/rule.js',
-        ruleId: 'ref-rule',
-        severity: 1,
-      },
-      id: expect.stringContaining('single-rule-ref-rule-') as string,
-      samples: mockCodeSamples,
-      name: 'Rule: ref-rule',
-    })
+    expect(createTestCase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Rule: ref/rule',
+        rule: reference,
+      }),
+    )
   })
 
-  it('should use default severity if not provided in rule reference', async () => {
-    let ruleReference: RuleConfig = {
-      path: '/path/to/rule.js',
-      ruleId: 'ref-rule',
-      severity: 2,
-    }
+  it('uses "unknown-rule" if ruleId is missing', async () => {
+    let weirdRule = { severity: 2 } as unknown as RuleConfig
 
-    await runSingleRule({
-      codeSamples: mockCodeSamples,
-      rule: ruleReference,
-    })
+    await runSingleRule({ codeSamples: samples, rule: weirdRule })
 
-    expect(createTestCase).toHaveBeenCalledWith({
-      rule: {
-        path: '/path/to/rule.js',
-        ruleId: 'ref-rule',
-        options: undefined,
-        severity: 2,
-      },
-      id: expect.stringContaining('single-rule-ref-rule-') as string,
-      samples: mockCodeSamples,
-      name: 'Rule: ref-rule',
-    })
-  })
-
-  it('should call onComplete callback with correct result', async () => {
-    let capturedResult: SingleRuleResult | undefined
-
-    await runSingleRule({
-      onComplete: result => {
-        capturedResult = result
-      },
-      codeSamples: mockCodeSamples,
-      rule: mockRule,
-    })
-
-    let firstCall = vi.mocked(runBenchmark).mock.calls[0]?.[0]
-    let onTestCompleteCallback = firstCall?.onTestComplete
-
-    onTestCompleteCallback?.(mockTestRunResults[0]!)
-
-    expect(capturedResult).toBeDefined()
-    expect(capturedResult?.rule.id).toBe(mockRule.ruleId)
-    expect(capturedResult?.benchmarkResults).toHaveLength(1)
-    expect(capturedResult?.benchmarkResults[0]).toBe(mockTestRunResults[0])
-    expect(capturedResult?.summary).toMatchObject({
-      totalWarnings: 2,
-      totalSamples: 1,
-      totalErrors: 1,
-    })
-  })
-
-  it('should return aggregated results with correct summary statistics', async () => {
-    let result = await runSingleRule({
-      codeSamples: mockCodeSamples,
-      rule: mockRule,
-    })
-
-    expect(result).toMatchObject({
-      summary: {
-        totalWarnings: 2,
-        medianTimeMs: 50,
-        totalSamples: 1,
-        totalErrors: 1,
-        meanTimeMs: 50,
-        minTimeMs: 50,
-        maxTimeMs: 50,
-      },
-      rule: {
-        id: mockRule.ruleId,
-      },
-      benchmarkResults: mockTestRunResults,
-    })
-  })
-
-  it('should handle non-standard rule objects and use "unknown-rule" as fallback', async () => {
-    interface NonStandardRule {
-      someProperty: string
-      severity: number
-    }
-
-    let nonStandardRule: Partial<RuleConfig> & NonStandardRule = {
-      someProperty: 'value',
-      severity: 2,
-    }
-
-    await runSingleRule({
-      rule: nonStandardRule as RuleConfig,
-      codeSamples: mockCodeSamples,
-    })
-
-    expect(createTestCase).toHaveBeenCalledWith({
-      id: expect.stringContaining('single-rule-unknown-rule-') as string,
-      name: 'Rule: unknown-rule',
-      samples: mockCodeSamples,
-      rule: nonStandardRule,
-    })
-  })
-
-  it('should correctly set path to undefined when using a regular RuleConfig', async () => {
-    let result = await runSingleRule({
-      codeSamples: mockCodeSamples,
-      rule: mockRule,
-    })
-
-    expect(result.rule.path).toBeUndefined()
-  })
-
-  it('should correctly extract path from RuleReference', async () => {
-    let ruleReference: RuleConfig = {
-      path: '/path/to/rule.js',
-      ruleId: 'ref-rule',
-      severity: 1,
-    }
-
-    let result = await runSingleRule({
-      codeSamples: mockCodeSamples,
-      rule: ruleReference,
-    })
-
-    expect(result.rule.path).toBe('/path/to/rule.js')
-  })
-
-  it('should preserve original rule when not a RuleReference', async () => {
-    let mockRuleCopy = { ...mockRule }
-
-    vi.mocked(createTestCase).mockImplementationOnce(parameters => {
-      expect(parameters.rule).toBe(mockRuleCopy)
-      return mockTestCase
-    })
-
-    await runSingleRule({
-      codeSamples: mockCodeSamples,
-      rule: mockRuleCopy,
-    })
-
-    expect(createTestCase).toHaveBeenCalledWith({
-      id: expect.stringContaining('single-rule-test-rule-') as string,
-      name: expect.stringContaining('Rule: test-rule') as string,
-      samples: mockCodeSamples,
-      rule: mockRuleCopy,
-    })
-  })
-
-  it('should handle empty objects through type checks', async () => {
-    vi.mocked(createTestCase).mockImplementationOnce(parameters => {
-      expect(parameters.name).toBe('Rule: unknown-rule')
-      return mockTestCase
-    })
-
-    await runSingleRule({
-      rule: {} as unknown as RuleConfig,
-      codeSamples: mockCodeSamples,
-    })
-
-    expect(createTestCase).toHaveBeenCalledWith({
-      id: expect.stringContaining('single-rule-unknown-rule-') as string,
-      rule: expect.anything() as RuleConfig,
-      name: 'Rule: unknown-rule',
-      samples: mockCodeSamples,
-    })
+    expect(createTestCase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: expect.stringContaining('single-rule-unknown-rule-') as string,
+        name: 'Rule: unknown-rule',
+      }),
+    )
   })
 })

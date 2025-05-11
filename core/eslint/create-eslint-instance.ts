@@ -5,6 +5,21 @@ import path from 'node:path'
 
 import type { RuleConfig } from '../../types/test-case'
 
+/** Options for creating an ESLint instance. */
+export interface CreateESLintInstanceOptions {
+  /** Additional ESLint configuration options. */
+  extraConfig?: Record<string, unknown>
+
+  /** Path to plugins (if applicable). */
+  pluginPaths?: string[]
+
+  /** Path to custom parser (if applicable). */
+  parserPath?: string
+
+  /** The rule to be tested. */
+  rule: RuleConfig
+}
+
 /**
  * Represents the possible structure of an imported ESLint rule module.
  *
@@ -36,21 +51,6 @@ interface ESLintRuleImport {
 
   /** Additional properties that might be present in the module. */
   [key: string]: unknown
-}
-
-/** Options for creating an ESLint instance. */
-interface CreateESLintInstanceOptions {
-  /** Additional ESLint configuration options. */
-  extraConfig?: Record<string, unknown>
-
-  /** Path to plugins (if applicable). */
-  pluginPaths?: string[]
-
-  /** Path to custom parser (if applicable). */
-  parserPath?: string
-
-  /** The rule to be tested. */
-  rule: RuleConfig
 }
 
 /** Result of loading a rule from a file. */

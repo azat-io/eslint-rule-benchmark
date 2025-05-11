@@ -1,10 +1,11 @@
-import type { ESLint } from 'eslint'
+import type { Bench } from 'tinybench'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { CreateESLintInstanceOptions } from '../../../core/eslint/create-eslint-instance'
 import type * as CreateBenchModule from '../../../core/benchmark/create-bench'
-import type { TestRunResult, TestCase } from '../../../types/test-case'
 import type { BenchmarkConfig } from '../../../types/benchmark-config'
+import type { TestCase } from '../../../types/test-case'
 
 import { createESLintInstance } from '../../../core/eslint/create-eslint-instance'
 import { runBenchmark } from '../../../core/benchmark/run-benchmark'
@@ -12,238 +13,93 @@ import { createBench } from '../../../core/benchmark/create-bench'
 
 vi.mock('../../../core/eslint/create-eslint-instance', () => ({
   createESLintInstance: vi.fn().mockResolvedValue({
-    lintText: vi.fn().mockResolvedValue([
-      {
-        fixableWarningCount: 1,
-        fixableErrorCount: 0,
-        warningCount: 2,
-        errorCount: 1,
-      },
-    ]),
+    lintText: vi.fn().mockResolvedValue([{ warningCount: 0, errorCount: 0 }]),
   }),
 }))
 
 vi.mock('../../../core/benchmark/create-bench', async importOriginal => {
-  let originalModule = await importOriginal<typeof CreateBenchModule>()
+  let orig = await importOriginal<typeof CreateBenchModule>()
 
   return {
-    ...originalModule,
+    ...orig,
     createBench: vi.fn().mockImplementation(() => {
-      let taskStore: Record<string, () => Promise<void>> = {}
+      let tasks: Record<string, () => Promise<void>> = {}
 
       return {
-        run: vi.fn().mockImplementation(async () => {
-          await Promise.all(
-            Object.values(taskStore).map(async task => await task()),
-          )
-          return []
+        run: vi.fn(async () => {
+          await Promise.all(Object.values(tasks).map(t => t()))
+          return Object.keys(tasks).map(name => ({ name }))
         }),
-        opts: {
-          warmupIterations: 0,
-          iterations: 1,
-          warmupTime: 0,
-          time: 100,
-        },
-        add: vi.fn((name: string, task: () => Promise<void>) => {
-          taskStore[name] = task
+        add: vi.fn((name: string, function_: () => Promise<void>) => {
+          tasks[name] = function_
         }),
+        opts: { warmupIterations: 0, iterations: 1, warmupTime: 0, time: 0 },
       }
     }),
   }
 })
 
-describe('runBenchmark', () => {
-  let testCase: TestCase
-  let config: BenchmarkConfig
-  let onTestStart: ReturnType<typeof vi.fn>
-  let onTestComplete: ReturnType<typeof vi.fn>
+let testCase: TestCase
+let config: BenchmarkConfig
 
+describe('runBenchmark', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
     testCase = {
-      samples: [
-        {
-          code: 'const x = 1;',
-          filename: 'test.js',
-        },
-        {
-          filename: 'test2.js',
-          code: 'const y = 2;',
-        },
-      ],
-      rule: {
-        ruleId: 'test-rule',
-        severity: 2,
-      },
-      name: 'Test Case 1',
-      id: 'test-case-1',
-      iterationCount: 5,
+      samples: [{ code: 'const a = 1;', filename: 'a.js' }],
+      rule: { ruleId: 'demo', severity: 2 },
+      name: 'Sample case',
+      iterationCount: 1,
+      id: 'id-1',
     }
 
     config = {
-      reporters: [
-        {
-          format: 'console',
-        },
-      ],
-      warmup: {
-        enabled: true,
-        iterations: 2,
-      },
-      name: 'Test Benchmark',
-      iterations: 10,
+      warmup: { enabled: false, iterations: 0 },
+      reporters: [{ format: 'console' }],
       timeout: 1000,
+      name: 'Bench',
+      iterations: 5,
     }
-
-    onTestStart = vi.fn()
-    onTestComplete = vi.fn()
-
-    vi.spyOn(Date, 'now')
-      .mockReturnValueOnce(1000)
-      .mockReturnValueOnce(1100)
-      .mockReturnValueOnce(1200)
   })
 
-  it('should create benchmark instance with correct parameters', async () => {
-    await runBenchmark({
-      testCases: [testCase],
-      onTestComplete,
-      onTestStart,
-      config,
-    })
+  it('creates Bench with proper options and adds every test case', async () => {
+    await runBenchmark({ testCases: [testCase], config })
 
-    expect(onTestStart).toHaveBeenCalledWith(testCase)
     expect(createBench).toHaveBeenCalledWith({
       warmupIterations: config.warmup.iterations,
       iterations: config.iterations,
       warmup: config.warmup.enabled,
       timeoutMs: config.timeout,
     })
+
+    let benchInstance = vi.mocked(createBench).mock.results[0]!.value as Bench
+    expect(benchInstance.add).toHaveBeenCalledTimes(1)
+    expect(benchInstance.add).toHaveBeenCalledWith(
+      testCase.name,
+      expect.any(Function),
+    )
   })
 
-  it('should call onTestStart for each test case', async () => {
-    await runBenchmark({
-      testCases: [testCase],
-      onTestComplete,
-      onTestStart,
-      config,
-    })
-
-    expect(onTestStart).toHaveBeenCalledWith(testCase)
-    expect(onTestStart).toHaveBeenCalledTimes(1)
+  it('returns first tinybench Task', async () => {
+    let task = await runBenchmark({ testCases: [testCase], config })
+    expect(task).toEqual({ name: testCase.name })
   })
 
-  it('should call onTestComplete after testing', async () => {
-    let capturedResult: TestRunResult | undefined
-    let customOnTestComplete = vi.fn((result: TestRunResult) => {
-      capturedResult = result
-    })
+  it('calls ESLint once per sample', async () => {
+    let eslint = await createESLintInstance({} as CreateESLintInstanceOptions)
+    let lintSpy = eslint.lintText
 
-    await runBenchmark({
-      onTestComplete: customOnTestComplete,
-      testCases: [testCase],
-      onTestStart,
-      config,
-    })
-
-    expect(customOnTestComplete).toHaveBeenCalledTimes(1)
-    expect(capturedResult).toBeDefined()
-    expect(capturedResult?.testCaseId).toBe(testCase.id)
+    await runBenchmark({ testCases: [testCase], config })
+    expect(lintSpy).toHaveBeenCalledTimes(testCase.samples.length + 1)
   })
 
-  it('should aggregate ESLint results from all code samples', async () => {
-    let lintTextMock = vi
-      .fn()
-      .mockResolvedValueOnce([
-        {
-          fixableWarningCount: 0,
-          fixableErrorCount: 0,
-          warningCount: 0,
-          errorCount: 0,
-        },
-      ])
-      .mockResolvedValueOnce([
-        {
-          fixableWarningCount: 1,
-          fixableErrorCount: 0,
-          warningCount: 2,
-          errorCount: 1,
-        },
-      ])
-      .mockResolvedValueOnce([
-        {
-          fixableWarningCount: 0,
-          fixableErrorCount: 1,
-          warningCount: 1,
-          errorCount: 2,
-        },
-      ])
+  it('propagates error from createESLintInstance', async () => {
+    let error = new Error('boom')
+    vi.mocked(createESLintInstance).mockRejectedValueOnce(error)
 
-    vi.mocked(createESLintInstance).mockResolvedValue({
-      lintText: lintTextMock,
-    } as unknown as ESLint)
-
-    let capturedResult: TestRunResult | undefined
-    let customOnTestComplete = vi.fn((result: TestRunResult) => {
-      capturedResult = result
-    })
-
-    await runBenchmark({
-      onTestComplete: customOnTestComplete,
-      testCases: [testCase],
-      onTestStart,
-      config,
-    })
-
-    expect(capturedResult).toBeDefined()
-    expect(capturedResult?.eslintResults?.errorCount).toBe(3)
-    expect(capturedResult?.eslintResults?.warningCount).toBe(3)
-    expect(capturedResult?.eslintResults?.fixableErrorCount).toBe(1)
-    expect(capturedResult?.eslintResults?.fixableWarningCount).toBe(1)
-  })
-
-  it('should handle errors when running ESLint', async () => {
-    let testError = new Error('Test ESLint error')
-    vi.mocked(createESLintInstance).mockRejectedValue(testError)
-
-    let capturedResult: TestRunResult | undefined
-    let customOnTestComplete = vi.fn((result: TestRunResult) => {
-      capturedResult = result
-    })
-
-    await runBenchmark({
-      onTestComplete: customOnTestComplete,
-      testCases: [testCase],
-      onTestStart,
-      config,
-    })
-
-    expect(customOnTestComplete).toHaveBeenCalledTimes(1)
-    expect(capturedResult).toBeDefined()
-    expect(capturedResult?.aborted).toBeTruthy()
-    expect(capturedResult?.errors?.[0]).toBe(testError.message)
-  })
-
-  it('should return results array for all test cases', async () => {
-    let testCases = [
-      testCase,
-      {
-        ...testCase,
-        name: 'Test Case 2',
-        id: 'test-case-2',
-      },
-    ]
-
-    let results = await runBenchmark({
-      onTestComplete,
-      onTestStart,
-      testCases,
-      config,
-    })
-
-    expect(results).toHaveLength(2)
-    expect(results[0]?.testCaseId).toBe(testCases[0]?.id)
-    expect(results[1]?.testCaseId).toBe(testCases[1]?.id)
+    await expect(runBenchmark({ testCases: [testCase], config })).rejects.toBe(
+      error,
+    )
   })
 })

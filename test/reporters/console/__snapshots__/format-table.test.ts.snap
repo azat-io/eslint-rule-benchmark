@@ -1,29 +1,37 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`formatTable > should format the table correctly 1`] = `
-"Rule Benchmark Results: rule-1
-
-Metric               Value
-===================================
-Mean time            100.00 ms
-Median time          200.00 ms
-Min time             50.00 ms
-Max time             300.00 ms
-Total samples        1000
-Total warnings       10
-Total errors         5"
+exports[`formatTable > prints "N/A" for NaN metrics 1`] = `
+"┌─────────────────────────────────────────────────────────────────┐
+│                 Rule Benchmark Results: rule-1                  │
+│ Metric                                   │ Value                │
+│ Operations per second                    │ 1234                 │
+│ Average time                             │ N/A                  │
+│ Median time (P50)                        │ N/A                  │
+│ Minimum time                             │ N/A                  │
+│ Maximum time                             │ N/A                  │
+│ P75 Percentile                           │ N/A                  │
+│ P99 Percentile                           │ N/A                  │
+│ Standard deviation                       │ N/A                  │
+│ Relative margin of error                 │ ±0.00%               │
+│ Total samples                            │ 0                    │
+└──────────────────────────────────────────┴──────────────────────┘
+"
 `;
 
-exports[`formatTable > should handle undefined values correctly 1`] = `
-"Rule Benchmark Results: rule-1
-
-Metric               Value
-===================================
-Mean time            N/A
-Median time          N/A
-Min time             N/A
-Max time             300.00 ms
-Total samples        1000
-Total warnings       10
-Total errors         5"
+exports[`formatTable > renders a table with metrics 1`] = `
+"┌─────────────────────────────────────────────────────────────────┐
+│                 Rule Benchmark Results: rule-1                  │
+│ Metric                                   │ Value                │
+│ Operations per second                    │ 1234                 │
+│ Average time                             │ 1.00 ms              │
+│ Median time (P50)                        │ 1.00 ms              │
+│ Minimum time                             │ 0.80 ms              │
+│ Maximum time                             │ 1.20 ms              │
+│ P75 Percentile                           │ 1.05 ms              │
+│ P99 Percentile                           │ 1.20 ms              │
+│ Standard deviation                       │ 0.05 ms              │
+│ Relative margin of error                 │ ±1.11%               │
+│ Total samples                            │ 10                   │
+└──────────────────────────────────────────┴──────────────────────┘
+"
 `;

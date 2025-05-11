@@ -1,4 +1,6 @@
-import pc from 'picocolors'
+import type { TableUserConfig } from 'table'
+
+import { getBorderCharacters, table } from 'table'
 
 import type { SingleRuleResult } from '../../runners/run-single-rule'
 
@@ -6,35 +8,49 @@ import type { SingleRuleResult } from '../../runners/run-single-rule'
  * Formats benchmark results as a console-friendly table.
  *
  * @param {SingleRuleResult} result - The benchmark result to format.
- * @returns {string} Formatted table string ready for console output.
+ * @returns {void} Formatted table string ready for console output.
  */
 export let formatTable = (result: SingleRuleResult): string => {
-  let { summary, rule } = result
+  let { rule } = result
+  let benchmarkResult = result.result?.result
+
+  if (!benchmarkResult) {
+    return 'No benchmark results available.'
+  }
 
   let formatMs = (ms: undefined | number): string =>
     ms === undefined || !Number.isFinite(ms) ? 'N/A' : `${ms.toFixed(2)} ms`
 
-  let formatNumber = (number_: number): string => number_.toString()
+  let config: TableUserConfig = {
+    header: {
+      content: `Rule Benchmark Results: ${rule.id}`,
+      alignment: 'center',
+      wrapWord: false,
+    },
+    columns: {
+      0: { wrapWord: false, width: 40 },
+      1: { wrapWord: false, width: 20 },
+    },
+    border: getBorderCharacters('norc'),
+    singleLine: true,
+  }
 
-  let columnWidth = 20
-  let valueColumnWidth = 15
-
-  let padColumn = (text: string): string => text.padEnd(columnWidth)
-
-  let header = pc.bold(`Rule Benchmark Results: ${pc.cyan(rule.id)}`)
-
-  let columnHeaders = `${pc.bold(padColumn('Metric'))} ${pc.bold('Value')}`
-  let separator = pc.bold('='.repeat(columnWidth + valueColumnWidth))
-
-  let rows = [
-    `${padColumn('Mean time')} ${pc.green(formatMs(summary.meanTimeMs))}`,
-    `${padColumn('Median time')} ${pc.green(formatMs(summary.medianTimeMs))}`,
-    `${padColumn('Min time')} ${pc.green(formatMs(summary.minTimeMs))}`,
-    `${padColumn('Max time')} ${pc.green(formatMs(summary.maxTimeMs))}`,
-    `${padColumn('Total samples')} ${formatNumber(summary.totalSamples)}`,
-    `${padColumn('Total warnings')} ${pc.yellow(formatNumber(summary.totalWarnings))}`,
-    `${padColumn('Total errors')} ${pc.red(formatNumber(summary.totalErrors))}`,
+  let data = [
+    ['Metric', 'Value'],
+    [
+      'Operations per second',
+      Math.round(benchmarkResult.throughput.mean).toString(),
+    ],
+    ['Average time', formatMs(benchmarkResult.latency.mean)],
+    ['Median time (P50)', formatMs(benchmarkResult.latency.p50)],
+    ['Minimum time', formatMs(benchmarkResult.latency.min)],
+    ['Maximum time', formatMs(benchmarkResult.latency.max)],
+    ['P75 Percentile', formatMs(benchmarkResult.latency.p75)],
+    ['P99 Percentile', formatMs(benchmarkResult.latency.p99)],
+    ['Standard deviation', formatMs(benchmarkResult.latency.sd)],
+    ['Relative margin of error', `±${benchmarkResult.latency.rme.toFixed(2)}%`],
+    ['Total samples', benchmarkResult.latency.samples.length.toString()],
   ]
 
-  return [header, '', columnHeaders, separator, ...rows].join('\n')
+  return table(data, config)
 }

@@ -4,7 +4,6 @@ import { setTimeout } from 'node:timers/promises'
 
 import type { SingleRuleResult } from '../../../runners/run-single-rule'
 import type { BenchmarkConfig } from '../../../types/benchmark-config'
-import type { ReporterOptions } from '../../../types/benchmark-config'
 
 import { createJsonReporter, jsonReporter } from '../../../reporters/json'
 
@@ -13,172 +12,224 @@ vi.mock('node:fs/promises', () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
 }))
 
-describe('jSON Reporter', () => {
-  let consoleInfoSpy: ReturnType<typeof vi.spyOn>
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>
-  let mockResult: SingleRuleResult
-  let mockConfig: BenchmarkConfig
+let fsWrite = vi.mocked(writeFile)
+let fsMkdir = vi.mocked(mkdir)
+
+let tinybenchResult = {
+  latency: {
+    samples: [1, 1.1],
+    rme: 1.11,
+    p75: 1.05,
+    p995: 1.1,
+    p999: 1.1,
+    sd: 0.05,
+    min: 0.9,
+    max: 1.1,
+    p99: 1.1,
+    mean: 1,
+    p50: 1,
+  },
+  throughput: { mean: 1234 },
+  runtimeVersion: 'v20.11.1',
+  runtime: 'node',
+  period: 0.001,
+  totalTime: 2,
+}
+
+let mockResult: SingleRuleResult
+let mockConfig: BenchmarkConfig
+
+/* -------------------------------------------------------------------------- */
+
+describe('jSON reporter', () => {
+  let infoSpy: ReturnType<typeof vi.spyOn>
+  let errorSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
-    consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    vi.mocked(mkdir).mockClear()
-    vi.mocked(writeFile).mockClear()
+    fsWrite.mockClear()
+    fsMkdir.mockClear()
 
     mockResult = {
-      benchmarkResults: [
-        {
-          measurements: [
-            { timestamp: 1609459200500, executionTimeMs: 500 },
-            { timestamp: 1609459200800, executionTimeMs: 300 },
-          ],
-          testCaseId: 'test-case-1',
-          startTime: 1609459200000,
-          endTime: 1609459201000,
-          totalTimeMs: 1000,
-          aborted: false,
-          errors: [],
-        },
-      ],
-      summary: {
-        totalSamples: 1000,
-        medianTimeMs: 200,
-        totalWarnings: 10,
-        meanTimeMs: 100,
-        maxTimeMs: 300,
-        totalErrors: 5,
-        minTimeMs: 50,
-      },
-      rule: {
-        id: 'test-rule',
-      },
-    }
+      result: { result: tinybenchResult },
+      rule: { id: 'test-rule' },
+    } as SingleRuleResult
 
     mockConfig = {
-      reporters: [
-        {
-          format: 'json',
-        },
-      ],
-      warmup: {
-        enabled: true,
-        iterations: 3,
-      },
-      name: 'test-benchmark',
+      warmup: { enabled: true, iterations: 3 },
+      reporters: [{ format: 'json' }],
       iterations: 10,
       timeout: 5000,
+      name: 'bench',
     }
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
+  afterEach(() => vi.restoreAllMocks())
 
-  describe('createJsonReporter', () => {
-    it('should create a reporter function', () => {
-      let reporter = createJsonReporter({
-        format: 'json',
-      })
-
+  describe('createJsonReporter()', () => {
+    it('creates a reporter function', () => {
+      let reporter = createJsonReporter({ format: 'json' })
       expect(reporter).toBeInstanceOf(Function)
       expect(reporter).toHaveLength(2)
     })
 
-    it('should save JSON report to file with default path', async () => {
-      let mockToISOString = vi
-        .spyOn(Date.prototype, 'toISOString')
-        .mockReturnValue('2021-01-01T00:00:00.000Z')
+    it('writes a report to a file by default', async () => {
+      vi.spyOn(Date.prototype, 'toISOString').mockReturnValue(
+        '2021-01-01T00:00:00.000Z',
+      )
 
-      let reporter = createJsonReporter({
-        format: 'json',
-      })
-
+      let reporter = createJsonReporter({ format: 'json' })
       reporter(mockResult, mockConfig)
+
       await setTimeout()
 
-      expect(mkdir).toHaveBeenCalledWith('report', { recursive: true })
-
-      expect(writeFile).toHaveBeenCalledWith(
+      expect(fsMkdir).toHaveBeenCalledWith('report', { recursive: true })
+      expect(fsWrite).toHaveBeenCalledWith(
         'report/benchmark-2021-01-01T00-00-00.000Z.json',
         expect.any(String),
         'utf8',
       )
 
-      let jsonString = vi.mocked(writeFile).mock.calls[0]?.[1]
-      let jsonContent = JSON.parse(jsonString as string) as Record<
-        string,
-        unknown
-      >
+      let saved = JSON.parse(
+        fsWrite.mock.calls[0]![1] as string,
+      ) as SingleRuleResult
 
-      expect(jsonContent).toMatchObject({
-        config: {
-          warmup: {
-            enabled: true,
-            iterations: 3,
-          },
-          name: 'test-benchmark',
-          iterations: 10,
-          timeout: 5000,
-        },
-        summary: expect.objectContaining({
-          medianTimeMs: 200,
-          meanTimeMs: 100,
-        }) as Record<string, number>,
-        timestamp: '2021-01-01T00:00:00.000Z',
-        rule: { id: 'test-rule' },
-      })
-
-      expect(consoleInfoSpy).toHaveBeenCalledWith(
-        expect.stringContaining('JSON report saved to:'),
+      expect(saved).toEqual(
+        expect.objectContaining({
+          metrics: expect.objectContaining({
+            averageTime: expect.stringMatching(/ms$/u) as string,
+            operationsPerSecond: 1234,
+          }) as Record<string, unknown>,
+          config: expect.objectContaining({
+            iterations: 10,
+            timeout: 5000,
+          }) as BenchmarkConfig,
+          timestamp: '2021-01-01T00:00:00.000Z',
+          rule: { id: 'test-rule' },
+        }),
       )
 
-      mockToISOString.mockRestore()
+      expect(infoSpy).toHaveBeenCalledWith(
+        expect.stringContaining('JSON report saved to:'),
+      )
     })
 
-    it('should use custom output path when provided', async () => {
+    it('uses the specified outputPath', async () => {
       let reporter = createJsonReporter({
-        outputPath: 'custom/path/report.json',
+        outputPath: 'custom/out/report.json',
         format: 'json',
       })
 
       reporter(mockResult, mockConfig)
       await setTimeout()
 
-      expect(mkdir).toHaveBeenCalledWith('custom/path', { recursive: true })
-      expect(writeFile).toHaveBeenCalledWith(
-        'custom/path/report.json',
+      expect(fsMkdir).toHaveBeenCalledWith('custom/out', { recursive: true })
+      expect(fsWrite).toHaveBeenCalledWith(
+        'custom/out/report.json',
         expect.any(String),
         'utf8',
       )
     })
 
-    it('should handle errors when saving the file', async () => {
-      vi.mocked(writeFile).mockRejectedValueOnce(
-        new Error('Failed to write file'),
-      )
+    it('logs an error if the file fails to save', async () => {
+      fsWrite.mockRejectedValueOnce(new Error('fail'))
 
-      let reporter = createJsonReporter({
-        format: 'json',
-      })
-
+      let reporter = createJsonReporter({ format: 'json' })
       reporter(mockResult, mockConfig)
-      await setTimeout()
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      await setTimeout()
+      expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining('Failed to save JSON report'),
       )
     })
   })
 
-  describe('jsonReporter', () => {
-    it('should return a reporter function', () => {
-      let options: ReporterOptions = {
-        format: 'json',
-      }
+  it('handles missing benchmark results', async () => {
+    let resultWithoutBenchmark: SingleRuleResult = {
+      rule: { path: 'path/to/rule.js', id: 'test-rule' },
+      result: null,
+    } as SingleRuleResult
 
-      let reporter = jsonReporter(options)
-      expect(reporter).toBeInstanceOf(Function)
+    let reporter = createJsonReporter({ format: 'json' })
+
+    vi.spyOn(Date.prototype, 'toISOString').mockReturnValue(
+      '2021-01-01T00:00:00.000Z',
+    )
+
+    reporter(resultWithoutBenchmark, mockConfig)
+    await setTimeout()
+
+    expect(fsWrite).toHaveBeenCalledWith(
+      'report/benchmark-2021-01-01T00-00-00.000Z.json',
+      expect.any(String),
+      'utf8',
+    )
+
+    let savedJson = JSON.parse(fsWrite.mock.calls[0]![1] as string) as object
+
+    expect(savedJson).toEqual({
+      config: {
+        iterations: mockConfig.iterations,
+        timeout: mockConfig.timeout,
+        warmup: mockConfig.warmup,
+        name: mockConfig.name,
+      },
+      rule: {
+        path: 'path/to/rule.js',
+        id: 'test-rule',
+      },
+      error: 'No benchmark results available',
+      timestamp: '2021-01-01T00:00:00.000Z',
     })
+  })
+
+  it('correctly formats invalid time values', async () => {
+    let resultWithInvalidTimes: SingleRuleResult = {
+      result: {
+        result: {
+          ...tinybenchResult,
+          latency: {
+            ...tinybenchResult.latency,
+            mean: undefined,
+            p75: Number.NaN,
+            p50: Infinity,
+          },
+        },
+      },
+      rule: { id: 'test-rule' },
+    } as unknown as SingleRuleResult
+
+    let reporter = createJsonReporter({ format: 'json' })
+    reporter(resultWithInvalidTimes, mockConfig)
+
+    await setTimeout()
+
+    let savedJson = JSON.parse(fsWrite.mock.calls[0]![1] as string) as {
+      metrics: {
+        operationsPerSecond: number
+        averageTime: string | null
+        medianTime: string | null
+        p75: string | null
+      }
+      config: BenchmarkConfig
+      rule: { id: string }
+    }
+
+    expect(savedJson.metrics.averageTime).toBeNull()
+    expect(savedJson.metrics.medianTime).toBeNull()
+    expect(savedJson.metrics.p75).toBeNull()
+  })
+
+  it('calls json reporter with correct parameters', async () => {
+    let reporter = jsonReporter({ format: 'json' })
+    reporter(mockResult, mockConfig)
+    await setTimeout()
+    expect(fsWrite).toHaveBeenCalledWith(
+      expect.stringContaining('report/benchmark-'),
+      expect.stringContaining('"metrics":'),
+      'utf8',
+    )
   })
 })

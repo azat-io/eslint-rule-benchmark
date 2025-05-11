@@ -1,9 +1,6 @@
-import type {
-  TestRunResult,
-  CodeSample,
-  RuleConfig,
-  TestCase,
-} from '../types/test-case'
+import type { Task } from 'tinybench'
+
+import type { CodeSample, RuleConfig } from '../types/test-case'
 import type { BenchmarkConfig } from '../types/benchmark-config'
 
 import {
@@ -18,30 +15,6 @@ import { runBenchmark } from '../core/benchmark/run-benchmark'
 
 /** Result of running a single rule benchmark. */
 export interface SingleRuleResult {
-  /** Summary statistics for the benchmark run. */
-  summary: {
-    /** Total number of ESLint warnings reported by the rule. */
-    totalWarnings: number
-
-    /** Median execution time in milliseconds. */
-    medianTimeMs: number
-
-    /** Total number of code samples tested. */
-    totalSamples: number
-
-    /** Total number of ESLint errors reported by the rule. */
-    totalErrors: number
-
-    /** Mean (average) execution time in milliseconds. */
-    meanTimeMs: number
-
-    /** Minimum execution time in milliseconds. */
-    minTimeMs: number
-
-    /** Maximum execution time in milliseconds. */
-    maxTimeMs: number
-  }
-
   /** Information about the tested rule. */
   rule: {
     /** File path to the rule module (if applicable). */
@@ -52,17 +25,11 @@ export interface SingleRuleResult {
   }
 
   /** Raw benchmark run results for detailed analysis. */
-  benchmarkResults: TestRunResult[]
+  result: Task | null
 }
 
 /** Parameters for running a single rule benchmark. */
 interface RunSingleRuleParameters {
-  /** Optional callback to be called after the test run completes. */
-  onComplete?(result: SingleRuleResult): void
-
-  /** Optional callback to be called before the test run starts. */
-  onStart?(testCase: TestCase): void
-
   /** Benchmark configuration. */
   benchmarkConfig?: BenchmarkConfig
 
@@ -77,47 +44,6 @@ interface RunSingleRuleParameters {
 }
 
 /**
- * Calculates summary statistics from test run results.
- *
- * @param {TestRunResult[]} results - Array of test run results.
- * @returns {SingleRuleResult['summary']} Summary statistics.
- */
-let calculateSummary = (
-  results: TestRunResult[],
-): SingleRuleResult['summary'] => {
-  let allMeasurements = results.flatMap(result => result.measurements)
-  let executionTimes = allMeasurements
-    .map(measurement => measurement.executionTimeMs)
-    .filter((time): time is number => typeof time === 'number')
-
-  let totalWarnings = 0
-  let totalErrors = 0
-
-  for (let result of results) {
-    if (result.eslintResults) {
-      totalWarnings += result.eslintResults.warningCount
-      totalErrors += result.eslintResults.errorCount
-    }
-  }
-
-  let meanTimeMs =
-    executionTimes.reduce((sum, time) => sum + time, 0) / executionTimes.length
-
-  let sortedTimes = [...executionTimes].toSorted((a, b) => a - b)
-  let medianTimeMs = sortedTimes[Math.floor(sortedTimes.length / 2)]!
-
-  return {
-    minTimeMs: Math.min(...executionTimes),
-    maxTimeMs: Math.max(...executionTimes),
-    totalSamples: allMeasurements.length,
-    totalWarnings,
-    medianTimeMs,
-    totalErrors,
-    meanTimeMs,
-  }
-}
-
-/**
  * Runs performance benchmark for a single ESLint rule.
  *
  * @param {RunSingleRuleParameters} parameters - Parameters for running the
@@ -128,7 +54,7 @@ let calculateSummary = (
 export let runSingleRule = async (
   parameters: RunSingleRuleParameters,
 ): Promise<SingleRuleResult> => {
-  let { benchmarkConfig, codeSamples, onComplete, onStart, rule } = parameters
+  let { benchmarkConfig, codeSamples, rule } = parameters
 
   let config = benchmarkConfig ?? {
     warmup: {
@@ -166,33 +92,16 @@ export let runSingleRule = async (
     rule: ruleConfig,
   })
 
-  let results = await runBenchmark({
-    onTestComplete: result => {
-      if (onComplete) {
-        let summary = calculateSummary([result])
-        let singleRuleResult: SingleRuleResult = {
-          rule: {
-            id: testCase.rule.ruleId,
-          },
-          benchmarkResults: [result],
-          summary,
-        }
-        onComplete(singleRuleResult)
-      }
-    },
+  let result = await runBenchmark({
     testCases: [testCase],
-    onTestStart: onStart,
     config,
   })
-
-  let summary = calculateSummary(results)
 
   return {
     rule: {
       path: 'path' in rule ? rule.path : undefined,
       id: testCase.rule.ruleId,
     },
-    benchmarkResults: results,
-    summary,
+    result,
   }
 }

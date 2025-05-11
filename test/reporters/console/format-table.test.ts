@@ -1,63 +1,76 @@
+import type { TaskResult, Bench } from 'tinybench'
+
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
+
+import type { SingleRuleResult } from '../../../runners/run-single-rule'
 
 import { formatTable } from '../../../reporters/console/format-table'
 
-vi.mock('picocolors', () => ({
-  default: {
-    yellow: (text: string) => text,
-    green: (text: string) => text,
-    cyan: (text: string) => text,
-    bold: (text: string) => text,
-    red: (text: string) => text,
-  },
-}))
+let makeTinybenchResult = (over: Partial<Bench> = {}): Partial<Bench> =>
+  ({
+    latency: {
+      samples: Array.from({ length: 10 }).fill(1),
+      p75: 1.05,
+      rme: 1.11,
+      min: 0.8,
+      max: 1.2,
+      p99: 1.2,
+      sd: 0.05,
+      mean: 1,
+      p50: 1,
+      ...over,
+    },
+    throughput: { mean: 1234 },
+    runtimeVersion: 'v20.11.1',
+    runtime: 'node',
+    period: 0.001,
+    totalTime: 2,
+    ...over,
+  }) as Partial<Bench>
 
 describe('formatTable', () => {
   beforeEach(() => {
-    process.env['FORCE_COLOR'] = '0'
     vi.spyOn(console, 'info').mockImplementation(() => {})
   })
 
   afterEach(() => {
-    delete process.env['FORCE_COLOR']
     vi.restoreAllMocks()
   })
 
-  it('should format the table correctly', () => {
-    let result = formatTable({
-      summary: {
-        totalSamples: 1000,
-        medianTimeMs: 200,
-        totalWarnings: 10,
-        meanTimeMs: 100,
-        maxTimeMs: 300,
-        totalErrors: 5,
-        minTimeMs: 50,
-      },
-      rule: {
-        id: 'rule-1',
-      },
-      benchmarkResults: [],
-    })
-    expect(result).toMatchSnapshot()
+  it('renders a table with metrics', () => {
+    let string_ = formatTable({
+      result: { result: makeTinybenchResult() },
+      rule: { id: 'rule-1' },
+    } as SingleRuleResult)
+
+    expect(string_).toMatchSnapshot()
   })
 
-  it('should handle undefined values correctly', () => {
-    let result = formatTable({
-      summary: {
-        medianTimeMs: Number.NaN,
-        meanTimeMs: Number.NaN,
-        minTimeMs: Number.NaN,
-        totalSamples: 1000,
-        totalWarnings: 10,
-        maxTimeMs: 300,
-        totalErrors: 5,
+  it('prints "N/A" for NaN metrics', () => {
+    let string_ = formatTable({
+      result: {
+        result: makeTinybenchResult({
+          latency: {
+            mean: Number.NaN,
+            p50: Number.NaN,
+            min: Number.NaN,
+            max: Number.NaN,
+            p75: Number.NaN,
+            p99: Number.NaN,
+            sd: Number.NaN,
+            samples: [],
+            rme: 0,
+          },
+        } as unknown as Partial<TaskResult>),
       },
-      rule: {
-        id: 'rule-1',
-      },
-      benchmarkResults: [],
-    })
-    expect(result).toMatchSnapshot()
+      rule: { id: 'rule-1' },
+    } as SingleRuleResult)
+
+    expect(string_).toMatchSnapshot()
+  })
+
+  it('returns message when no benchmark data', () => {
+    let string_ = formatTable({ rule: { id: 'rule-1' } } as SingleRuleResult)
+    expect(string_).toBe('No benchmark results available.')
   })
 })

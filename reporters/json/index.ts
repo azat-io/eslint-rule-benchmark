@@ -53,19 +53,65 @@ export let createJsonReporter = (
 let createJsonReport = (
   result: SingleRuleResult,
   config: BenchmarkConfig,
-): object => ({
-  config: {
-    iterations: config.iterations,
-    timeout: config.timeout,
-    warmup: config.warmup,
-    name: config.name,
-  },
-  rule: {
-    id: result.rule.id,
-  },
-  timestamp: new Date().toISOString(),
-  summary: result.summary,
-})
+): object => {
+  let benchmarkResult = result.result?.result
+
+  if (!benchmarkResult) {
+    return {
+      config: {
+        iterations: config.iterations,
+        timeout: config.timeout,
+        warmup: config.warmup,
+        name: config.name,
+      },
+      rule: {
+        path: result.rule.path,
+        id: result.rule.id,
+      },
+      error: 'No benchmark results available',
+      timestamp: new Date().toISOString(),
+    }
+  }
+
+  let formatMs = (ms: undefined | number): string | null =>
+    ms === undefined || !Number.isFinite(ms) ? null : `${ms.toFixed(2)} ms`
+
+  return {
+    metrics: {
+      operationsPerSecond: Math.round(benchmarkResult.throughput.mean),
+      marginOfError: `±${benchmarkResult.latency.rme.toFixed(2)}%`,
+      standardDeviation: formatMs(benchmarkResult.latency.sd),
+      totalSamples: benchmarkResult.latency.samples.length,
+      averageTime: formatMs(benchmarkResult.latency.mean),
+      minimumTime: formatMs(benchmarkResult.latency.min),
+      maximumTime: formatMs(benchmarkResult.latency.max),
+      medianTime: formatMs(benchmarkResult.latency.p50),
+      totalTime: formatMs(benchmarkResult.totalTime),
+      runtimeVersion: benchmarkResult.runtimeVersion,
+      p995: formatMs(benchmarkResult.latency.p995),
+      p999: formatMs(benchmarkResult.latency.p999),
+      p75: formatMs(benchmarkResult.latency.p75),
+      p99: formatMs(benchmarkResult.latency.p99),
+      period: formatMs(benchmarkResult.period),
+      runtime: benchmarkResult.runtime,
+    },
+    config: {
+      iterations: config.iterations,
+      timeout: config.timeout,
+      warmup: config.warmup,
+      name: config.name,
+    },
+    raw: {
+      throughput: benchmarkResult.throughput,
+      latency: benchmarkResult.latency,
+    },
+    rule: {
+      path: result.rule.path,
+      id: result.rule.id,
+    },
+    timestamp: new Date().toISOString(),
+  }
+}
 
 /**
  * Saves a JSON report to a file.
