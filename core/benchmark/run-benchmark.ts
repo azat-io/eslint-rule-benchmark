@@ -1,3 +1,5 @@
+import type { ESLint } from 'eslint'
+
 import type { TestRunResult, TestCase } from '../../types/test-case'
 import type { BenchmarkConfig } from '../../types/benchmark-config'
 
@@ -40,12 +42,37 @@ export let runBenchmark = async (
     timeoutMs: config.timeout,
   })
 
+  let { rule } = testCases[0]!
+
+  let eslint: ESLint
+  try {
+    eslint = await createESLintInstance({
+      rule,
+    })
+  } catch (error) {
+    let { message } = error as Error
+    for (let tc of testCases) {
+      let aborted: TestRunResult = {
+        startTime: Date.now(),
+        endTime: Date.now(),
+        testCaseId: tc.id,
+        errors: [message],
+        measurements: [],
+        totalTimeMs: 0,
+        aborted: true,
+      }
+      onTestComplete?.(aborted)
+      results.push(aborted)
+    }
+    return results
+  }
+
   for (let testCase of testCases) {
     if (onTestStart) {
       onTestStart(testCase)
     }
 
-    let task = createBenchmarkTask(testCase, result => {
+    let task = createBenchmarkTask(eslint, testCase, result => {
       results.push(result)
       if (onTestComplete) {
         onTestComplete(result)
@@ -63,12 +90,14 @@ export let runBenchmark = async (
 /**
  * Creates a benchmark task for a test case.
  *
+ * @param {ESLint} eslint - The ESLint instance to use for linting.
  * @param {TestCase} testCase - The test case to create a task for.
  * @param {(result: TestRunResult) => void} onComplete - Callback for task
  *   completion.
  * @returns {() => Promise<void>} A benchmark task function.
  */
 let createBenchmarkTask = (
+  eslint: ESLint,
   testCase: TestCase,
   onComplete: (result: TestRunResult) => void,
 ): (() => Promise<void>) => {
@@ -85,10 +114,7 @@ let createBenchmarkTask = (
     result.startTime = Date.now()
 
     try {
-      let { samples, rule } = testCase
-      let eslint = await createESLintInstance({
-        rule,
-      })
+      let { samples } = testCase
 
       let eslintResults = {
         fixableWarningCount: 0,

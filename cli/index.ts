@@ -5,6 +5,12 @@ import cac from 'cac'
 import type { ReporterOptions, ReporterFormat } from '../types/benchmark-config'
 import type { CodeSample } from '../types/test-case'
 
+import {
+  DEFAULT_WARMUP_ITERATIONS,
+  DEFAULT_REPORTER_FORMAT,
+  DEFAULT_ITERATIONS,
+  DEFAULT_TIMEOUT_MS,
+} from '../constants'
 import { createBenchmarkConfig } from '../core/benchmark/create-benchmark-config'
 import { runSingleRule } from '../runners/run-single-rule'
 import { runReporters } from '../reporters'
@@ -57,16 +63,24 @@ export let run = (): void => {
     .option('--config <config>', 'Path to ESLint config file')
     .option('--source <source>', 'Path to directory with test cases')
     .option('--iterations <number>', 'Number of benchmark iterations', {
-      default: 10,
+      default: DEFAULT_ITERATIONS,
     })
-    .option('--warmup <number>', 'Number of warmup iterations', { default: 2 })
-    .option('--max-duration <number>', 'Maximum allowed duration in ms', {
-      default: 0,
+    .option('--warmup <number>', 'Number of warmup iterations', {
+      default: DEFAULT_WARMUP_ITERATIONS,
     })
+    .option(
+      '--max-duration <number>',
+      'Target time in ms for benchmarking (lower values = fewer iterations)',
+      {
+        default: DEFAULT_TIMEOUT_MS,
+      },
+    )
     .option(
       '--report <format>',
       'Report format (console, json, markdown, html)',
-      { default: 'console' },
+      {
+        default: DEFAULT_REPORTER_FORMAT,
+      },
     )
     .option('--output <file>', 'Output file for the report')
     .action(async (options: RunCommandOptions) => {
@@ -133,12 +147,13 @@ export let run = (): void => {
 
         let benchmarkConfig = createBenchmarkConfig({
           warmup: {
+            iterations: Math.max(1, options.warmup),
             enabled: options.warmup > 0,
-            iterations: options.warmup,
           },
+          timeout:
+            options.maxDuration > 0 ? options.maxDuration : DEFAULT_TIMEOUT_MS,
+          iterations: Math.max(1, options.iterations),
           name: `Benchmark for rule ${options.name}`,
-          timeout: options.maxDuration || 5000,
-          iterations: options.iterations,
           reporters: [reporterOptions],
         })
 

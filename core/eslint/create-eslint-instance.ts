@@ -123,9 +123,6 @@ let loadParserModule = async (parserPath: string): Promise<Linter.Parser> => {
   }
 }
 
-/** Cache of loaded rules to improve performance. */
-let ruleCache = new Map<string, RuleLoadResult>()
-
 /**
  * Converts numeric severity level to ESLint string severity format.
  *
@@ -155,12 +152,6 @@ let loadRuleFromFile = async (
   rulePath: string,
   ruleId: string,
 ): Promise<RuleLoadResult> => {
-  let cacheKey = `${rulePath}:${ruleId}`
-
-  if (ruleCache.has(cacheKey)) {
-    return ruleCache.get(cacheKey)!
-  }
-
   let result: RuleLoadResult = {}
 
   try {
@@ -175,7 +166,6 @@ let loadRuleFromFile = async (
     result.error = errorValue.message
   }
 
-  ruleCache.set(cacheKey, result)
   return result
 }
 
@@ -207,7 +197,7 @@ export let createESLintInstance = async (
     throw new Error(`Rule module not found: ${ruleId}`)
   }
 
-  let uniqueNamespace = `benchmark_${Date.now()}_${Math.floor(Math.random() * 10000)}`
+  let uniqueNamespace = 'eslint-rule-benchmark'
 
   let localName = ruleId.includes('/') ? ruleId.split('/')[1]! : ruleId
 

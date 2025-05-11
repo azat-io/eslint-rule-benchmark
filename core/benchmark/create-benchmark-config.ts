@@ -10,7 +10,7 @@ import {
   DEFAULT_WARMUP_ENABLED,
   DEFAULT_ITERATIONS,
   DEFAULT_TIMEOUT_MS,
-} from './constants'
+} from '../../constants'
 
 /** Parameters for creating a benchmark configuration. */
 interface CreateBenchmarkConfigParameters {

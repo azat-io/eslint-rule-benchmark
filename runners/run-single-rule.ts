@@ -6,6 +6,13 @@ import type {
 } from '../types/test-case'
 import type { BenchmarkConfig } from '../types/benchmark-config'
 
+import {
+  DEFAULT_WARMUP_ITERATIONS,
+  DEFAULT_REPORTER_FORMAT,
+  DEFAULT_WARMUP_ENABLED,
+  DEFAULT_ITERATIONS,
+  DEFAULT_TIMEOUT_MS,
+} from '../constants'
 import { createTestCase } from '../core/test-case/create-test-case'
 import { runBenchmark } from '../core/benchmark/run-benchmark'
 
@@ -124,11 +131,14 @@ export let runSingleRule = async (
   let { benchmarkConfig, codeSamples, onComplete, onStart, rule } = parameters
 
   let config = benchmarkConfig ?? {
-    warmup: { enabled: true, iterations: 5 },
-    reporters: [{ format: 'console' }],
+    warmup: {
+      iterations: DEFAULT_WARMUP_ITERATIONS,
+      enabled: DEFAULT_WARMUP_ENABLED,
+    },
+    reporters: [{ format: DEFAULT_REPORTER_FORMAT }],
+    iterations: DEFAULT_ITERATIONS,
     name: 'Single Rule Benchmark',
-    iterations: 100,
-    timeout: 5000,
+    timeout: DEFAULT_TIMEOUT_MS,
   }
 
   let ruleName: string

@@ -136,11 +136,11 @@ describe('runSingleRule', () => {
 
     expect(runBenchmark).toHaveBeenCalledWith({
       config: {
-        warmup: { enabled: true, iterations: 5 },
+        warmup: { iterations: 10, enabled: true },
         reporters: [{ format: 'console' }],
         name: 'Single Rule Benchmark',
-        iterations: 100,
-        timeout: 5000,
+        iterations: 50,
+        timeout: 300,
       },
       onTestComplete: expect.any(Function) as (result: TestRunResult) => void,
       testCases: [mockTestCase],

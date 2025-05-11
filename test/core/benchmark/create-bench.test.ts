@@ -6,7 +6,7 @@ import {
   DEFAULT_WARMUP_TIME_MS,
   DEFAULT_ITERATIONS,
   DEFAULT_TIMEOUT_MS,
-} from '../../../core/benchmark/constants'
+} from '../../../constants'
 import { createBench } from '../../../core/benchmark/create-bench'
 
 describe('createBench', () => {

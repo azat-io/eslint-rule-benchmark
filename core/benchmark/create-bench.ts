@@ -5,7 +5,7 @@ import {
   DEFAULT_WARMUP_TIME_MS,
   DEFAULT_ITERATIONS,
   DEFAULT_TIMEOUT_MS,
-} from './constants'
+} from '../../constants'
 
 /** Options for configuring a benchmark instance. */
 interface CreateBenchOptions {
