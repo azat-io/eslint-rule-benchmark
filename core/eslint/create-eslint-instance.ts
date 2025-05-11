@@ -240,9 +240,14 @@ export let createESLintInstance = async (
     ...extraConfig,
   }
 
-  let FlatESLint = await loadESLint({ useFlatConfig: true })
+  let FlatESLint = await loadESLint({
+    useFlatConfig: true,
+  })
 
   return new FlatESLint({
+    ruleFilter: ({ ruleId: currentRuleId }) => currentRuleId === uniqueRuleId,
     overrideConfig: [flatConfig],
+    overrideConfigFile: null,
+    allowInlineConfig: false,
   })
 }

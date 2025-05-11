@@ -15,16 +15,31 @@ interface ESLintForTesting extends ESLint {
     plugins?: Record<string, unknown>
     rules?: Record<string, unknown>
   }[]
+  ruleFilter(rule: { ruleId: string }): boolean
+  overrideConfigFile: string | null
+  allowInlineConfig: boolean
 }
+
+let constructorOptions: Record<string, unknown> = {}
 
 vi.mock('eslint', () => {
   class FakeESLint {
     public overrideConfig: Record<string, unknown>[] | undefined
+    public ruleFilter: (rule: { ruleId: string }) => boolean
+    public overrideConfigFile: undefined | string | null
+    public allowInlineConfig: undefined | boolean
 
-    private constructor(
-      options: { overrideConfig?: Record<string, unknown>[] } = {},
-    ) {
+    private constructor(options: {
+      ruleFilter(rule: { ruleId: string }): boolean
+      overrideConfig: Record<string, unknown>[]
+      overrideConfigFile: string | null
+      allowInlineConfig: boolean
+    }) {
+      constructorOptions = options
       this.overrideConfig = options.overrideConfig
+      this.ruleFilter = options.ruleFilter
+      this.allowInlineConfig = options.allowInlineConfig
+      this.overrideConfigFile = options.overrideConfigFile
     }
 
     // eslint-disable-next-line typescript/class-methods-use-this
@@ -309,5 +324,37 @@ describe('createESLintInstance', () => {
         },
       }),
     ).rejects.toThrow(/Rule module not found: non-existing-rule/u)
+  })
+
+  it('isolates testing to only the specified rule', async () => {
+    constructorOptions = {}
+
+    await createESLintInstance({
+      rule: {
+        ruleId: 'test/rule-isolation',
+        path: directRulePath,
+        severity: 2,
+      },
+    })
+
+    expect(constructorOptions['ruleFilter']).toBeDefined()
+    expect(constructorOptions['allowInlineConfig']).toBeFalsy()
+    expect(constructorOptions['overrideConfigFile']).toBeNull()
+
+    let rules = (
+      constructorOptions['overrideConfig'] as Record<
+        string,
+        { rules: Linter.RuleEntry[] }
+      >
+    )[0]!.rules as unknown as Record<string, Linter.RuleEntry>
+
+    let [targetRuleId] = Object.keys(rules)
+
+    let ruleFilter = constructorOptions['ruleFilter'] as (argument: {
+      ruleId: string
+    }) => boolean
+
+    expect(ruleFilter({ ruleId: targetRuleId! })).toBeTruthy()
+    expect(ruleFilter({ ruleId: 'some-other-rule' })).toBeFalsy()
   })
 })
