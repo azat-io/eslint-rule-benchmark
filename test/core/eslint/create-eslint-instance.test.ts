@@ -1,8 +1,6 @@
 import type { ESLint, Linter } from 'eslint'
 
-import { beforeAll, describe, afterAll, expect, it, vi } from 'vitest'
-import fs from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import path from 'node:path'
 
 import { createESLintInstance } from '../../../core/eslint/create-eslint-instance'
@@ -54,6 +52,74 @@ vi.mock('eslint', () => {
   return { loadESLint: vi.fn().mockResolvedValue(FakeESLint) }
 })
 
+vi.mock('jiti', () => ({
+  createJiti: () => ({
+    import: vi.fn().mockImplementation((filepath: string) => {
+      if (filepath.includes('direct')) {
+        return {
+          meta: { docs: { description: 'direct' }, type: 'problem' },
+          create: () => ({}),
+        }
+      }
+
+      if (filepath.includes('collection')) {
+        return {
+          rules: {
+            'collection/rule': {
+              meta: { type: 'problem' },
+              create: () => ({}),
+            },
+          },
+        }
+      }
+
+      if (filepath.includes('defaultRule')) {
+        return {
+          default: { meta: { type: 'problem' }, create: () => ({}) },
+        }
+      }
+
+      if (filepath.includes('defaultCollection')) {
+        return {
+          default: {
+            rules: {
+              'defcoll/rule': { meta: { type: 'problem' }, create: () => ({}) },
+            },
+          },
+        }
+      }
+
+      if (filepath.includes('no-match') || filepath.includes('missing')) {
+        throw new Error(`Module not found: ${filepath}`)
+      }
+
+      if (filepath.includes('invalid-format')) {
+        return {
+          someData: 'not a rule',
+          someFunction: () => 42,
+        }
+      }
+
+      if (filepath.includes('other-rule')) {
+        return {
+          rules: {
+            'existing-rule': { meta: { type: 'problem' }, create: () => ({}) },
+          },
+        }
+      }
+
+      if (filepath.includes('parser') && !filepath.includes('missing')) {
+        if (filepath.includes('default')) {
+          return { default: { parse: () => ({}) } }
+        }
+        return { parse: () => ({}) }
+      }
+
+      throw new Error(`Unexpected import path in test: ${filepath}`)
+    }),
+  }),
+}))
+
 let temporaryDirectory: string
 let parserPath: string
 let invalidParserPath: string
@@ -70,53 +136,14 @@ let firstKey = (object?: Record<string, unknown>): string =>
   Object.keys(object!)[0]!
 
 describe('createESLintInstance', () => {
-  beforeAll(async () => {
-    temporaryDirectory = await fs.mkdtemp(
-      path.join(tmpdir(), 'eslint-flat-test-'),
-    )
-
-    let write = async (filename: string, source: string): Promise<string> => {
-      let filePath = path.join(temporaryDirectory, filename)
-      await fs.writeFile(filePath, source, 'utf8')
-      return filePath
-    }
-
-    parserPath = await write(
-      'parser.mjs',
-      `export function parse() { return {} }`,
-    )
-    invalidParserPath = path.join(temporaryDirectory, 'missing-parser.mjs')
-
-    directRulePath = await write(
-      'direct.mjs',
-      `export const meta = { type: 'problem', docs: { description: 'direct' } };
-     export const create = () => ({})`,
-    )
-
-    collectionRulePath = await write(
-      'collection.mjs',
-      `export const rules = {
-       'collection/rule': { meta: { type: 'problem' }, create: () => ({}) }
-     }`,
-    )
-
-    defaultRulePath = await write(
-      'defaultRule.mjs',
-      `export default { meta: { type: 'problem' }, create: () => ({}) }`,
-    )
-
-    defaultCollectionRulePath = await write(
-      'defaultCollection.mjs',
-      `export default {
-       rules: {
-         'defcoll/rule': { meta: { type: 'problem' }, create: () => ({}) }
-       }
-     }`,
-    )
-  })
-
-  afterAll(async () => {
-    await fs.rm(temporaryDirectory, { recursive: true, force: true })
+  beforeAll(() => {
+    temporaryDirectory = '/mock-temp-dir'
+    parserPath = `${temporaryDirectory}/parser.mjs`
+    invalidParserPath = `${temporaryDirectory}/missing-parser.mjs`
+    directRulePath = `${temporaryDirectory}/direct.mjs`
+    collectionRulePath = `${temporaryDirectory}/collection.mjs`
+    defaultRulePath = `${temporaryDirectory}/defaultRule.mjs`
+    defaultCollectionRulePath = `${temporaryDirectory}/defaultCollection.mjs`
   })
 
   it('loads direct rule export', async () => {
@@ -243,10 +270,6 @@ describe('createESLintInstance', () => {
     await createESLintInstance({
       rule: { path: directRulePath, ruleId: 'ns/cache', severity: 2 },
     })
-    await fs.writeFile(
-      directRulePath,
-      `export const meta={}; export const create=()=>({})`,
-    )
     let eslint = await createESLintInstance({
       rule: { path: directRulePath, ruleId: 'ns/cache', severity: 2 },
     })
@@ -255,7 +278,6 @@ describe('createESLintInstance', () => {
 
   it('accepts parser with default export', async () => {
     let filePath = path.join(temporaryDirectory, 'parser-default.mjs')
-    await fs.writeFile(filePath, `export default { parse(){return {}} }`)
     let eslint = (await createESLintInstance({
       rule: { path: directRulePath, ruleId: 'ns/defp', severity: 2 },
       parserPath: filePath,
@@ -265,13 +287,6 @@ describe('createESLintInstance', () => {
 
   it('throws when module loaded but rule id is absent', async () => {
     let missingPath = path.join(temporaryDirectory, 'no-match.mjs')
-    await fs.writeFile(
-      missingPath,
-      `export const rules = {
-       'other-id': { meta: { type: 'problem' }, create: () => ({}) }
-     }`,
-      'utf8',
-    )
 
     await expect(
       createESLintInstance({
@@ -290,12 +305,6 @@ describe('createESLintInstance', () => {
 
   it('throws when file contains non-rule format', async () => {
     let invalidFormatPath = path.join(temporaryDirectory, 'invalid-format.mjs')
-    await fs.writeFile(
-      invalidFormatPath,
-      `export const someData = 'not a rule';
-     export function someFunction() { return 42; }`,
-      'utf8',
-    )
 
     await expect(
       createESLintInstance({
@@ -306,13 +315,6 @@ describe('createESLintInstance', () => {
 
   it('throws specific error when rule not found in loaded module', async () => {
     let missingRulePath = path.join(temporaryDirectory, 'other-rule.mjs')
-    await fs.writeFile(
-      missingRulePath,
-      `export const rules = {
-       'existing-rule': { meta: { type: 'problem' }, create: () => ({}) }
-     }`,
-      'utf8',
-    )
 
     await expect(
       createESLintInstance({

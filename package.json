@@ -58,6 +58,7 @@
   },
   "dependencies": {
     "cac": "^6.7.14",
+    "jiti": "^2.4.2",
     "table": "^6.9.0",
     "tinybench": "^4.0.1"
   },

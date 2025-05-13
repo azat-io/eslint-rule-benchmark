@@ -20,6 +20,7 @@ Allows to catch regressions and quantify optimization gains.
 
 - **Precise timing measurements** for individual ESLint rules
 - **Testing against real projects** and code files
+- **Native TypeScript support** for rules written in .ts files
 - **Automatic regression detection** with customizable thresholds
 - **Detailed statistics** with various metrics (mean time, median, percentiles)
 - **Multiple report formats** (console, JSON, Markdown)
@@ -34,7 +35,7 @@ npm install --save-dev eslint-rule-benchmark
 ## Usage
 
 ```sh
-eslint-rule-benchmark run --rule ./dist/rules/sort-imports.js --name sort-imports --source index.js
+eslint-rule-benchmark run --rule ./rules/sort-imports.ts --name sort-imports --source index.js
 ```
 
 ## Metrics and Output

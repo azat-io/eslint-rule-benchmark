@@ -1,6 +1,7 @@
 import type { ESLint, Linter, Rule } from 'eslint'
 
 import { loadESLint } from 'eslint'
+import { createJiti } from 'jiti'
 import path from 'node:path'
 
 import type { RuleConfig } from '../../types/test-case'
@@ -63,6 +64,17 @@ interface RuleLoadResult {
 }
 
 /**
+ * Creates a Jiti instance for module loading.
+ *
+ * This instance is configured to handle ES modules and CommonJS modules
+ * seamlessly, allowing for dynamic imports of ESLint rules and plugins.
+ */
+let jiti = createJiti(import.meta.url, {
+  interopDefault: true,
+  requireCache: false,
+})
+
+/**
  * Extracts an ESLint rule from the imported module.
  *
  * This function handles different module export formats:
@@ -111,7 +123,7 @@ let extractRule = (
  */
 let loadParserModule = async (parserPath: string): Promise<Linter.Parser> => {
   try {
-    let module: unknown = await import(parserPath)
+    let module: unknown = await jiti.import(parserPath)
     return (
       typeof module === 'object' && module !== null && 'default' in module
         ? module.default
@@ -159,7 +171,7 @@ let loadRuleFromFile = async (
       ? rulePath
       : path.resolve(process.cwd(), rulePath)
 
-    let moduleExport = (await import(absolutePath)) as ESLintRuleImport
+    let moduleExport: ESLintRuleImport = await jiti.import(absolutePath)
     result.rule = extractRule(moduleExport, ruleId)
   } catch (error) {
     let errorValue = error as Error
