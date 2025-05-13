@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import 'node:worker_threads'
 import cac from 'cac'
 
 import type { ReporterOptions, ReporterFormat } from '../types/benchmark-config'
@@ -178,7 +179,7 @@ export let run = (): void => {
         console.error(
           `Error: ${error instanceof Error ? error.message : String(error)}`,
         )
-        // eslint-disable-next-line unicorn/no-process-exit
+
         process.exit(1)
       }
     })

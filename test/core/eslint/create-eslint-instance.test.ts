@@ -42,8 +42,7 @@ vi.mock('eslint', () => {
       this.overrideConfigFile = options.overrideConfigFile
     }
 
-    // eslint-disable-next-line typescript/class-methods-use-this
-    public lintText(): Promise<Linter.LintMessage[]> {
+    public static lintText(): Promise<Linter.LintMessage[]> {
       return Promise.resolve([
         {
           messages: [],
