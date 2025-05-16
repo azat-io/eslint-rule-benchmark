@@ -1,3 +1,4 @@
+import { prettierFormat } from 'vite-plugin-prettier-format'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 import path from 'node:path'
@@ -35,5 +36,6 @@ export default defineConfig({
       insertTypesEntry: true,
       strictOutput: true,
     }),
+    prettierFormat(),
   ],
 })
