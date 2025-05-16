@@ -71,20 +71,22 @@ The tool uses [Tinybench](https://github.com/tinylibs/tinybench) for accurate an
 ### Example Output
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│              Rule Benchmark Results: sort-imports               │
-│ Metric                                   │ Value                │
-│ Operations per second                    │ 989                  │
-│ Average time                             │ 1.10 ms              │
-│ Median time (P50)                        │ 0.94 ms              │
-│ Minimum time                             │ 0.87 ms              │
-│ Maximum time                             │ 3.78 ms              │
-│ P75 Percentile                           │ 1.01 ms              │
-│ P99 Percentile                           │ 2.62 ms              │
-│ Standard deviation                       │ 0.45 ms              │
-│ Relative margin of error                 │ ±4.86%               │
-│ Total samples                            │ 274                  │
-└──────────────────────────────────────────┴──────────────────────┘
+-------------------------------------|--------
+     Rule Benchmark Results: sort-imports
+-------------------------------------|--------
+Metric                               | Value
+Operations per second                | 1079
+Average time                         | 1.01 ms
+Median time (P50)                    | 0.86 ms
+Minimum time                         | 0.76 ms
+Maximum time                         | 2.62 ms
+P75 Percentile                       | 0.94 ms
+P99 Percentile                       | 2.52 ms
+Standard deviation                   | 0.43 ms
+Relative margin of error             | ±4.83 %
+Total samples                        | 297
+-------------------------------------|--------
+
 ```
 
 ## Versioning Policy
