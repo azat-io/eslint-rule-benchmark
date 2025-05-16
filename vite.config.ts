@@ -21,10 +21,16 @@ export default defineConfig({
   },
   plugins: [
     dts({
-      include: [path.join(__dirname, 'cli'), path.join(__dirname, 'core')],
+      include: [
+        path.join(__dirname, 'cli'),
+        path.join(__dirname, 'constants'),
+        path.join(__dirname, 'core'),
+        path.join(__dirname, 'reporters'),
+        path.join(__dirname, 'runners'),
+        path.join(__dirname, 'types'),
+      ],
       insertTypesEntry: true,
       strictOutput: true,
-      rollupTypes: true,
     }),
   ],
 })
