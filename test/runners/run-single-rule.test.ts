@@ -28,8 +28,8 @@ describe('runSingleRule', () => {
     vi.clearAllMocks()
 
     samples = [
-      { code: 'const a = 1', filename: 'a.js' },
-      { code: 'const b = 2', filename: 'b.js' },
+      { language: 'javascript', code: 'const a = 1', filename: 'a.js' },
+      { language: 'javascript', code: 'const b = 2', filename: 'b.js' },
     ]
 
     rule = { ruleId: 'test/rule', severity: 2 }

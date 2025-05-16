@@ -47,7 +47,9 @@ describe('runBenchmark', () => {
     vi.clearAllMocks()
 
     testCase = {
-      samples: [{ code: 'const a = 1;', filename: 'a.js' }],
+      samples: [
+        { language: 'javascript', code: 'const a = 1;', filename: 'a.js' },
+      ],
       rule: { ruleId: 'demo', severity: 2 },
       name: 'Sample case',
       iterationCount: 1,

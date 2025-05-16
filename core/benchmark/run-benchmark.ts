@@ -3,6 +3,7 @@ import type { ESLint } from 'eslint'
 
 import type { BenchmarkConfig } from '../../types/benchmark-config'
 import type { TestCase } from '../../types/test-case'
+import type { LANGUAGES } from '../../constants'
 
 import { createESLintInstance } from '../eslint/create-eslint-instance'
 import { createBench } from './create-bench'
@@ -37,8 +38,18 @@ export let runBenchmark = async (
   })
 
   let { rule } = testCases[0]!
+  let languages: (typeof LANGUAGES)[number][] = []
+
+  for (let testCase of testCases) {
+    for (let sample of testCase.samples) {
+      if (!languages.includes(sample.language)) {
+        languages.push(sample.language)
+      }
+    }
+  }
 
   let eslint = await createESLintInstance({
+    languages,
     rule,
   })
   await eslint.lintText('/* eslint-disable */')

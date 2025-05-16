@@ -3,11 +3,20 @@ import type { ESLint, Linter } from 'eslint'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import path from 'node:path'
 
+import type { LANGUAGES } from '../../../constants'
+
 import { createESLintInstance } from '../../../core/eslint/create-eslint-instance'
 
 interface ESLintForTesting extends ESLint {
   overrideConfig?: {
     languageOptions?: {
+      parserOptions?: {
+        ecmaFeatures?: {
+          [key: string]: unknown
+          jsx?: boolean
+        }
+        [key: string]: unknown
+      }
       parser?: unknown
     }
     plugins?: Record<string, unknown>
@@ -17,6 +26,8 @@ interface ESLintForTesting extends ESLint {
   overrideConfigFile: string | null
   allowInlineConfig: boolean
 }
+
+type Language = (typeof LANGUAGES)[number]
 
 let constructorOptions: Record<string, unknown> = {}
 
@@ -121,8 +132,6 @@ vi.mock('jiti', () => ({
 }))
 
 let temporaryDirectory: string
-let parserPath: string
-let invalidParserPath: string
 let directRulePath: string
 let collectionRulePath: string
 let defaultRulePath: string
@@ -138,8 +147,6 @@ let firstKey = (object?: Record<string, unknown>): string =>
 describe('createESLintInstance', () => {
   beforeAll(() => {
     temporaryDirectory = '/mock-temp-dir'
-    parserPath = `${temporaryDirectory}/parser.mjs`
-    invalidParserPath = `${temporaryDirectory}/missing-parser.mjs`
     directRulePath = `${temporaryDirectory}/direct.mjs`
     collectionRulePath = `${temporaryDirectory}/collection.mjs`
     defaultRulePath = `${temporaryDirectory}/defaultRule.mjs`
@@ -149,6 +156,7 @@ describe('createESLintInstance', () => {
   it('loads direct rule export', async () => {
     let eslint = await createESLintInstance({
       rule: { path: directRulePath, ruleId: 'ns/direct', severity: 2 },
+      languages: ['javascript'],
     })
     expect(eslint).toBeInstanceOf(Object)
   })
@@ -160,6 +168,7 @@ describe('createESLintInstance', () => {
         path: collectionRulePath,
         severity: 2,
       },
+      languages: ['javascript'],
     })
     expect(eslint).toBeInstanceOf(Object)
   })
@@ -167,6 +176,7 @@ describe('createESLintInstance', () => {
   it('loads default-exported rule', async () => {
     let eslint = await createESLintInstance({
       rule: { path: defaultRulePath, ruleId: 'ns/default', severity: 2 },
+      languages: ['javascript'],
     })
     expect(eslint).toBeInstanceOf(Object)
   })
@@ -178,6 +188,7 @@ describe('createESLintInstance', () => {
         ruleId: 'defcoll/rule',
         severity: 2,
       },
+      languages: ['javascript'],
     })
     expect(es).toBeInstanceOf(Object)
   })
@@ -188,32 +199,17 @@ describe('createESLintInstance', () => {
       severities.map(async severity => {
         let eslint = await createESLintInstance({
           rule: { ruleId: `ns/s${severity}`, path: directRulePath, severity },
+          languages: ['javascript'],
         })
         expect(eslint).toBeInstanceOf(Object)
       }),
     )
   })
 
-  it('adds custom parser', async () => {
-    let eslint = (await createESLintInstance({
-      rule: { path: directRulePath, ruleId: 'ns/p', severity: 2 },
-      parserPath,
-    })) as ESLintForTesting
-    expect(eslint.overrideConfig?.[0]?.languageOptions?.parser).toBeDefined()
-  })
-
-  it('throws on bad parser path', async () => {
-    await expect(
-      createESLintInstance({
-        rule: { path: directRulePath, ruleId: 'ns/bad', severity: 2 },
-        parserPath: invalidParserPath,
-      }),
-    ).rejects.toThrow(/Failed to load parser/u)
-  })
-
   it('works when RuleConfig given directly', async () => {
     let eslint = (await createESLintInstance({
       rule: { ruleId: 'just-id', severity: 2 },
+      languages: ['javascript'],
     })) as ESLintForTesting
     expect(eslint).toBeInstanceOf(Object)
   })
@@ -226,6 +222,7 @@ describe('createESLintInstance', () => {
         path: directRulePath,
         severity: 2,
       },
+      languages: ['javascript'],
     })) as ESLintForTesting
     let rules = getRules(eslint) as unknown as Record<string, unknown>
     let key = firstKey(rules)
@@ -236,6 +233,7 @@ describe('createESLintInstance', () => {
     let local = 'plain'
     let eslint = (await createESLintInstance({
       rule: { path: directRulePath, ruleId: local, severity: 2 },
+      languages: ['javascript'],
     })) as ESLintForTesting
     let rules = getRules(eslint) as unknown as Record<string, unknown>
     let key = firstKey(rules)
@@ -250,6 +248,7 @@ describe('createESLintInstance', () => {
           ruleId: 'ns/miss',
           severity: 2,
         },
+        languages: ['javascript'],
       }),
     ).rejects.toThrow(/Failed to load rule/u)
   })
@@ -262,6 +261,7 @@ describe('createESLintInstance', () => {
           ruleId: 'ns/no-match',
           severity: 2,
         },
+        languages: ['javascript'],
       }),
     ).rejects.toThrow()
   })
@@ -269,20 +269,13 @@ describe('createESLintInstance', () => {
   it('caches same rulePath+id', async () => {
     await createESLintInstance({
       rule: { path: directRulePath, ruleId: 'ns/cache', severity: 2 },
+      languages: ['javascript'],
     })
     let eslint = await createESLintInstance({
       rule: { path: directRulePath, ruleId: 'ns/cache', severity: 2 },
+      languages: ['javascript'],
     })
     expect(eslint).toBeInstanceOf(Object)
-  })
-
-  it('accepts parser with default export', async () => {
-    let filePath = path.join(temporaryDirectory, 'parser-default.mjs')
-    let eslint = (await createESLintInstance({
-      rule: { path: directRulePath, ruleId: 'ns/defp', severity: 2 },
-      parserPath: filePath,
-    })) as ESLintForTesting
-    expect(eslint.overrideConfig?.[0]?.languageOptions?.parser).toBeDefined()
   })
 
   it('throws when module loaded but rule id is absent', async () => {
@@ -291,6 +284,7 @@ describe('createESLintInstance', () => {
     await expect(
       createESLintInstance({
         rule: { ruleId: 'ns/no-match', path: missingPath, severity: 2 },
+        languages: ['javascript'],
       }),
     ).rejects.toThrow()
   })
@@ -299,6 +293,7 @@ describe('createESLintInstance', () => {
     let relativePath = path.relative(process.cwd(), directRulePath)
     let es = await createESLintInstance({
       rule: { ruleId: 'ns/relative', path: relativePath, severity: 2 },
+      languages: ['javascript'],
     })
     expect(es).toBeInstanceOf(Object)
   })
@@ -309,6 +304,7 @@ describe('createESLintInstance', () => {
     await expect(
       createESLintInstance({
         rule: { path: invalidFormatPath, ruleId: 'any-id', severity: 2 },
+        languages: ['javascript'],
       }),
     ).rejects.toThrow(/Rule module not found/u)
   })
@@ -323,6 +319,7 @@ describe('createESLintInstance', () => {
           path: missingRulePath,
           severity: 2,
         },
+        languages: ['javascript'],
       }),
     ).rejects.toThrow(/Rule module not found: non-existing-rule/u)
   })
@@ -336,6 +333,7 @@ describe('createESLintInstance', () => {
         path: directRulePath,
         severity: 2,
       },
+      languages: ['javascript'],
     })
 
     expect(constructorOptions['ruleFilter']).toBeDefined()
@@ -357,5 +355,107 @@ describe('createESLintInstance', () => {
 
     expect(ruleFilter({ ruleId: targetRuleId! })).toBeTruthy()
     expect(ruleFilter({ ruleId: 'some-other-rule' })).toBeFalsy()
+  })
+
+  it('loads TypeScript parser for typescript language', async () => {
+    constructorOptions = {}
+
+    await createESLintInstance({
+      rule: { ruleId: 'test-rule', severity: 2 },
+      languages: ['typescript'],
+    })
+
+    let config = (
+      constructorOptions['overrideConfig'] as Record<string, unknown>[]
+    )[0] as Linter.Config
+
+    expect(config.languageOptions?.parser).toBeDefined()
+  })
+
+  it('adds JSX support for React languages', async () => {
+    constructorOptions = {}
+
+    await createESLintInstance({
+      rule: { ruleId: 'test-rule', severity: 2 },
+      languages: ['javascript-react'],
+    })
+
+    let config = (
+      constructorOptions['overrideConfig'] as Record<string, unknown>[]
+    )[0] as Linter.Config
+
+    expect(
+      config.languageOptions?.parserOptions?.ecmaFeatures?.jsx,
+    ).toBeTruthy()
+  })
+
+  it('combines parser and JSX support for TypeScript React', async () => {
+    constructorOptions = {}
+
+    await createESLintInstance({
+      rule: { ruleId: 'test-rule', severity: 2 },
+      languages: ['typescript-react'],
+    })
+
+    let config = (
+      constructorOptions['overrideConfig'] as Record<string, unknown>[]
+    )[0] as Linter.Config
+
+    expect(config.languageOptions?.parser).toBeDefined()
+    expect(
+      config.languageOptions?.parserOptions?.ecmaFeatures?.jsx,
+    ).toBeTruthy()
+  })
+
+  it('handles multiple languages with parsers', async () => {
+    constructorOptions = {}
+
+    await createESLintInstance({
+      languages: ['typescript', 'vue', 'svelte'],
+      rule: { ruleId: 'test-rule', severity: 2 },
+    })
+
+    let config = (
+      constructorOptions['overrideConfig'] as Record<string, unknown>[]
+    )[0] as Linter.Config
+
+    expect(config.languageOptions?.parser).toBeDefined()
+  })
+
+  it('supports all language types', async () => {
+    let supportedLanguages = [
+      'javascript',
+      'typescript',
+      'javascript-react',
+      'typescript-react',
+      'vue',
+      'svelte',
+      'astro',
+    ] as Language[]
+
+    await Promise.all(
+      supportedLanguages.map(async language => {
+        let eslint = await createESLintInstance({
+          rule: { ruleId: 'test-rule', severity: 2 },
+          languages: [language],
+        })
+        expect(eslint).toBeInstanceOf(Object)
+      }),
+    )
+  })
+
+  it('handles parser loading errors gracefully', async () => {
+    let eslint = await createESLintInstance({
+      rule: { ruleId: 'test-rule', severity: 2 },
+      languages: ['typescript'],
+    })
+
+    expect(eslint).toBeInstanceOf(Object)
+
+    let config = (
+      constructorOptions['overrideConfig'] as Record<string, unknown>[]
+    )[0] as Linter.Config
+
+    expect(config.rules).toBeDefined()
   })
 })

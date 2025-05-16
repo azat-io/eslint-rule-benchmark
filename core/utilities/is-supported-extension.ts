@@ -1,0 +1,14 @@
+import { SUPPORTED_EXTENSIONS } from '../../constants'
+
+type Extensions = (typeof SUPPORTED_EXTENSIONS)[number]
+
+/**
+ * Check if the given extension is supported by the benchmark runner.
+ *
+ * @param {string} extension - The file extension to check.
+ * @returns {boolean} True if the extension is supported, false otherwise.
+ */
+export let isSupportedExtension = (
+  extension: string,
+): extension is Extensions =>
+  (SUPPORTED_EXTENSIONS as readonly string[]).includes(extension)

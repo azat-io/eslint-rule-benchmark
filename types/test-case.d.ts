@@ -1,3 +1,5 @@
+import type { LANGUAGES } from '../constants'
+
 /** Defines a test case with all necessary information. */
 export interface TestCase {
   /** Number of iterations to run. */
@@ -69,6 +71,9 @@ export interface TimingMeasurement {
 
 /** Represents a code sample used for testing. */
 export interface CodeSample {
+  /** Language of the code sample. */
+  language: (typeof LANGUAGES)[number]
+
   /** Filename with extension (e.g., example.js). */
   filename: string
 

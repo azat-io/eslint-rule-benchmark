@@ -12,7 +12,10 @@ import {
   DEFAULT_ITERATIONS,
   DEFAULT_TIMEOUT_MS,
 } from '../constants'
+import { getLanguageByFileName } from '../core/utilities/get-language-by-file-name'
 import { createBenchmarkConfig } from '../core/benchmark/create-benchmark-config'
+import { isSupportedExtension } from '../core/utilities/is-supported-extension'
+import { getFileExtension } from '../core/utilities/get-file-extension'
 import { runSingleRule } from '../runners/run-single-rule'
 import { runReporters } from '../reporters'
 import { version } from '../package.json'
@@ -111,7 +114,7 @@ export let run = (): void => {
           if (sourceStats.isDirectory()) {
             let files = await fs.readdir(sourcePath)
             sourceFiles = files
-              .filter(file => file.endsWith('.js') || file.endsWith('.ts'))
+              .filter(file => isSupportedExtension(getFileExtension(file)))
               .map(file => path.join(sourcePath, file))
           } else {
             sourceFiles = [sourcePath]
@@ -132,6 +135,7 @@ export let run = (): void => {
             try {
               let code = await fs.readFile(file, 'utf8')
               codeSamples.push({
+                language: getLanguageByFileName(file),
                 filename: path.basename(file),
                 code,
               })
