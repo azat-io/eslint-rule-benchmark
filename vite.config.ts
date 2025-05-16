@@ -5,8 +5,11 @@ import path from 'node:path'
 export default defineConfig({
   build: {
     lib: {
+      entry: [
+        path.resolve(__dirname, 'cli/index.ts'),
+        path.resolve(__dirname, 'core/index.ts'),
+      ],
       fileName: (_format, entryName) => `${entryName}.js`,
-      entry: [path.resolve(__dirname, 'cli/index.ts')],
       name: 'eslint-rule-benchmark',
       formats: ['es'],
     },

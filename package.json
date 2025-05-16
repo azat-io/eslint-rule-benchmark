@@ -25,14 +25,18 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/cli/index.d.ts",
-      "default": "./dist/cli/index.js"
+      "types": "./dist/core/index.d.ts",
+      "default": "./dist/core/index.js"
     },
     "./package.json": "./package.json"
   },
   "bin": {
     "eslint-rule-benchmark": "./bin/eslint-rule-benchmark.js"
   },
+  "files": [
+    "./bin",
+    "./dist"
+  ],
   "scripts": {
     "build": "vite build",
     "ci:changelog": "changelogithub",

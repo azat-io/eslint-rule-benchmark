@@ -7,6 +7,6 @@ export default {
     'svelte-eslint-parser',
     'vue-eslint-parser',
   ],
+  entry: ['cli/index.ts', 'core/index.ts'],
   ignore: ['changelog.config.ts'],
-  entry: 'cli/index.ts',
 } satisfies KnipConfig
