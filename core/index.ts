@@ -1,1 +1,2 @@
-export { runSingleRule } from '../runners/run-single-rule'
+export type { UserBenchmarkConfig } from '../types/user-benchmark-config'
+export { defineConfig } from './config/define-config'

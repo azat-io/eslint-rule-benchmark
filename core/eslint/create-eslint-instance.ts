@@ -11,7 +11,7 @@ import { loadRuleFromFile } from './load-rule-from-file'
 import { toSeverity } from './to-severity'
 
 /** Options for creating an ESLint instance. */
-export interface CreateESLintInstanceOptions {
+interface CreateESLintInstanceOptions {
   /** Languages to be tested. */
   languages: Language[]
 
@@ -44,7 +44,7 @@ export let createESLintInstance = async (
 ): Promise<ESLint> => {
   let { languages, rule } = instanceOptions
 
-  let { path: rulePath, options = [], severity, ruleId } = rule
+  let { path: rulePath, severity, options, ruleId } = rule
 
   let ruleModule: Rule.RuleModule | undefined
 
@@ -65,8 +65,9 @@ export let createESLintInstance = async (
   let localName = ruleId.includes('/') ? ruleId.split('/')[1]! : ruleId
 
   let severityString = toSeverity(severity)
-  let ruleEntry: Linter.RuleEntry =
-    options.length > 0 ? [severityString, ...options] : severityString
+  let ruleEntry: Linter.RuleEntry = options
+    ? [severityString, options]
+    : severityString
 
   let uniqueRuleId = `${uniqueNamespace}/${localName}`
 
