@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 
-import type { SingleRuleResult } from '../../../runners/run-single-rule'
+import type { SingleRuleResult } from '../../../types/benchmark-config'
 
 import {
   createConsoleReporter,

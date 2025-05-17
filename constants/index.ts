@@ -31,6 +31,12 @@ export const DEFAULT_TIMEOUT_MS = 300 as const
 export const DEFAULT_ITERATIONS = 50 as const
 
 /**
+ * Default severity level for benchmark results. This is used to determine the
+ * severity of the benchmark results in the output report.
+ */
+export const DEFAULT_SEVERITY = 2 as const
+
+/**
  * Default output format for benchmark results. Options include: 'console',
  * 'json', 'markdown', 'html'
  */

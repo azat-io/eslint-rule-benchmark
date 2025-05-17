@@ -48,7 +48,7 @@ export interface RuleConfig {
   severity: 0 | 1 | 2
 
   /** Optional rule configuration options. */
-  options?: unknown[]
+  options?: unknown
 
   /** The ID of the rule to test. */
   ruleId: string
