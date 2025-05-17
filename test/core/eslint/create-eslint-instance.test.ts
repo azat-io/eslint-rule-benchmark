@@ -217,8 +217,8 @@ describe('createESLintInstance', () => {
   it('stores options array', async () => {
     let eslint = (await createESLintInstance({
       rule: {
-        options: [{ x: true }],
         ruleId: 'ns/with-opt',
+        options: { x: true },
         path: directRulePath,
         severity: 2,
       },

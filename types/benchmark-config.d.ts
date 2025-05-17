@@ -1,4 +1,6 @@
 /** Main configuration for a benchmark run. */
+import type { Task } from 'tinybench'
+
 export interface BenchmarkConfig {
   /** Reporter options. */
   reporters: ReporterOptions[]
@@ -17,6 +19,21 @@ export interface BenchmarkConfig {
 
   /** Name of the benchmark. */
   name: string
+}
+
+/** Result of running a single rule benchmark (often for a single code sample). */
+export interface SingleRuleResult {
+  /** Information about the tested rule. */
+  rule: {
+    /** File path to the rule module (if applicable). */
+    path?: string
+
+    /** Rule identifier, usually in format "namespace/rule-name". */
+    id: string
+  }
+
+  /** Raw benchmark run results for detailed analysis (from tinybench). */
+  result: Task | null
 }
 
 /** Configuration for benchmark warmup. */

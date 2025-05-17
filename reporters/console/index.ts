@@ -1,4 +1,4 @@
-import type { SingleRuleResult } from '../../runners/run-single-rule'
+import type { SingleRuleResult } from '../../types/benchmark-config'
 
 import { formatTable } from './format-table'
 

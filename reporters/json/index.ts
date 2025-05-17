@@ -2,10 +2,10 @@ import { writeFile, mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
 import type {
+  SingleRuleResult,
   BenchmarkConfig,
   ReporterOptions,
 } from '../../types/benchmark-config'
-import type { SingleRuleResult } from '../../runners/run-single-rule'
 
 /** Options for the JSON reporter. */
 interface JsonReporterOptions {

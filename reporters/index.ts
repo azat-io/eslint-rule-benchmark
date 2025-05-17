@@ -1,8 +1,8 @@
 import type {
+  SingleRuleResult,
   BenchmarkConfig,
   ReporterOptions,
 } from '../types/benchmark-config'
-import type { SingleRuleResult } from '../runners/run-single-rule'
 
 import { markdownReporter } from './markdown'
 import { consoleReporter } from './console'
@@ -61,10 +61,9 @@ export let runReporters = (
       let reporter = createReporter(reporterOptions)
       reporter(result, config)
     } catch (error) {
+      let errorValue = error as Error
       console.error(
-        `Error in reporter "${reporterOptions.format}": ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Error in reporter "${reporterOptions.format}": ${errorValue.message}`,
       )
     }
   }

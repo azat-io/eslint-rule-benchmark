@@ -1,10 +1,8 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
 import 'node:worker_threads'
 import cac from 'cac'
 
 import type { ReporterOptions, ReporterFormat } from '../types/benchmark-config'
-import type { CodeSample } from '../types/test-case'
+import type { UserBenchmarkConfig } from '../types/user-benchmark-config'
 
 import {
   DEFAULT_WARMUP_ITERATIONS,
@@ -12,48 +10,90 @@ import {
   DEFAULT_ITERATIONS,
   DEFAULT_TIMEOUT_MS,
 } from '../constants'
-import { getLanguageByFileName } from '../core/utilities/get-language-by-file-name'
-import { createBenchmarkConfig } from '../core/benchmark/create-benchmark-config'
-import { isSupportedExtension } from '../core/utilities/is-supported-extension'
-import { getFileExtension } from '../core/utilities/get-file-extension'
-import { runSingleRule } from '../runners/run-single-rule'
-import { runReporters } from '../reporters'
+import { runBenchmarksFromConfig } from '../runners/run-benchmarks-from-config'
+import { validateConfig } from '../core/config/validate-config'
+import { loadConfig } from '../core/config/load-config'
 import { version } from '../package.json'
 
-/** Options for the benchmark run command. */
-interface RunCommandOptions {
-  /** Report format. */
+/**
+ * Defines the command-line options for the 'run-single' command. This command
+ * benchmarks a single ESLint rule against specified source code.
+ */
+interface RunSingleCommandOptions {
+  /**
+   * Specifies the output format for the benchmark report (e.g., 'console',
+   * 'json', 'markdown').
+   */
   report: ReporterFormat
 
   /** Maximum allowed duration in ms. */
   maxDuration: number
 
-  /** Number of benchmark iterations. */
+  /** The number of iterations to run the benchmark for the rule. */
   iterations: number
 
-  /** Path to ESLint config file. */
+  /** Optional path to an ESLint configuration file to use for linting. */
   config?: string
 
-  /** Output file for the report. */
+  /** Optional path to a file where the benchmark report should be saved. */
   output?: string
 
-  /** Path to directory with test cases. */
+  /**
+   * Path to the directory or file containing code samples to test the rule
+   * against.
+   */
   source: string
 
-  /** Number of warmup iterations. */
+  /** The number of warmup iterations to perform before actual measurements. */
   warmup: number
 
-  /** Path to the ESLint rule file. */
+  /** Path to the JavaScript/TypeScript file implementing the ESLint rule. */
   rule: string
 
-  /** Name of the rule to benchmark. */
+  /**
+   * The identifier (name) of the ESLint rule to benchmark (e.g.,
+   * 'my-plugin/my-rule').
+   */
   name: string
 }
 
 /**
- * Command-line interface for ESLint Rule Benchmark.
+ * Defines the command-line options for the 'run' command. This command executes
+ * benchmarks based on a benchmark configuration file.
+ */
+interface RunCommandOptions {
+  /**
+   * Optional. Specifies the output format for the benchmark report (e.g.,
+   * 'console', 'json', 'markdown').
+   */
+  report?: ReporterFormat
+
+  /**
+   * Optional. Path to the benchmark configuration file. If not provided,
+   * searches for default config files.
+   */
+  config?: string
+
+  /** Optional. Path to a file where the benchmark report should be saved. */
+  output?: string
+}
+
+/**
+ * Initializes and runs the command-line interface for the ESLint Rule Benchmark
+ * tool.
  *
- * @returns {void}
+ * This function sets up the CLI using 'cac', defining two main commands:
+ *
+ * - 'run': Executes benchmarks based on a provided or discovered configuration
+ *   file. Allows overriding reporter options via CLI flags.
+ * - 'run-single': Executes a benchmark for a single specified ESLint rule against
+ *   given source code, with all parameters provided via CLI flags.
+ *
+ * It parses command-line arguments and delegates to the appropriate command
+ * actions.
+ *
+ * @returns {void} This function does not return a value but may exit the
+ *   process.
  */
 export let run = (): void => {
   let cli = cac('eslint-rule-benchmark')
@@ -61,11 +101,49 @@ export let run = (): void => {
   cli.version(version).help()
 
   cli
-    .command('run', 'Run benchmark on a single ESLint rule')
+    .command('run', 'Run benchmarks from config')
+    .option('--config <path>', 'Path to configuration file')
+    .option('--report <format>', 'Report format (console, json, markdown)', {
+      default: DEFAULT_REPORTER_FORMAT,
+    })
+    .option('--output <file>', 'Output file for the report')
+    .action(async (options: RunCommandOptions) => {
+      try {
+        let userConfig: UserBenchmarkConfig = await loadConfig(options.config)
+
+        let errors = await validateConfig(userConfig)
+        if (errors.length > 0) {
+          console.error('Configuration validation errors:')
+          for (let error of errors) {
+            console.error(`- ${error}`)
+          }
+          process.exit(1)
+        }
+
+        let reporterOptionsArray: ReporterOptions[] = [
+          {
+            format: options.report ?? DEFAULT_REPORTER_FORMAT,
+            outputPath: options.output,
+          },
+        ]
+
+        await runBenchmarksFromConfig({
+          reporterOptions: reporterOptionsArray,
+          userConfig,
+        })
+      } catch (error) {
+        let errorValue = error as Error
+        console.error(`Error: ${errorValue.message}`)
+        process.exit(1)
+      }
+    })
+
+  cli
+    .command('run-single', 'Run benchmark on a single ESLint rule')
     .option('--rule <rule>', 'Path to the ESLint rule file')
     .option('--name <name>', 'Name of the rule to benchmark')
     .option('--config <config>', 'Path to ESLint config file')
-    .option('--source <source>', 'Path to directory with test cases')
+    .option('--source <source>', 'Path to directory or file with test cases')
     .option('--iterations <number>', 'Number of benchmark iterations', {
       default: DEFAULT_ITERATIONS,
     })
@@ -81,109 +159,68 @@ export let run = (): void => {
     )
     .option(
       '--report <format>',
-      'Report format (console, json, markdown, html)',
+      'Report format (console, json, markdown)', // Removed html
       {
         default: DEFAULT_REPORTER_FORMAT,
       },
     )
     .option('--output <file>', 'Output file for the report')
-    .action(async (options: RunCommandOptions) => {
+    .action(async (options: RunSingleCommandOptions) => {
       try {
         if (!options.rule) {
           throw new Error('Rule path (--rule) is required')
         }
-
         if (!options.name) {
-          throw new Error('Rule name (--name) is required')
+          throw new Error('Rule name/ID (--name) is required')
         }
-
         if (!options.source) {
-          throw new Error('Source option is required')
+          throw new Error('Source path (--source) is required')
         }
 
-        let reporterOptions: ReporterOptions = {
-          outputPath: options.output,
-          format: options.report,
-        }
+        let reporterOptionsArray: ReporterOptions[] = [
+          {
+            outputPath: options.output,
+            format: options.report,
+          },
+        ]
 
-        let sourceFiles: string[]
-        try {
-          let sourcePath = path.resolve(process.cwd(), options.source)
-          let sourceStats = await fs.stat(sourcePath)
-
-          if (sourceStats.isDirectory()) {
-            let files = await fs.readdir(sourcePath)
-            sourceFiles = files
-              .filter(file => isSupportedExtension(getFileExtension(file)))
-              .map(file => path.join(sourcePath, file))
-          } else {
-            sourceFiles = [sourcePath]
-          }
-        } catch (error) {
-          let errorValue = error as Error
-          throw new Error(`Error reading source files: ${errorValue.message}`)
-        }
-
-        if (sourceFiles.length === 0) {
-          throw new Error('No source files found')
-        }
-
-        let codeSamples: CodeSample[] = []
-
-        await Promise.all(
-          sourceFiles.map(async file => {
-            try {
-              let code = await fs.readFile(file, 'utf8')
-              codeSamples.push({
-                language: getLanguageByFileName(file),
-                filename: path.basename(file),
-                code,
-              })
-            } catch (error) {
-              let errorValue = error as Error
-              console.warn(`Skipping file ${file}: ${errorValue.message}`)
-            }
-          }),
-        )
-
-        if (codeSamples.length === 0) {
-          throw new Error('No valid source files found')
-        }
-
-        let benchmarkConfig = createBenchmarkConfig({
+        let constructedUserConfig: UserBenchmarkConfig = {
+          tests: [
+            {
+              name: `CLI: ${options.name}`,
+              testPath: options.source,
+              rulePath: options.rule,
+              ruleId: options.name,
+            },
+          ],
           warmup: {
-            iterations: Math.max(1, options.warmup),
+            iterations: options.warmup > 0 ? options.warmup : undefined,
             enabled: options.warmup > 0,
           },
-          timeout:
-            options.maxDuration > 0 ? options.maxDuration : DEFAULT_TIMEOUT_MS,
-          iterations: Math.max(1, options.iterations),
-          name: `Benchmark for rule ${options.name}`,
-          reporters: [reporterOptions],
-        })
+          iterations: options.iterations > 0 ? options.iterations : undefined,
+          timeout: options.maxDuration > 0 ? options.maxDuration : undefined,
+        }
+
+        let errors = await validateConfig(constructedUserConfig)
+        if (errors.length > 0) {
+          console.error('Constructed configuration validation errors:')
+          for (let error of errors) {
+            console.error(`- ${error}`)
+          }
+          process.exit(1)
+        }
 
         console.info(`Running benchmark for rule ${options.name}...`)
         console.info(`Using rule file: ${options.rule}`)
-        console.info(
-          `Using ${codeSamples.length} source files from ${options.source}`,
-        )
+        console.info(`Using source: ${options.source}`)
 
-        let result = await runSingleRule({
-          rule: {
-            ruleId: options.name,
-            path: options.rule,
-            severity: 2,
-          },
-          benchmarkConfig,
-          codeSamples,
+        await runBenchmarksFromConfig({
+          reporterOptions: reporterOptionsArray,
+          userConfig: constructedUserConfig,
         })
-
-        runReporters(result, benchmarkConfig)
       } catch (error) {
-        console.error(
-          `Error: ${error instanceof Error ? error.message : String(error)}`,
-        )
-
+        let errorValue = error as Error
+        console.error(`Error: ${errorValue.message}`)
         process.exit(1)
       }
     })

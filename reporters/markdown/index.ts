@@ -4,10 +4,10 @@ import { writeFile, mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
 import type {
+  SingleRuleResult,
   BenchmarkConfig,
   ReporterOptions,
 } from '../../types/benchmark-config'
-import type { SingleRuleResult } from '../../runners/run-single-rule'
 
 /** Options for the Markdown reporter. */
 interface MarkdownReporterOptions {
@@ -22,7 +22,7 @@ interface MarkdownReporterOptions {
  * @returns {(result: SingleRuleResult, config: BenchmarkConfig) => void} A
  *   function that saves benchmark results to a Markdown file.
  */
-let createMarkdownReporter = (
+export let createMarkdownReporter = (
   options: ReporterOptions,
 ): ((result: SingleRuleResult, config: BenchmarkConfig) => void) => {
   let reporterOptions: MarkdownReporterOptions = {
@@ -100,7 +100,7 @@ let createHeader = (
 ): string =>
   [
     `# ESLint Rule Benchmark Report`,
-    `## ${config.name || 'Benchmark Results'}`,
+    `## ${config.name}`,
     '',
     `**Rule ID:** \`${rule.id}\``,
     rule.path ? `**Rule Path:** \`${rule.path}\`` : '',
