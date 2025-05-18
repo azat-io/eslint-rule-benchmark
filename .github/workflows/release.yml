@@ -35,12 +35,3 @@ jobs:
         run: pnpm run ci:changelog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure NPM Auth
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NODE_AUTH_TOKEN }}" > ~/.npmrc
-
-      - name: Clear Package JSON
-        run: pnpm run ci:clear
-
-      - name: Publish Root Package to NPM
-        run: npm publish --access public --no-git-checks --provenance

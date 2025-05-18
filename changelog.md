@@ -1,8 +1,33 @@
 # Changelog
 
+## v0.4.0
+
+[compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.3.0...v0.4.0)
+
+### 🚀 Features
+
+- Implement config-based benchmark runner ([d906a16](https://github.com/azat-io/eslint-rule-benchmark/commit/d906a16))
+
+### 🏎 Performance Improvements
+
+- Replace table with native implementation ([150c73d](https://github.com/azat-io/eslint-rule-benchmark/commit/150c73d))
+
+### 🐞 Bug Fixes
+
+- Fix package exports ([4f45579](https://github.com/azat-io/eslint-rule-benchmark/commit/4f45579))
+
+### 🏡 Chore
+
+- Add vite prettier plugin ([5c59fe4](https://github.com/azat-io/eslint-rule-benchmark/commit/5c59fe4))
+- Setup trusted dependencies ([3cfb6d7](https://github.com/azat-io/eslint-rule-benchmark/commit/3cfb6d7))
+
+### ❤️ Contributors
+
+- Azat S. ([@azat-io](https://github.com/azat-io))
+
 ## v0.3.0
 
-[compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.2.0...v0.2.1)
+[compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.2.0...v0.3.0)
 
 ### 🚀 Features
 
