@@ -26,11 +26,11 @@ describe('loadRuleFromFile', () => {
 
     vi.mocked(mockJiti.import).mockResolvedValueOnce(directRule)
 
-    let result = await loadRuleFromFile(
-      mockJiti,
-      '/path/to/rule.js',
-      'direct-rule',
-    )
+    let result = await loadRuleFromFile(mockJiti, {
+      configDirectory: '/path/to/config',
+      rulePath: '/path/to/rule.js',
+      ruleId: 'direct-rule',
+    })
 
     expect(result.rule).toBe(directRule)
     expect(result.error).toBeUndefined()
@@ -46,7 +46,11 @@ describe('loadRuleFromFile', () => {
       },
     })
 
-    let result = await loadRuleFromFile(mockJiti, '/path/to/rules.js', ruleId)
+    let result = await loadRuleFromFile(mockJiti, {
+      configDirectory: '/path/to/config',
+      rulePath: '/path/to/rules.js',
+      ruleId,
+    })
 
     expect(result.rule).toBe(ruleModule)
     expect(result.error).toBeUndefined()
@@ -59,11 +63,11 @@ describe('loadRuleFromFile', () => {
       default: ruleModule,
     })
 
-    let result = await loadRuleFromFile(
-      mockJiti,
-      '/path/to/default-rule.js',
-      'any-id',
-    )
+    let result = await loadRuleFromFile(mockJiti, {
+      rulePath: '/path/to/default-rule.js',
+      configDirectory: '/path/to/config',
+      ruleId: 'any-id',
+    })
 
     expect(result.rule).toBe(ruleModule)
     expect(result.error).toBeUndefined()
@@ -81,11 +85,11 @@ describe('loadRuleFromFile', () => {
       },
     })
 
-    let result = await loadRuleFromFile(
-      mockJiti,
-      '/path/to/default-collection.js',
+    let result = await loadRuleFromFile(mockJiti, {
+      rulePath: '/path/to/default-collection.js',
+      configDirectory: '/path/to/config',
       ruleId,
-    )
+    })
 
     expect(result.rule).toBe(ruleModule)
     expect(result.error).toBeUndefined()
@@ -100,7 +104,11 @@ describe('loadRuleFromFile', () => {
       create: () => ({}),
     })
 
-    await loadRuleFromFile(mockJiti, relativePath, 'any-id')
+    await loadRuleFromFile(mockJiti, {
+      configDirectory: '/mock-cwd',
+      rulePath: relativePath,
+      ruleId: 'any-id',
+    })
 
     expect(mockJiti.import).toHaveBeenCalledWith(expectedAbsolutePath)
   })
@@ -113,7 +121,11 @@ describe('loadRuleFromFile', () => {
       create: () => ({}),
     })
 
-    await loadRuleFromFile(mockJiti, absolutePath, 'any-id')
+    await loadRuleFromFile(mockJiti, {
+      configDirectory: '/mock-cwd',
+      rulePath: absolutePath,
+      ruleId: 'any-id',
+    })
 
     expect(mockJiti.import).toHaveBeenCalledWith(absolutePath)
   })
@@ -125,11 +137,11 @@ describe('loadRuleFromFile', () => {
       },
     })
 
-    let result = await loadRuleFromFile(
-      mockJiti,
-      '/path/to/rules.js',
-      'non-existent-rule',
-    )
+    let result = await loadRuleFromFile(mockJiti, {
+      configDirectory: '/path/to/config',
+      rulePath: '/path/to/rules.js',
+      ruleId: 'non-existent-rule',
+    })
 
     expect(result.rule).toBeUndefined()
     expect(result.error).toBeUndefined()
@@ -140,11 +152,11 @@ describe('loadRuleFromFile', () => {
       someOtherProperty: true,
     })
 
-    let result = await loadRuleFromFile(
-      mockJiti,
-      '/path/to/invalid.js',
-      'any-id',
-    )
+    let result = await loadRuleFromFile(mockJiti, {
+      configDirectory: '/path/to/config',
+      rulePath: '/path/to/invalid.js',
+      ruleId: 'any-id',
+    })
 
     expect(result.rule).toBeUndefined()
     expect(result.error).toBeUndefined()
@@ -157,11 +169,11 @@ describe('loadRuleFromFile', () => {
       throw new Error(errorMessage)
     })
 
-    let result = await loadRuleFromFile(
-      mockJiti,
-      '/path/to/missing.js',
-      'any-id',
-    )
+    let result = await loadRuleFromFile(mockJiti, {
+      configDirectory: '/path/to/config',
+      rulePath: '/path/to/missing.js',
+      ruleId: 'any-id',
+    })
 
     expect(result.rule).toBeUndefined()
     expect(result.error).toBe(errorMessage)

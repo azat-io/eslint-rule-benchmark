@@ -13,6 +13,9 @@ interface RunBenchmarkParameters {
   /** Configuration for the benchmark. */
   config: BenchmarkConfig
 
+  /** Path to the configuration directory. */
+  configDirectory: string
+
   /** Test cases to benchmark. */
   testCases: TestCase[]
 }
@@ -52,7 +55,7 @@ type Language = (typeof LANGUAGES)[number]
 export let runBenchmark = async (
   parameters: RunBenchmarkParameters,
 ): Promise<Task[] | null> => {
-  let { testCases, config } = parameters
+  let { configDirectory, testCases, config } = parameters
 
   if (testCases.length === 0) {
     return null
@@ -86,6 +89,7 @@ export let runBenchmark = async (
       eslint = await createESLintInstance({
         languages: currentTestCaseLanguages,
         rule: testCase.rule,
+        configDirectory,
       })
       await eslint.lintText('/* eslint-disable */')
     } catch (error: unknown) {

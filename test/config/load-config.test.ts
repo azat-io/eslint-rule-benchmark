@@ -64,14 +64,17 @@ describe('loadConfig', () => {
         .search as SearchFunction,
     ).toHaveBeenCalledWith(process.cwd())
     expect(config).toEqual({
-      tests: [
-        {
-          rulePath: 'rule.js',
-          testPath: 'test.js',
-          ruleId: 'rule',
-          name: 'test',
-        },
-      ],
+      config: {
+        tests: [
+          {
+            rulePath: 'rule.js',
+            testPath: 'test.js',
+            ruleId: 'rule',
+            name: 'test',
+          },
+        ],
+      },
+      filepath: '/path/to/config.js',
     })
   })
 
@@ -99,14 +102,17 @@ describe('loadConfig', () => {
       vi.mocked(lilconfig)('eslint-rule-benchmark').search as SearchFunction,
     ).toHaveBeenCalledWith(customPath)
     expect(config).toEqual({
-      tests: [
-        {
-          rulePath: 'custom-rule.js',
-          testPath: 'custom-test.js',
-          ruleId: 'custom-rule',
-          name: 'custom',
-        },
-      ],
+      config: {
+        tests: [
+          {
+            rulePath: 'custom-rule.js',
+            testPath: 'custom-test.js',
+            ruleId: 'custom-rule',
+            name: 'custom',
+          },
+        ],
+      },
+      filepath: '/custom/path/config.js',
     })
   })
 
@@ -136,20 +142,23 @@ describe('loadConfig', () => {
 
   it('should handle TypeScript configuration files', async () => {
     let tsConfig = {
-      tests: [
-        {
-          rulePath: 'rule.js',
-          testPath: 'test.js',
-          name: 'ts-test',
-          ruleId: 'rule',
-        },
-      ],
+      config: {
+        tests: [
+          {
+            rulePath: 'rule.ts',
+            testPath: 'test.ts',
+            name: 'ts-test',
+            ruleId: 'rule',
+          },
+        ],
+      },
+      filepath: '/path/to/config.ts',
     }
     ;(
       vi.mocked(lilconfig)('eslint-rule-benchmark').search as SearchFunction
     ).mockResolvedValue({
       filepath: '/path/to/config.ts',
-      config: tsConfig,
+      config: tsConfig.config,
     })
 
     let config = await loadConfig()

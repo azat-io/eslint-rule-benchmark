@@ -12,6 +12,9 @@ import { toSeverity } from './to-severity'
 
 /** Options for creating an ESLint instance. */
 interface CreateESLintInstanceOptions {
+  /** The path to the user configuration directory. */
+  configDirectory: string
+
   /** Languages to be tested. */
   languages: Language[]
 
@@ -42,14 +45,18 @@ let jiti = createJiti(import.meta.url, {
 export let createESLintInstance = async (
   instanceOptions: CreateESLintInstanceOptions,
 ): Promise<ESLint> => {
-  let { languages, rule } = instanceOptions
+  let { configDirectory, languages, rule } = instanceOptions
 
   let { path: rulePath, severity, options, ruleId } = rule
 
   let ruleModule: Rule.RuleModule | undefined
 
   if (rulePath) {
-    let loadResult = await loadRuleFromFile(jiti, rulePath, ruleId)
+    let loadResult = await loadRuleFromFile(jiti, {
+      configDirectory,
+      rulePath,
+      ruleId,
+    })
     if (loadResult.error) {
       throw new Error(`Failed to load rule: ${loadResult.error}`)
     }

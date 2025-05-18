@@ -45,6 +45,7 @@ vi.mock('../../../core/benchmark/create-bench', async importOriginal => {
 
 let testCase: TestCase
 let config: BenchmarkConfig
+let configDirectory: string
 
 describe('runBenchmark', () => {
   beforeEach(() => {
@@ -69,10 +70,12 @@ describe('runBenchmark', () => {
       name: 'Bench',
       iterations: 5,
     }
+
+    configDirectory = 'benchmark/config'
   })
 
   it('creates Bench with proper options and adds tasks for every sample', async () => {
-    await runBenchmark({ testCases: [testCase], config })
+    await runBenchmark({ testCases: [testCase], configDirectory, config })
 
     expect(createBench).toHaveBeenCalledWith({
       warmupIterations: config.warmup.iterations,
@@ -92,7 +95,11 @@ describe('runBenchmark', () => {
   })
 
   it('returns array of task results', async () => {
-    let tasks = await runBenchmark({ testCases: [testCase], config })
+    let tasks = await runBenchmark({
+      testCases: [testCase],
+      configDirectory,
+      config,
+    })
     let expectedTaskResults = testCase.samples.map(sample => ({
       name: `${testCase.name} on ${sample.filename}`,
     }))
@@ -100,13 +107,17 @@ describe('runBenchmark', () => {
   })
 
   it('returns null if no test cases are provided', async () => {
-    let tasks = await runBenchmark({ testCases: [], config })
+    let tasks = await runBenchmark({ configDirectory, testCases: [], config })
     expect(tasks).toBeNull()
   })
 
   it('returns null if test cases have no samples or no runnable tasks are added', async () => {
     testCase.samples = []
-    let tasks = await runBenchmark({ testCases: [testCase], config })
+    let tasks = await runBenchmark({
+      testCases: [testCase],
+      configDirectory,
+      config,
+    })
     expect(tasks).toBeNull()
   })
 
@@ -139,7 +150,7 @@ describe('runBenchmark', () => {
       .mockResolvedValueOnce(mockESLintInstance1)
       .mockResolvedValueOnce(mockESLintInstance2)
 
-    await runBenchmark({ testCases, config })
+    await runBenchmark({ configDirectory, testCases, config })
 
     expect(createESLintInstance).toHaveBeenCalledTimes(testCases.length)
 
@@ -191,6 +202,7 @@ describe('runBenchmark', () => {
     }
     let tasks = await runBenchmark({
       testCases: [testCase, anotherTestCase],
+      configDirectory,
       config,
     })
 

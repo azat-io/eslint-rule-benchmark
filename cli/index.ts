@@ -1,4 +1,5 @@
 import 'node:worker_threads'
+import path from 'node:path'
 import cac from 'cac'
 
 import type { ReporterOptions, ReporterFormat } from '../types/benchmark-config'
@@ -109,9 +110,9 @@ export let run = (): void => {
     .option('--output <file>', 'Output file for the report')
     .action(async (options: RunCommandOptions) => {
       try {
-        let userConfig: UserBenchmarkConfig = await loadConfig(options.config)
+        let { filepath, config } = await loadConfig(options.config)
 
-        let errors = await validateConfig(userConfig)
+        let errors = await validateConfig(config, filepath)
         if (errors.length > 0) {
           console.error('Configuration validation errors:')
           for (let error of errors) {
@@ -128,8 +129,9 @@ export let run = (): void => {
         ]
 
         await runBenchmarksFromConfig({
+          configDirectory: path.dirname(filepath),
           reporterOptions: reporterOptionsArray,
-          userConfig,
+          userConfig: config,
         })
       } catch (error) {
         let errorValue = error as Error
@@ -201,7 +203,11 @@ export let run = (): void => {
           timeout: options.maxDuration > 0 ? options.maxDuration : undefined,
         }
 
-        let errors = await validateConfig(constructedUserConfig)
+        let configDirectory = process.cwd()
+        let errors = await validateConfig(
+          constructedUserConfig,
+          configDirectory,
+        )
         if (errors.length > 0) {
           console.error('Constructed configuration validation errors:')
           for (let error of errors) {
@@ -217,6 +223,7 @@ export let run = (): void => {
         await runBenchmarksFromConfig({
           reporterOptions: reporterOptionsArray,
           userConfig: constructedUserConfig,
+          configDirectory,
         })
       } catch (error) {
         let errorValue = error as Error

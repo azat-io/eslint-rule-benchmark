@@ -36,6 +36,7 @@ describe('runBenchmarksFromConfig', () => {
   let consoleWarnSpy: ReturnType<typeof vi.spyOn>
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>
   let originalExitCode: undefined | number
+  let configDirectory: string
 
   let mockedFsReadFile = vi.mocked(fsPromises.readFile)
   let mockedFsStat = vi.mocked(fsPromises.stat)
@@ -56,6 +57,8 @@ describe('runBenchmarksFromConfig', () => {
 
     originalExitCode = process.exitCode as number
     process.exitCode = undefined
+
+    configDirectory = '/test/config/dir'
 
     mockCodeSamples = [
       { filename: 'sample1.js', language: 'javascript', code: 'let a = 1;' },
@@ -129,10 +132,11 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     let expectedTestPath = mockUserConfig.tests[0]!.testPath as string
-    let resolvedTestPath = path.resolve(process.cwd(), expectedTestPath)
+    let resolvedTestPath = path.resolve(configDirectory, expectedTestPath)
 
     expect(mockedFsStat).toHaveBeenCalledWith(resolvedTestPath)
     expect(mockedFsReadFile).toHaveBeenCalledWith(resolvedTestPath, 'utf8')
@@ -163,6 +167,7 @@ describe('runBenchmarksFromConfig', () => {
         reporters: mockReporterOptions,
       },
       testCases: [mockTestCase],
+      configDirectory,
     })
 
     expect(mockedRunReporters).toHaveBeenCalledOnce()
@@ -209,10 +214,11 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(mockedFsReaddir).toHaveBeenCalledWith(
-      path.resolve(process.cwd(), mockUserConfig.tests[0]!.testPath),
+      path.resolve(configDirectory, mockUserConfig.tests[0]!.testPath),
     )
     expect(mockedFsReadFile).toHaveBeenCalledTimes(2)
     expect(mockedCreateTestCase).toHaveBeenCalledOnce()
@@ -224,6 +230,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -233,7 +240,6 @@ describe('runBenchmarksFromConfig', () => {
       expect.stringContaining('No valid test cases'),
     )
     expect(process.exitCode).toBe(1)
-    expect(process.exitCode).toBe(1)
   })
 
   it('should handle non-Error objects thrown in fs.stat', async () => {
@@ -242,6 +248,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -258,6 +265,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -267,9 +275,6 @@ describe('runBenchmarksFromConfig', () => {
       expect.stringContaining('No valid test cases'),
     )
     expect(process.exitCode).toBe(1)
-    expect(process.exitCode).toBe(1)
-    expect(process.exitCode).toBe(1)
-    expect(process.exitCode).toBe(1)
   })
 
   it('should handle errors in fs.readFile', async () => {
@@ -278,6 +283,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -287,7 +293,6 @@ describe('runBenchmarksFromConfig', () => {
       expect.stringContaining('No valid test cases'),
     )
     expect(process.exitCode).toBe(1)
-    expect(process.exitCode).toBe(1)
   })
 
   it('should handle non-Error objects thrown in fs.readFile', async () => {
@@ -296,6 +301,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -312,6 +318,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -328,6 +335,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -351,6 +359,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(mockedRunBenchmark).toHaveBeenCalledWith({
@@ -365,6 +374,7 @@ describe('runBenchmarksFromConfig', () => {
         reporters: mockReporterOptions,
       },
       testCases: [mockTestCase],
+      configDirectory,
     })
   })
 
@@ -376,6 +386,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -394,6 +405,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -410,6 +422,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -424,6 +437,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -463,6 +477,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(mockedCreateTestCase).toHaveBeenCalledTimes(2)
@@ -480,6 +495,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -528,6 +544,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -547,6 +564,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -570,6 +588,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(mockedFsStat).toHaveBeenCalledTimes(2)
@@ -584,6 +603,7 @@ describe('runBenchmarksFromConfig', () => {
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
       userConfig: mockUserConfig,
+      configDirectory,
     })
 
     expect(mockedCreateTestCase).toHaveBeenCalledWith(

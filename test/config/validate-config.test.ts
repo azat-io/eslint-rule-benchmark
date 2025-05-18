@@ -36,7 +36,7 @@ describe('validateConfig', () => {
 
   it('should return an error if no tests are provided', async () => {
     let config = { iterations: 10 }
-    let errors = await validateConfig(config)
+    let errors = await validateConfig(config, '')
     expect(errors).toEqual([
       'Configuration must include at least one test in the "tests" array',
     ])
@@ -44,7 +44,7 @@ describe('validateConfig', () => {
 
   it('should return an error if tests is empty array', async () => {
     let config = { tests: [] }
-    let errors = await validateConfig(config)
+    let errors = await validateConfig(config, '')
     expect(errors).toEqual([
       'Configuration must include at least one test in the "tests" array',
     ])
@@ -62,7 +62,7 @@ describe('validateConfig', () => {
       ],
       iterations: 0,
     }
-    let errors = await validateConfig(configInvalid)
+    let errors = await validateConfig(configInvalid, '')
     expect(errors).toContain('Global "iterations" must be a positive number')
   })
 
@@ -78,7 +78,7 @@ describe('validateConfig', () => {
       ],
       timeout: -1,
     }
-    let errors = await validateConfig(configInvalid)
+    let errors = await validateConfig(configInvalid, '')
     expect(errors).toContain('Global "timeout" must be a positive number')
   })
 
@@ -94,7 +94,7 @@ describe('validateConfig', () => {
       ],
       warmup: 'not-an-object',
     }
-    let errors = await validateConfig(configInvalid as UserBenchmarkConfig)
+    let errors = await validateConfig(configInvalid as UserBenchmarkConfig, '')
     expect(errors).toContain('Global "warmup" must be an object')
 
     let configInvalidIterations = {
@@ -110,6 +110,7 @@ describe('validateConfig', () => {
     }
     let errorsIterations = await validateConfig(
       configInvalidIterations as unknown as UserBenchmarkConfig,
+      '',
     )
     expect(errorsIterations).toContain(
       'Global "warmup.iterations" must be a non-negative number',
@@ -128,6 +129,7 @@ describe('validateConfig', () => {
     }
     let errorsEnabled = await validateConfig(
       configInvalidEnabled as unknown as UserBenchmarkConfig,
+      '',
     )
     expect(errorsEnabled).toContain('Global "warmup.enabled" must be a boolean')
   })
@@ -136,7 +138,7 @@ describe('validateConfig', () => {
     let config = {
       tests: [{}],
     }
-    let errors = await validateConfig(config as UserBenchmarkConfig)
+    let errors = await validateConfig(config as UserBenchmarkConfig, '')
     expect(errors).toContain('Test at index 0: "name" is required')
     expect(errors).toContain('Test at index 0: "ruleId" is required')
     expect(errors).toContain('Test at index 0: "rulePath" is required')
@@ -157,7 +159,7 @@ describe('validateConfig', () => {
       ],
     }
 
-    let errors = await validateConfig(config)
+    let errors = await validateConfig(config, '')
     expect(errors).toContain(
       'Test at index 0: Rule file not found at "non-existent-rule.js"',
     )
@@ -179,7 +181,7 @@ describe('validateConfig', () => {
       ],
     }
 
-    let errors = await validateConfig(config)
+    let errors = await validateConfig(config, '')
     expect(errors).toContain(
       'Test at index 0: Test file not found at "non-existent-test.js"',
     )
@@ -203,7 +205,7 @@ describe('validateConfig', () => {
       ],
     }
 
-    let errors = await validateConfig(config)
+    let errors = await validateConfig(config, '')
     expect(errors).toContain(
       'Test at index 0: Test file not found at "non-existent-test.js"',
     )
@@ -222,7 +224,7 @@ describe('validateConfig', () => {
       ],
     }
 
-    let errors = await validateConfig(config)
+    let errors = await validateConfig(config, '')
     expect(errors).toContain('Test at index 0: "severity" must be 0, 1, or 2')
   })
 
@@ -239,7 +241,7 @@ describe('validateConfig', () => {
       ],
     }
 
-    let errors = await validateConfig(config as UserBenchmarkConfig)
+    let errors = await validateConfig(config as UserBenchmarkConfig, '')
     expect(errors).toContain('Test at index 0: "options" must be an array')
   })
 
@@ -258,6 +260,7 @@ describe('validateConfig', () => {
 
     let errorsType = await validateConfig(
       configInvalidType as unknown as UserBenchmarkConfig,
+      '',
     )
     expect(errorsType).toContain(
       'Test at index 0: "benchmarkSettings" must be an object',
@@ -277,7 +280,7 @@ describe('validateConfig', () => {
       ],
     }
 
-    let errorsIterations = await validateConfig(configInvalidIterations)
+    let errorsIterations = await validateConfig(configInvalidIterations, '')
     expect(errorsIterations).toContain(
       'Test at index 0: "benchmarkSettings.iterations" must be a positive number',
     )
@@ -296,7 +299,7 @@ describe('validateConfig', () => {
       ],
     }
 
-    let errorsTimeout = await validateConfig(configInvalidTimeout)
+    let errorsTimeout = await validateConfig(configInvalidTimeout, '')
     expect(errorsTimeout).toContain(
       'Test at index 0: "benchmarkSettings.timeout" must be a positive number',
     )
@@ -319,6 +322,7 @@ describe('validateConfig', () => {
 
     let errorsType = await validateConfig(
       configInvalidType as UserBenchmarkConfig,
+      '',
     )
     expect(errorsType).toContain(
       'Test at index 0: "benchmarkSettings.warmup" must be an object',
@@ -340,7 +344,7 @@ describe('validateConfig', () => {
       ],
     }
 
-    let errorsIterations = await validateConfig(configInvalidIterations)
+    let errorsIterations = await validateConfig(configInvalidIterations, '')
     expect(errorsIterations).toContain(
       'Test at index 0: "benchmarkSettings.warmup.iterations" must be a non-negative number',
     )
@@ -363,6 +367,7 @@ describe('validateConfig', () => {
 
     let errorsEnabled = await validateConfig(
       configInvalidEnabled as unknown as UserBenchmarkConfig,
+      '',
     )
     expect(errorsEnabled).toContain(
       'Test at index 0: "benchmarkSettings.warmup.enabled" must be a boolean',
@@ -399,7 +404,7 @@ describe('validateConfig', () => {
       timeout: 10000,
     }
 
-    let errors = await validateConfig(validConfig)
+    let errors = await validateConfig(validConfig, '')
     expect(errors).toHaveLength(0)
   })
 
@@ -416,7 +421,7 @@ describe('validateConfig', () => {
       ],
     }
 
-    let errors = await validateConfig(validConfig)
+    let errors = await validateConfig(validConfig, '')
     expect(errors).toHaveLength(0)
   })
 
@@ -437,7 +442,7 @@ describe('validateConfig', () => {
       ],
     }
 
-    let errors = await validateConfig(config as UserBenchmarkConfig)
+    let errors = await validateConfig(config as UserBenchmarkConfig, '')
     expect(errors).toContain('Test at index 1: "name" is required')
     expect(errors).toContain('Test at index 1: "ruleId" is required')
     expect(errors).toContain('Test at index 1: "severity" must be 0, 1, or 2')
@@ -456,7 +461,10 @@ describe('validateConfig', () => {
       ],
     }
 
-    let errors = await validateConfig(config as unknown as UserBenchmarkConfig)
+    let errors = await validateConfig(
+      config as unknown as UserBenchmarkConfig,
+      '',
+    )
 
     expect(errors).toContain(
       'Test at index 0: "testPath" must be a string or an array of strings',

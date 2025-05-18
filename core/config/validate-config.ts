@@ -7,11 +7,13 @@ import type { UserBenchmarkConfig } from '../../types/user-benchmark-config'
  * Validates the user benchmark configuration and returns validation errors.
  *
  * @param {Partial<UserBenchmarkConfig>} config - Configuration to validate.
+ * @param {string} configDirectory - Path to the configuration directory.
  * @returns {Promise<string[]>} Array of validation error messages (empty if
  *   valid).
  */
 export let validateConfig = async (
   config: Partial<UserBenchmarkConfig>,
+  configDirectory: string,
 ): Promise<string[]> => {
   let errors: string[] = []
 
@@ -75,7 +77,7 @@ export let validateConfig = async (
 
     if (test.rulePath) {
       try {
-        let rulePath = path.resolve(process.cwd(), test.rulePath)
+        let rulePath = path.resolve(configDirectory, test.rulePath)
         await fs.access(rulePath)
       } catch {
         testErrors.push(`${prefix}: Rule file not found at "${test.rulePath}"`)
@@ -87,7 +89,7 @@ export let validateConfig = async (
     if (test.testPath) {
       if (typeof test.testPath === 'string') {
         try {
-          let testFilePath = path.resolve(process.cwd(), test.testPath)
+          let testFilePath = path.resolve(configDirectory, test.testPath)
           await fs.access(testFilePath)
         } catch {
           testErrors.push(
@@ -97,7 +99,7 @@ export let validateConfig = async (
       } else if (Array.isArray(test.testPath)) {
         let pathCheckPromises = test.testPath.map(async testPath => {
           try {
-            let testFilePath = path.resolve(process.cwd(), testPath)
+            let testFilePath = path.resolve(configDirectory, testPath)
             await fs.access(testFilePath)
             return null
           } catch {

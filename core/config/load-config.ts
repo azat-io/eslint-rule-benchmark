@@ -5,6 +5,14 @@ import type { UserBenchmarkConfig } from '../../types/user-benchmark-config'
 import { jitiLoader } from './jiti-loader'
 import { jsonLoader } from './json-loader'
 
+interface LoadConfigResult {
+  /** The loaded configuration object. */
+  config: UserBenchmarkConfig
+
+  /** The path to the configuration file. */
+  filepath: string
+}
+
 /**
  * Explorer instance for loading configuration files.
  *
@@ -38,12 +46,11 @@ let explorer = lilconfig('eslint-rule-benchmark', {
  * directory.
  *
  * @param {string} configPath - Optional path to the configuration file.
- * @returns {Promise<UserBenchmarkConfig>} The loaded configuration with
- *   filepath
+ * @returns {Promise<LoadConfigResult>} Load configuration result.
  */
 export let loadConfig = async (
   configPath?: string,
-): Promise<UserBenchmarkConfig> => {
+): Promise<LoadConfigResult> => {
   let searchDirectory = process.cwd()
   if (configPath) {
     searchDirectory = configPath
@@ -54,5 +61,8 @@ export let loadConfig = async (
     throw new Error(`No config found in: ${searchDirectory}`)
   }
 
-  return result.config as UserBenchmarkConfig
+  return {
+    config: result.config as UserBenchmarkConfig,
+    filepath: result.filepath,
+  }
 }

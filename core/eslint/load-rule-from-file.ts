@@ -36,6 +36,17 @@ interface ESLintRuleImport {
   [key: string]: unknown
 }
 
+interface LoadRuleFromFileOptions {
+  /** The path to the user configuration directory. */
+  configDirectory: string
+
+  /** The path to the rule file. */
+  rulePath: string
+
+  /** The ID of the rule to load. */
+  ruleId: string
+}
+
 /** Result of loading a rule from a file. */
 interface RuleLoadResult {
   /** Error message if loading failed. */
@@ -90,21 +101,20 @@ let extractRule = (
  * Loads an ESLint rule from the specified file path.
  *
  * @param {Jiti} jiti - Jiti instance for dynamic imports.
- * @param {string} rulePath - Path to the file containing the rule.
- * @param {string} ruleId - ID of the rule to load.
+ * @param {LoadRuleFromFileOptions} options - Options for loading the rule.
  * @returns {Promise<RuleLoadResult>} Promise resolving to the rule load result.
  */
 export let loadRuleFromFile = async (
   jiti: Jiti,
-  rulePath: string,
-  ruleId: string,
+  options: LoadRuleFromFileOptions,
 ): Promise<RuleLoadResult> => {
   let result: RuleLoadResult = {}
+  let { configDirectory, rulePath, ruleId } = options
 
   try {
     let absolutePath = path.isAbsolute(rulePath)
       ? rulePath
-      : path.resolve(process.cwd(), rulePath)
+      : path.resolve(configDirectory, rulePath)
 
     let moduleExport: ESLintRuleImport = await jiti.import(absolutePath)
     result.rule = extractRule(moduleExport, ruleId)

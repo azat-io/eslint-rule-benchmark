@@ -156,6 +156,7 @@ describe('createESLintInstance', () => {
   it('loads direct rule export', async () => {
     let eslint = await createESLintInstance({
       rule: { path: directRulePath, ruleId: 'ns/direct', severity: 2 },
+      configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })
     expect(eslint).toBeInstanceOf(Object)
@@ -168,6 +169,7 @@ describe('createESLintInstance', () => {
         path: collectionRulePath,
         severity: 2,
       },
+      configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })
     expect(eslint).toBeInstanceOf(Object)
@@ -176,6 +178,7 @@ describe('createESLintInstance', () => {
   it('loads default-exported rule', async () => {
     let eslint = await createESLintInstance({
       rule: { path: defaultRulePath, ruleId: 'ns/default', severity: 2 },
+      configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })
     expect(eslint).toBeInstanceOf(Object)
@@ -188,6 +191,7 @@ describe('createESLintInstance', () => {
         ruleId: 'defcoll/rule',
         severity: 2,
       },
+      configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })
     expect(es).toBeInstanceOf(Object)
@@ -199,6 +203,7 @@ describe('createESLintInstance', () => {
       severities.map(async severity => {
         let eslint = await createESLintInstance({
           rule: { ruleId: `ns/s${severity}`, path: directRulePath, severity },
+          configDirectory: temporaryDirectory,
           languages: ['javascript'],
         })
         expect(eslint).toBeInstanceOf(Object)
@@ -209,6 +214,7 @@ describe('createESLintInstance', () => {
   it('works when RuleConfig given directly', async () => {
     let eslint = (await createESLintInstance({
       rule: { ruleId: 'just-id', severity: 2 },
+      configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })) as ESLintForTesting
     expect(eslint).toBeInstanceOf(Object)
@@ -222,6 +228,7 @@ describe('createESLintInstance', () => {
         path: directRulePath,
         severity: 2,
       },
+      configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })) as ESLintForTesting
     let rules = getRules(eslint) as unknown as Record<string, unknown>
@@ -233,6 +240,7 @@ describe('createESLintInstance', () => {
     let local = 'plain'
     let eslint = (await createESLintInstance({
       rule: { path: directRulePath, ruleId: local, severity: 2 },
+      configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })) as ESLintForTesting
     let rules = getRules(eslint) as unknown as Record<string, unknown>
@@ -248,6 +256,7 @@ describe('createESLintInstance', () => {
           ruleId: 'ns/miss',
           severity: 2,
         },
+        configDirectory: temporaryDirectory,
         languages: ['javascript'],
       }),
     ).rejects.toThrow(/Failed to load rule/u)
@@ -261,6 +270,7 @@ describe('createESLintInstance', () => {
           ruleId: 'ns/no-match',
           severity: 2,
         },
+        configDirectory: temporaryDirectory,
         languages: ['javascript'],
       }),
     ).rejects.toThrow()
@@ -269,10 +279,12 @@ describe('createESLintInstance', () => {
   it('caches same rulePath+id', async () => {
     await createESLintInstance({
       rule: { path: directRulePath, ruleId: 'ns/cache', severity: 2 },
+      configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })
     let eslint = await createESLintInstance({
       rule: { path: directRulePath, ruleId: 'ns/cache', severity: 2 },
+      configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })
     expect(eslint).toBeInstanceOf(Object)
@@ -284,6 +296,7 @@ describe('createESLintInstance', () => {
     await expect(
       createESLintInstance({
         rule: { ruleId: 'ns/no-match', path: missingPath, severity: 2 },
+        configDirectory: temporaryDirectory,
         languages: ['javascript'],
       }),
     ).rejects.toThrow()
@@ -293,6 +306,7 @@ describe('createESLintInstance', () => {
     let relativePath = path.relative(process.cwd(), directRulePath)
     let es = await createESLintInstance({
       rule: { ruleId: 'ns/relative', path: relativePath, severity: 2 },
+      configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })
     expect(es).toBeInstanceOf(Object)
@@ -304,6 +318,7 @@ describe('createESLintInstance', () => {
     await expect(
       createESLintInstance({
         rule: { path: invalidFormatPath, ruleId: 'any-id', severity: 2 },
+        configDirectory: temporaryDirectory,
         languages: ['javascript'],
       }),
     ).rejects.toThrow(/Rule module not found/u)
@@ -319,6 +334,7 @@ describe('createESLintInstance', () => {
           path: missingRulePath,
           severity: 2,
         },
+        configDirectory: temporaryDirectory,
         languages: ['javascript'],
       }),
     ).rejects.toThrow(/Rule module not found: non-existing-rule/u)
@@ -333,6 +349,7 @@ describe('createESLintInstance', () => {
         path: directRulePath,
         severity: 2,
       },
+      configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })
 
@@ -362,6 +379,7 @@ describe('createESLintInstance', () => {
 
     await createESLintInstance({
       rule: { ruleId: 'test-rule', severity: 2 },
+      configDirectory: temporaryDirectory,
       languages: ['typescript'],
     })
 
@@ -377,6 +395,7 @@ describe('createESLintInstance', () => {
 
     await createESLintInstance({
       rule: { ruleId: 'test-rule', severity: 2 },
+      configDirectory: temporaryDirectory,
       languages: ['javascript-react'],
     })
 
@@ -394,6 +413,7 @@ describe('createESLintInstance', () => {
 
     await createESLintInstance({
       rule: { ruleId: 'test-rule', severity: 2 },
+      configDirectory: temporaryDirectory,
       languages: ['typescript-react'],
     })
 
@@ -413,6 +433,7 @@ describe('createESLintInstance', () => {
     await createESLintInstance({
       languages: ['typescript', 'vue', 'svelte'],
       rule: { ruleId: 'test-rule', severity: 2 },
+      configDirectory: temporaryDirectory,
     })
 
     let config = (
@@ -437,6 +458,7 @@ describe('createESLintInstance', () => {
       supportedLanguages.map(async language => {
         let eslint = await createESLintInstance({
           rule: { ruleId: 'test-rule', severity: 2 },
+          configDirectory: temporaryDirectory,
           languages: [language],
         })
         expect(eslint).toBeInstanceOf(Object)
@@ -447,6 +469,7 @@ describe('createESLintInstance', () => {
   it('handles parser loading errors gracefully', async () => {
     let eslint = await createESLintInstance({
       rule: { ruleId: 'test-rule', severity: 2 },
+      configDirectory: temporaryDirectory,
       languages: ['typescript'],
     })
 

@@ -32,6 +32,9 @@ interface RunBenchmarksFromConfigParameters {
 
   /** The user-defined benchmark configuration. */
   userConfig: UserBenchmarkConfig
+
+  /** User configuration directory path */
+  configDirectory: string
 }
 
 /**
@@ -53,6 +56,8 @@ interface RunBenchmarksFromConfigParameters {
  *
  * @param {string | string[]} testPath - A single path (string) or an array of
  *   paths to files or directories containing code samples.
+ * @param {string} configDirectory - The path to the user configuration
+ *   directory.
  * @returns {Promise<CodeSample[]>} A promise that resolves to an array of
  *   CodeSample objects. Each object represents a successfully loaded code
  *   sample.
@@ -61,6 +66,7 @@ interface RunBenchmarksFromConfigParameters {
  */
 let loadCodeSamples = async (
   testPath: string[] | string,
+  configDirectory: string,
 ): Promise<CodeSample[]> => {
   let pathsToProcess = Array.isArray(testPath) ? testPath : [testPath]
 
@@ -68,7 +74,7 @@ let loadCodeSamples = async (
     pathsToProcess.map(async currentPath => {
       let filesForCurrentPath: string[] = []
       try {
-        let resolvedPath = path.resolve(process.cwd(), currentPath)
+        let resolvedPath = path.resolve(configDirectory, currentPath)
         let stats = await fs.stat(resolvedPath)
 
         if (stats.isDirectory()) {
@@ -179,7 +185,7 @@ let loadCodeSamples = async (
 export let runBenchmarksFromConfig = async (
   parameters: RunBenchmarksFromConfigParameters,
 ): Promise<void> => {
-  let { reporterOptions, userConfig } = parameters
+  let { reporterOptions, configDirectory, userConfig } = parameters
 
   if (userConfig.tests.length === 0) {
     console.warn('User configuration contains no tests. Exiting.')
@@ -200,7 +206,10 @@ export let runBenchmarksFromConfig = async (
   let processedTestCases = await Promise.all(
     userConfig.tests.map(async testSpec => {
       try {
-        let codeSamples = await loadCodeSamples(testSpec.testPath)
+        let codeSamples = await loadCodeSamples(
+          testSpec.testPath,
+          configDirectory,
+        )
 
         let ruleConfig: RuleConfig = {
           severity: testSpec.severity ?? DEFAULT_SEVERITY,
@@ -243,6 +252,7 @@ export let runBenchmarksFromConfig = async (
 
   let benchmarkRunResults: Task[] | null = await runBenchmark({
     config: globalBenchmarkConfig,
+    configDirectory,
     testCases,
   })
 
