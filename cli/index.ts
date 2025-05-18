@@ -159,13 +159,9 @@ export let run = (): void => {
         default: DEFAULT_TIMEOUT_MS,
       },
     )
-    .option(
-      '--report <format>',
-      'Report format (console, json, markdown)', // Removed html
-      {
-        default: DEFAULT_REPORTER_FORMAT,
-      },
-    )
+    .option('--report <format>', 'Report format (console, json, markdown)', {
+      default: DEFAULT_REPORTER_FORMAT,
+    })
     .option('--output <file>', 'Output file for the report')
     .action(async (options: RunSingleCommandOptions) => {
       try {
