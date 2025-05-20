@@ -1,3 +1,5 @@
+import type { JSRuleDefinitionTypeOptions } from 'eslint'
+
 import type { LANGUAGES } from '../constants'
 
 /** Defines a test case with all necessary information. */
@@ -44,11 +46,11 @@ export interface StatisticalMetrics {
 
 /** Represents an ESLint rule configuration. */
 export interface RuleConfig {
+  /** Optional rule configuration options. */
+  options?: JSRuleDefinitionTypeOptions['RuleOptions']
+
   /** The severity level (0=off, 1=warn, 2=error). */
   severity: 0 | 1 | 2
-
-  /** Optional rule configuration options. */
-  options?: unknown
 
   /** The ID of the rule to test. */
   ruleId: string

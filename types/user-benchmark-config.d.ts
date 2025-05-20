@@ -1,4 +1,4 @@
-import type { Linter } from 'eslint'
+import type { JSRuleDefinitionTypeOptions, Linter } from 'eslint'
 
 /** Configuration for eslint-rule-benchmark. */
 export interface UserBenchmarkConfig {
@@ -22,14 +22,14 @@ export interface UserBenchmarkConfig {
       timeout?: number
     }
 
+    /** Rule options (same structure as in ESLint config). */
+    options?: JSRuleDefinitionTypeOptions['RuleOptions']
+
     /** Path to file(s) which will be used for testing the rule. */
     testPath: string[] | string
 
     /** Rule severity (0=off, 1=warn, 2=error). Default: 2 */
     severity?: Linter.Severity
-
-    /** Rule options (same structure as in ESLint config). */
-    options?: unknown
 
     /** Path to rule implementation file (for custom rules). */
     rulePath: string

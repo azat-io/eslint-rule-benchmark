@@ -239,9 +239,9 @@ describe('validateConfig', () => {
           name: 'test',
         },
       ],
-    }
+    } as unknown as UserBenchmarkConfig
 
-    let errors = await validateConfig(config as UserBenchmarkConfig, '')
+    let errors = await validateConfig(config, '')
     expect(errors).toContain('Test at index 0: "options" must be an array')
   })
 

@@ -598,7 +598,7 @@ describe('runBenchmarksFromConfig', () => {
 
   it('should use custom severity and options when provided', async () => {
     mockUserConfig.tests[0]!.severity = 'error' as unknown as Linter.Severity
-    mockUserConfig.tests[0]!.options = { someOption: true }
+    mockUserConfig.tests[0]!.options = [{ someOption: true }]
 
     await runBenchmarksFromConfig({
       reporterOptions: mockReporterOptions,
@@ -611,7 +611,7 @@ describe('runBenchmarksFromConfig', () => {
         rule: {
           ruleId: mockUserConfig.tests[0]!.ruleId,
           path: mockUserConfig.tests[0]!.rulePath,
-          options: { someOption: true },
+          options: [{ someOption: true }],
           severity: 'error',
         },
       }),

@@ -73,7 +73,7 @@ export let createESLintInstance = async (
 
   let severityString = toSeverity(severity)
   let ruleEntry: Linter.RuleEntry = options
-    ? [severityString, options]
+    ? [severityString, ...options]
     : severityString
 
   let uniqueRuleId = `${uniqueNamespace}/${localName}`
