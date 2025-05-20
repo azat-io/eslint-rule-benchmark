@@ -8,5 +8,4 @@ export default {
     'vue-eslint-parser',
   ],
   entry: ['cli/index.ts', 'core/index.ts'],
-  ignore: ['changelog.config.ts'],
 } satisfies KnipConfig
