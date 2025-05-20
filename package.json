@@ -62,7 +62,7 @@
     "test:usage": "knip"
   },
   "dependencies": {
-    "@octokit/rest": "^21.1.1",
+    "@octokit/graphql": "^9.0.1",
     "cac": "^6.7.14",
     "jiti": "^2.4.2",
     "lilconfig": "^3.1.3",
@@ -72,7 +72,6 @@
     "@azat-io/eslint-config": "^2.30.0",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
-    "@octokit/openapi-types": "^25.0.0",
     "@octokit/webhooks-types": "^7.6.1",
     "@types/node": "^22.15.20",
     "@typescript-eslint/parser": "^8.32.1",

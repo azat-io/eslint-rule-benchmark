@@ -1,205 +1,237 @@
-import type { components } from '@octokit/openapi-types'
-
 import { beforeEach, afterEach, describe, expect, vi, it } from 'vitest'
-import { Octokit } from '@octokit/rest'
+import { graphql } from '@octokit/graphql'
 import fs from 'node:fs/promises'
 
 import { publishGithubComment } from '../../integrations/publish-github-comment'
 
-type IssueComment = components['schemas']['issue-comment']
-
 vi.mock('node:fs/promises')
-vi.mock('@octokit/rest')
+vi.mock('@octokit/graphql', () => {
+  let graphqlMock = vi.fn()
+  return Promise.resolve({
+    graphql: {
+      defaults: () => graphqlMock,
+    },
+    default: graphqlMock,
+  })
+})
 
-let mockCreateComment = vi.fn()
-let mockListComments = vi.fn()
-let mockUpdateComment = vi.fn()
+let graphqlMock = vi.mocked(graphql.defaults({}))
 
-describe('publishGithubComment', () => {
+describe('publishGithubComment (GraphQL)', () => {
   let originalEnvironment: NodeJS.ProcessEnv
 
   beforeEach(() => {
     originalEnvironment = { ...process.env }
 
-    vi.resetAllMocks()
-    let MockedOctokit = vi.mocked(Octokit)
-    MockedOctokit.mockImplementation(
-      () =>
-        ({
-          rest: {
-            issues: {
-              createComment: mockCreateComment,
-              updateComment: mockUpdateComment,
-              listComments: mockListComments,
-            },
-          },
-          issues: {
-            createComment: mockCreateComment,
-            updateComment: mockUpdateComment,
-            listComments: mockListComments,
-          },
-        }) as unknown as InstanceType<typeof Octokit>,
-    )
-    let mockedReadFile = vi.mocked(fs.readFile)
-    mockedReadFile.mockResolvedValue(
+    graphqlMock.mockReset()
+    vi.mocked(fs.readFile).mockResolvedValue(
       JSON.stringify({
-        repository: { owner: { login: 'test-owner' }, name: 'test-repo' },
         // eslint-disable-next-line camelcase
         pull_request: { number: 123 },
       }),
     )
+
+    process.env['GITHUB_ACTIONS'] = 'true'
+    process.env['GITHUB_EVENT_NAME'] = 'pull_request'
+    process.env['GITHUB_EVENT_PATH'] = '/path/to/event.json'
+    process.env['GITHUB_TOKEN'] = 'test-token'
+    process.env['GITHUB_REPOSITORY'] = 'test-owner/test-repo'
   })
 
   afterEach(() => {
     process.env = originalEnvironment
   })
 
-  let setValidGhEnvironment = (): void => {
-    process.env['GITHUB_ACTIONS'] = 'true'
-    process.env['GITHUB_EVENT_NAME'] = 'pull_request_target'
-    process.env['GITHUB_TOKEN'] = 'test-token'
-    process.env['GITHUB_REPOSITORY'] = 'test-owner/test-repo'
-    process.env['GITHUB_EVENT_PATH'] = '/path/to/event.json'
-  }
-
-  it('should do nothing if not in GitHub PR context', async () => {
+  it('does nothing if not in PR context', async () => {
     process.env['GITHUB_ACTIONS'] = 'false'
-    await publishGithubComment('test report')
+    await publishGithubComment('text')
     expect(fs.readFile).not.toHaveBeenCalled()
-    expect(mockListComments).not.toHaveBeenCalled()
-    expect(mockCreateComment).not.toHaveBeenCalled()
-    expect(mockUpdateComment).not.toHaveBeenCalled()
+    expect(graphqlMock).not.toHaveBeenCalled()
   })
 
-  it('should create a new comment if no existing bot comment is found', async () => {
-    setValidGhEnvironment()
-    mockListComments.mockResolvedValue({ data: [] })
+  it('creates comment if no existing marker found', async () => {
+    graphqlMock
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequest: {
+            comments: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [],
+            },
+            id: 'PR_NODE_ID',
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        addComment: {
+          commentEdge: {
+            node: { id: 'NEW_COMMENT_ID' },
+          },
+        },
+      })
 
-    await publishGithubComment('new report')
+    await publishGithubComment('report')
 
-    expect(mockListComments).toHaveBeenCalledWith({
-      owner: 'test-owner',
-      repo: 'test-repo',
-      // eslint-disable-next-line camelcase
-      issue_number: 123,
-    })
-    expect(mockCreateComment).toHaveBeenCalledWith(
+    expect(graphqlMock).toHaveBeenCalledWith(
+      expect.stringContaining('addComment'),
       expect.objectContaining({
         body: expect.stringContaining(
-          '<!-- eslint-rule-benchmark-report -->\n\nnew report',
+          '<!-- eslint-rule-benchmark-report -->',
         ) as string,
-        owner: 'test-owner',
-        repo: 'test-repo',
-        // eslint-disable-next-line camelcase
-        issue_number: 123,
+        subjectId: 'PR_NODE_ID',
       }),
     )
-    expect(mockUpdateComment).not.toHaveBeenCalled()
   })
 
-  it('should update an existing comment if a bot comment is found', async () => {
-    setValidGhEnvironment()
-    let existingBotComment: Partial<IssueComment> = {
-      user: { login: 'github-actions[bot]' } as IssueComment['user'],
-      body: '<!-- eslint-rule-benchmark-report -->\n\nold report',
-      id: 999,
-    }
-    mockListComments.mockResolvedValue({ data: [existingBotComment] })
+  it('updates comment if marker found', async () => {
+    graphqlMock
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequest: {
+            comments: {
+              nodes: [
+                {
+                  body: '<!-- eslint-rule-benchmark-report -->\n\nold content',
+                  author: { login: 'github-actions[bot]' },
+                  id: 'COMMENT_NODE_ID',
+                  databaseId: 456,
+                },
+              ],
+              pageInfo: { hasNextPage: false, endCursor: null },
+            },
+            id: 'PR_NODE_ID',
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        updateIssueComment: {
+          issueComment: {
+            id: 'COMMENT_NODE_ID',
+          },
+        },
+      })
 
     await publishGithubComment('updated report')
 
-    expect(mockListComments).toHaveBeenCalledOnce()
-    expect(mockUpdateComment).toHaveBeenCalledWith(
+    expect(graphqlMock).toHaveBeenCalledWith(
+      expect.stringContaining('updateIssueComment'),
       expect.objectContaining({
-        body: expect.stringContaining(
-          '<!-- eslint-rule-benchmark-report -->\n\nupdated report',
-        ) as string,
-        owner: 'test-owner',
-        repo: 'test-repo',
-        // eslint-disable-next-line camelcase
-        comment_id: 999,
+        body: expect.stringContaining('updated report') as string,
+        commentId: 'COMMENT_NODE_ID',
       }),
     )
-    expect(mockCreateComment).not.toHaveBeenCalled()
   })
 
-  it('should handle error when GITHUB_EVENT_PATH is invalid', async () => {
-    setValidGhEnvironment()
-    let mockedReadFile = vi.mocked(fs.readFile)
-    mockedReadFile.mockRejectedValue(new Error('File not found'))
-
-    let consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {})
-
-    await publishGithubComment('report')
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to post comment: File not found'),
+  it('handles readFile error', async () => {
+    vi.mocked(fs.readFile).mockRejectedValue(new Error('file not found'))
+    let spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await publishGithubComment('fallback')
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to post comment: file not found'),
     )
-    expect(mockListComments).not.toHaveBeenCalled()
-    consoleErrorSpy.mockRestore()
+    spy.mockRestore()
   })
 
-  it('should handle error if GITHUB_REPOSITORY is malformed', async () => {
-    setValidGhEnvironment()
-    process.env['GITHUB_REPOSITORY'] = 'invalid-repo-format'
-    let consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
-    await publishGithubComment('report')
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
+  it('handles malformed GITHUB_REPOSITORY', async () => {
+    process.env['GITHUB_REPOSITORY'] = 'invalidformat'
+    let warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    await publishGithubComment('warn test')
+    expect(warnSpy).toHaveBeenCalledWith(
       'GitHub PR Commenter: Could not determine PR number, owner, or repo.',
     )
-    expect(mockListComments).not.toHaveBeenCalled()
-    consoleWarnSpy.mockRestore()
+    warnSpy.mockRestore()
   })
 
-  it('should handle error from listComments API call', async () => {
-    setValidGhEnvironment()
-    mockListComments.mockRejectedValue(new Error('API list error'))
-    let consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {})
-
-    await publishGithubComment('report')
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to post comment: API list error'),
+  it('logs error when GraphQL query fails', async () => {
+    graphqlMock.mockRejectedValueOnce(new Error('GraphQL query failed'))
+    let spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await publishGithubComment('err test')
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to fetch comments via GraphQL'),
     )
-    consoleErrorSpy.mockRestore()
+    spy.mockRestore()
   })
 
-  it('should handle error from createComment API call', async () => {
-    setValidGhEnvironment()
-    mockListComments.mockResolvedValue({ data: [] })
-    mockCreateComment.mockRejectedValue(new Error('API create error'))
-    let consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {})
+  it('logs error when update mutation fails', async () => {
+    graphqlMock
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequest: {
+            comments: {
+              nodes: [
+                {
+                  body: '<!-- eslint-rule-benchmark-report -->\n\nsomething',
+                  author: { login: 'github-actions[bot]' },
+                  id: 'COMMENT_NODE_ID',
+                  databaseId: 456,
+                },
+              ],
+              pageInfo: { hasNextPage: false, endCursor: null },
+            },
+            id: 'PR_NODE_ID',
+          },
+        },
+      })
+      .mockRejectedValueOnce(new Error('mutation failed'))
 
-    await publishGithubComment('report')
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to post comment: API create error'),
+    let spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await publishGithubComment('update fail test')
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to update comment via GraphQL'),
     )
-    consoleErrorSpy.mockRestore()
+    spy.mockRestore()
   })
 
-  it('should handle error from updateComment API call', async () => {
-    setValidGhEnvironment()
-    let existingBotComment: Partial<IssueComment> = {
-      user: { login: 'github-actions[bot]' } as IssueComment['user'],
-      body: '<!-- eslint-rule-benchmark-report -->\n\nold report',
-      id: 999,
-    }
-    mockListComments.mockResolvedValue({ data: [existingBotComment] })
-    mockUpdateComment.mockRejectedValue(new Error('API update error'))
-    let consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {})
+  it('logs error when addComment mutation fails', async () => {
+    graphqlMock
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequest: {
+            comments: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [],
+            },
+            id: 'PR_NODE_ID',
+          },
+        },
+      })
+      .mockRejectedValueOnce(new Error('create mutation failed'))
 
-    await publishGithubComment('report')
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to post comment: API update error'),
+    let spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await publishGithubComment('create fail test')
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to create comment via GraphQL'),
     )
-    consoleErrorSpy.mockRestore()
+    spy.mockRestore()
+  })
+
+  it('logs error if pull request node ID is missing before creating comment', async () => {
+    graphqlMock.mockResolvedValueOnce({
+      repository: {
+        pullRequest: {
+          comments: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: [],
+          },
+          id: undefined,
+        },
+      },
+    })
+
+    let errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    await publishGithubComment('test')
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Cannot create comment, Pull Request Node ID not found.',
+    )
+
+    expect(
+      graphqlMock.mock.calls.some(
+        ([query]) => typeof query === 'string' && query.includes('addComment'),
+      ),
+    ).toBeFalsy()
+
+    errorSpy.mockRestore()
   })
 })
