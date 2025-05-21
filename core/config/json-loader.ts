@@ -14,7 +14,8 @@ export let jsonLoader: Loader = (_filepath, content): UserBenchmarkConfig => {
   try {
     return JSON.parse(content) as UserBenchmarkConfig
   } catch (error) {
-    let errorValue = error as Error
-    throw new Error(`Failed to load JSON: ${errorValue.message}`)
+    throw new Error('Failed to load JSON', {
+      cause: error,
+    })
   }
 }

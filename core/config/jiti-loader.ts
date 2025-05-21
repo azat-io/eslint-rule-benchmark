@@ -27,9 +27,8 @@ export let jitiLoader: Loader = async (filepath: string, _content: string) => {
     let loader: { default: UserBenchmarkConfig } = await jiti.import(filepath)
     return loader.default
   } catch (error) {
-    let errorValue = error as Error
-    throw new Error(
-      `Error loading file: ${filepath}\nError: ${errorValue.message}`,
-    )
+    throw new Error(`Error loading file ${filepath}`, {
+      cause: error,
+    })
   }
 }

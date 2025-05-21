@@ -57,7 +57,7 @@ describe('jitiLoader', () => {
     importMock.mockRejectedValueOnce(new Error('syntax error'))
 
     await expect(jitiLoader('/bad.ts', '')).rejects.toThrow(
-      'Error loading file: /bad.ts\nError: syntax error',
+      'Error loading file /bad.ts',
     )
   })
 

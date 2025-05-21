@@ -35,7 +35,7 @@ describe('jsonLoader', () => {
     let content = '{ invalid json }'
 
     expect(() => jsonLoader('', content) as UserBenchmarkConfig).toThrow(
-      "Failed to load JSON: Expected property name or '}' in JSON at position 2 (line 1 column 3)",
+      'Failed to load JSON',
     )
   })
 
@@ -43,7 +43,7 @@ describe('jsonLoader', () => {
     let content = ''
 
     expect(() => jsonLoader('', content) as UserBenchmarkConfig).toThrow(
-      'Failed to load JSON: Unexpected end of JSON input',
+      'Failed to load JSON',
     )
   })
 })
