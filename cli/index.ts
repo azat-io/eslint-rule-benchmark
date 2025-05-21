@@ -116,7 +116,9 @@ export let run = (): void => {
       try {
         let { filepath, config } = await loadConfig(options.config)
 
-        let errors = await validateConfig(config, filepath)
+        let configDirectory = path.dirname(filepath)
+
+        let errors = await validateConfig(config, configDirectory)
         if (errors.length > 0) {
           console.error('Configuration validation errors:')
           for (let error of errors) {
@@ -133,9 +135,9 @@ export let run = (): void => {
         ]
 
         await runBenchmarksFromConfig({
-          configDirectory: path.dirname(filepath),
           reporterOptions: reporterOptionsArray,
           userConfig: config,
+          configDirectory,
         })
       } catch (error) {
         let errorValue = error as Error
