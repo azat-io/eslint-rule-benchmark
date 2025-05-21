@@ -8,7 +8,7 @@ import type {
   ReporterOptions,
   BenchmarkConfig,
 } from '../types/benchmark-config'
-import type { CodeSample, RuleConfig, TestCase } from '../types/test-case'
+import type { CodeSample, RuleConfig, TestCase, Case } from '../types/test-case'
 import type { UserBenchmarkConfig } from '../types/user-benchmark-config'
 
 import {
@@ -149,24 +149,36 @@ let loadCodeSamples = async (
  * Orchestrates the entire benchmark process based on a user-provided
  * configuration.
  *
- * This function takes a UserBenchmarkConfig object and reporter options. It
- * performs the following steps:
+ * This function takes a `UserBenchmarkConfig` object and reporter options. It
+ * performs the following main stages:
  *
- * 1. Validates the top-level user configuration (e.g., iterations, timeout).
- * 2. For each test specification in `userConfig.tests`: a. Loads code samples
- *    using `loadCodeSamples`. b. Creates a `RuleConfig` and then a `TestCase`.
- *    c. Skips test specs that lead to errors or yield no code samples.
- * 3. If no valid `TestCase` objects can be generated, it logs an error and sets
- *    the process exit code.
- * 4. Calls `runBenchmark` with all valid `TestCase` objects and a global
- *    `BenchmarkConfig`.
- * 5. For each `Task` result returned by `runBenchmark` (representing a single
- *    sample's benchmark), it finds the corresponding `TestCase` to provide rule
- *    context.
- * 6. Calls `runReporters` to output/save the results for each task.
+ * 1. **Parallel Preparation**: a. For each test specification (`testSpec`) in
+ *    `userConfig.tests`: i. Determines the specific benchmark settings
+ *    (`specBenchmarkConfig`) by merging global `userConfig` settings with any
+ *    overrides from the current `testSpec`. ii. For each `caseItem` within the
+ *    `testSpec.cases` array: - Loads code samples using `loadCodeSamples` based
+ *    on `caseItem.testPath`. - Creates a `RuleConfig` using the `testSpec`'s
+ *    rule information (`ruleId`, `rulePath`) and the `caseItem`'s specific
+ *    `options` and `severity`. - Generates a `TestCase` object which includes
+ *    the loaded samples and the `RuleConfig`. b. All these preparation tasks
+ *    (for all `testSpec`s and their `caseItem`s) are executed in parallel using
+ *    `Promise.all`. Errors during individual case processing are caught, and
+ *    problematic cases are skipped.
+ * 2. **Sequential Benchmarking**: a. After all test cases are prepared, the
+ *    function iterates through the data मौसम for each `testSpec`. b. For each
+ *    `testSpec` that has valid `TestCase`s, it calls `runBenchmark`
+ *    _sequentially_. This ensures that benchmark runs for different test
+ *    specifications do not interfere with each other. The call to
+ *    `runBenchmark` uses the `testCases` prepared for that specific `testSpec`
+ *    and its determined `specBenchmarkConfig`.
+ * 3. **Reporting**: a. All `Task` results from all `runBenchmark` calls are
+ *    aggregated. b. For each `Task` result, the corresponding `TestCase` (which
+ *    contains the rule context) is identified. c. `runReporters` is called for
+ *    each task to output or save the benchmark results.
  *
- * Errors during individual test spec processing are logged, and the process
- * attempts to continue with other valid test specs.
+ * If no valid `TestCase` objects can be generated from the entire
+ * configuration, an error is logged, and the process may exit with an error
+ * code.
  *
  * @example
  *   // Assuming userConfig and reporterOpts are defined:
@@ -192,53 +204,94 @@ export let runBenchmarksFromConfig = async (
     return
   }
 
-  let globalBenchmarkConfig: BenchmarkConfig = {
-    warmup: {
-      iterations: userConfig.warmup?.iterations ?? DEFAULT_WARMUP_ITERATIONS,
-      enabled: userConfig.warmup?.enabled ?? DEFAULT_WARMUP_ENABLED,
-    },
-    iterations: userConfig.iterations ?? DEFAULT_ITERATIONS,
-    timeout: userConfig.timeout ?? DEFAULT_TIMEOUT_MS,
-    name: 'User Config Benchmark Run',
-    reporters: reporterOptions,
+  let allCreatedTestCases: TestCase[] = []
+  let allBenchmarkResults: Task[] = []
+
+  let allTestCasePreparationTasks = userConfig.tests.map(async testSpec => {
+    let specBenchmarkConfig: BenchmarkConfig = {
+      warmup: {
+        iterations:
+          testSpec.warmup?.iterations ??
+          userConfig.warmup?.iterations ??
+          DEFAULT_WARMUP_ITERATIONS,
+        enabled:
+          testSpec.warmup?.enabled ??
+          userConfig.warmup?.enabled ??
+          DEFAULT_WARMUP_ENABLED,
+      },
+      iterations:
+        testSpec.iterations ?? userConfig.iterations ?? DEFAULT_ITERATIONS,
+      timeout: testSpec.timeout ?? userConfig.timeout ?? DEFAULT_TIMEOUT_MS,
+      reporters: reporterOptions,
+      name: testSpec.name,
+    }
+
+    let caseProcessingPromises = testSpec.cases.map(
+      async (caseItem: Case, caseIndex) => {
+        try {
+          let codeSamples = await loadCodeSamples(
+            caseItem.testPath,
+            configDirectory,
+          )
+
+          let ruleConfig: RuleConfig = {
+            severity: caseItem.severity ?? DEFAULT_SEVERITY,
+            options: caseItem.options,
+            ruleId: testSpec.ruleId,
+            path: testSpec.rulePath,
+          }
+
+          let caseNameSuffix = `Case ${caseIndex + 1}`
+          let testCaseName = `${testSpec.name} - ${caseNameSuffix}`
+          let testCaseId = `config-test-${testSpec.name.replaceAll(/\s+/gu, '-')}-case-${caseIndex}-${Date.now()}`
+
+          return createTestCase({
+            samples: codeSamples,
+            name: testCaseName,
+            rule: ruleConfig,
+            id: testCaseId,
+          })
+        } catch (error: unknown) {
+          let errorValue = error as Error
+          console.warn(
+            `Skipping case ${caseIndex + 1} in test "${testSpec.name}" due to an error: ${errorValue.message}`,
+          )
+          return null
+        }
+      },
+    )
+
+    let resolvedTestCases = await Promise.all(caseProcessingPromises)
+    let validTestCases = resolvedTestCases.filter(
+      (tc): tc is TestCase => tc !== null,
+    )
+    return { testCases: validTestCases, specBenchmarkConfig, testSpec }
+  })
+
+  let preparedDataForAllSpecs = await Promise.all(allTestCasePreparationTasks)
+
+  for (let preparedData of preparedDataForAllSpecs) {
+    let { specBenchmarkConfig, testCases, testSpec } = preparedData
+
+    if (testCases.length > 0) {
+      console.info(
+        `Starting benchmark run for test spec "${testSpec.name}" with ${testCases.length} test case(s)...`,
+      )
+      // eslint-disable-next-line no-await-in-loop
+      let specRunResults = await runBenchmark({
+        config: specBenchmarkConfig,
+        configDirectory,
+        testCases,
+      })
+
+      if (specRunResults) {
+        allBenchmarkResults.push(...specRunResults)
+        allCreatedTestCases.push(...testCases)
+      }
+    }
   }
 
-  let processedTestCases = await Promise.all(
-    userConfig.tests.map(async testSpec => {
-      try {
-        let codeSamples = await loadCodeSamples(
-          testSpec.testPath,
-          configDirectory,
-        )
-
-        let ruleConfig: RuleConfig = {
-          severity: testSpec.severity ?? DEFAULT_SEVERITY,
-          options: testSpec.options,
-          ruleId: testSpec.ruleId,
-          path: testSpec.rulePath,
-        }
-
-        return createTestCase({
-          id: `config-test-${testSpec.name.replaceAll(/\s+/gu, '-')}-${Date.now()}`,
-          samples: codeSamples,
-          name: testSpec.name,
-          rule: ruleConfig,
-        })
-      } catch (error: unknown) {
-        let errorValue = error as Error
-        console.warn(
-          `Skipping test "${testSpec.name}" due to an error: ${errorValue.message}`,
-        )
-        return null
-      }
-    }),
-  )
-
-  let testCases: TestCase[] = processedTestCases.filter(
-    (tc): tc is TestCase => tc !== null,
-  )
-
-  if (testCases.length === 0) {
+  if (allCreatedTestCases.length === 0) {
     console.error(
       'No valid test cases could be generated from the user configuration. Exiting.',
     )
@@ -246,22 +299,23 @@ export let runBenchmarksFromConfig = async (
     return
   }
 
-  console.info(
-    `Starting benchmark run for ${testCases.length} test case(s) from configuration...`,
-  )
+  if (allBenchmarkResults.length > 0) {
+    let reportingConfigBase = {
+      warmup: {
+        iterations: userConfig.warmup?.iterations ?? DEFAULT_WARMUP_ITERATIONS,
+        enabled: userConfig.warmup?.enabled ?? DEFAULT_WARMUP_ENABLED,
+      },
+      iterations: userConfig.iterations ?? DEFAULT_ITERATIONS,
+      timeout: userConfig.timeout ?? DEFAULT_TIMEOUT_MS,
+      name: 'User Config Benchmark Run',
+      reporters: reporterOptions,
+    }
 
-  let benchmarkRunResults: Task[] | null = await runBenchmark({
-    config: globalBenchmarkConfig,
-    configDirectory,
-    testCases,
-  })
-
-  if (benchmarkRunResults && benchmarkRunResults.length > 0) {
-    for (let taskItem of benchmarkRunResults) {
+    for (let taskItem of allBenchmarkResults) {
       let correspondingTestCase: undefined | TestCase
       let taskName = taskItem.name || ''
 
-      for (let tc of testCases) {
+      for (let tc of allCreatedTestCases) {
         if (taskName.startsWith(`${tc.name} on `)) {
           correspondingTestCase = tc
           break
@@ -276,29 +330,14 @@ export let runBenchmarksFromConfig = async (
           },
           result: taskItem,
         }
-        runReporters(reportableResult, globalBenchmarkConfig)
+        runReporters(reportableResult, reportingConfigBase)
       } else {
-        if (testCases.length === 1) {
-          correspondingTestCase = testCases[0]!
-          let reportableResult: SingleRuleResult = {
-            rule: {
-              id: correspondingTestCase.rule.ruleId,
-              path: correspondingTestCase.rule.path,
-            },
-            result: taskItem,
-          }
-          runReporters(reportableResult, globalBenchmarkConfig)
-          console.warn(
-            `Could not precisely match task "${taskName}" to a TestCase name. Attributed to the sole TestCase "${correspondingTestCase.name}".`,
-          )
-        } else {
-          console.warn(
-            `Could not find corresponding TestCase for benchmark task "${taskName}". Skipping report for this task.`,
-          )
-        }
+        console.warn(
+          `Could not find corresponding TestCase for benchmark task "${taskName}". Skipping report for this task. This might indicate an issue with TestCase naming or matching logic.`,
+        )
       }
     }
-  } else if (testCases.length > 0) {
+  } else if (allCreatedTestCases.length > 0) {
     console.warn(
       'Benchmark run completed, but no results were returned to report.',
     )

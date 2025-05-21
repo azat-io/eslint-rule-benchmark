@@ -15,7 +15,6 @@ describe('createTestCase', () => {
     })
 
     expect(config.name).toBe('Test Case')
-    expect(config.iterationCount).toBe(100)
     expect(config.samples).toHaveLength(0)
   })
 
@@ -27,11 +26,9 @@ describe('createTestCase', () => {
       },
       name: 'Custom Test Case',
       id: 'custom-test-case',
-      iterationCount: 50,
       samples: [],
     })
 
     expect(config.name).toBe('Custom Test Case')
-    expect(config.iterationCount).toBe(50)
   })
 })

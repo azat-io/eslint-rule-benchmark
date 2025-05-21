@@ -37,8 +37,12 @@ describe('jitiLoader', () => {
     let cfg: UserBenchmarkConfig = {
       tests: [
         {
+          cases: [
+            {
+              testPath: 'test.js',
+            },
+          ],
           rulePath: 'rule.js',
-          testPath: 'test.js',
           ruleId: 'rule',
           name: 'demo',
         },

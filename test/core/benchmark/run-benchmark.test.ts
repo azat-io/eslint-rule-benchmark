@@ -59,7 +59,6 @@ describe('runBenchmark', () => {
       ],
       rule: { ruleId: 'demo', severity: 2 },
       name: 'Sample case',
-      iterationCount: 1,
       id: 'id-1',
     }
 

@@ -107,9 +107,13 @@ import { defineConfig } from 'eslint-rule-benchmark'
 export default defineConfig({
   /* Optional: Default iterations for all tests */
   iterations: 100,
+
   /* Optional: Default warmup configuration */
   warmup: {
+    /* Optional: Number of warmup iterations */
     iterations: 20,
+
+    /* Optional: Whether to enable warmup */
     enabled: true,
   },
   /* Optional: Default timeout for each test */
@@ -118,30 +122,63 @@ export default defineConfig({
   /* Array of benchmark test specifications */
   tests: [
     {
-      /* Required: Descriptive name for this test */
+      /* Required: Descriptive name for this test group/specification */
       name: 'My Custom Rule: no-vars',
+
       /* Required: ESLint rule identifier (e.g., plugin-name/rule-name) */
       ruleId: 'my-plugin/no-vars',
+
       /* Required: Path to the rule's implementation */
       rulePath: './lib/rules/no-vars.js',
-      /* Required: Path(s) to files or directories containing code samples */
-      testPath: './test/fixtures/no-vars/',
-      /* Optional: ESLint rule options */
-      options: [{ allowLet: false }],
-      /* Optional: ESLint rule severity (0, 1, 2) - defaults to 2 (error) */
-      severity: 2,
-      /* Optional: Override global benchmark settings for this specific test */
-      benchmarkSettings: {
-        iterations: 50,
-        timeout: 300,
+
+      /* Optional: Override global benchmark settings for this specific test group */
+      iterations: 50,
+
+      /* Optional: Override global warmup settings for this specific test group */
+      timeout: 300,
+
+      /* Optional: Override global warmup settings for this specific test group */
+      warmup: {
+        /* Optional: Number of warmup iterations */
+        iterations: 10,
       },
+
+      /* Required: Array of test cases for this rule */
+      cases: [
+        {
+          /* Required: Path(s) to files or directories for this specific case */
+          testPath: './test/fixtures/no-vars/valid.js',
+
+          /* Optional: ESLint rule options specific to this case */
+          options: [{ allowLet: true }],
+
+          /* Optional: ESLint rule severity for this case (0, 1, 2) - defaults to 2 */
+          severity: 2,
+        },
+        {
+          /* Optional: Descriptive name for this specific test case */
+          testPath: './test/fixtures/no-vars/invalid.js',
+
+          /* Optional: ESLint rule options specific to this case */
+          options: [{ allowLet: false }],
+        },
+      ],
     },
     {
       name: 'Another Rule: prefer-const',
       ruleId: 'prefer-const',
-      testPath: [
-        './test/fixtures/general/file1.js',
-        './test/fixtures/general/file2.ts',
+      cases: [
+        {
+          testPath: [
+            './test/fixtures/general/file1.js',
+            './test/fixtures/general/file2.ts',
+          ],
+        },
+        {
+          name: 'Prefer Const with specific options',
+          testPath: './test/fixtures/general/file3.js',
+          options: [{ destructuring: 'all' }],
+        },
       ],
     },
     /* ... more test specifications */
@@ -152,19 +189,25 @@ export default defineConfig({
 **Configuration Fields:**
 
 - **Global Settings (optional, at the root of the config object):**
-  - `iterations: number`: Default number of measurement iterations for each test.
+  - `iterations: number`: Default number of measurement iterations for each code sample.
   - `warmup: object`: Default warmup configuration.
     - `iterations: number`: Number of warmup iterations.
-    - `enabled: boolean`: Whether warmup is enabled.
+    - `enabled: boolean`: Whether warmup is enabled (defaults to `true`).
   - `timeout: number`: Default target time in milliseconds for tinybench to run each sample's benchmark.
-- **`tests: array` (required):** An array of test specification objects. Each object defines a benchmark scenario:
-  - `name: string` (required): A descriptive name for this test, used in reports.
+- **`tests: array` (required):** An array of test specification objects. Each object defines a rule to be benchmarked and can contain multiple test cases.
+  - `name: string` (required): A descriptive name for this test specification (e.g., "Rule: no-console Performance"). Used in reports.
   - `ruleId: string` (required): The ESLint rule identifier (e.g., `plugin-name/rule-name` or `core-rule-name`).
-  - `rulePath: string` (required for local/custom rules): The file path to the rule's implementation. Can be omitted if the rule is a core ESLint rule or from a plugin that ESLint can resolve through its own configuration (though providing it ensures clarity).
-  - `testPath: string | string[]` (required): Path(s) to files or directories containing code samples to benchmark against.
-  - `options?: unknown[]`: Optional. An array of options for the ESLint rule, same as in an ESLint config file (e.g., `[{ "myOption": true }]`).
-  - `severity?: 0 | 1 | 2`: Optional. The severity for the rule (0=off, 1=warn, 2=error). Defaults to 2 (error) if not specified.
-  - `benchmarkSettings?: object`: Optional. Allows overriding global benchmark settings (`iterations`, `warmup`, `timeout`) specifically for this test.
+  - `rulePath: string` (required for local/custom rules): The file path to the rule's implementation.
+  - `iterations?: number`: Optional. Overrides global `iterations` for all cases in this test specification.
+  - `warmup?: object`: Optional. Overrides global `warmup` settings for all cases in this test specification.
+    - `iterations?: number`
+    - `enabled?: boolean`
+  - `timeout?: number`: Optional. Overrides global `timeout` for all cases in this test specification.
+  - **`cases: array` (required):** An array of test case objects for this rule. Each case defines a specific scenario.
+    - `name?: string`: Optional. A descriptive name for this specific test case. If not provided, one might be generated.
+    - `testPath: string | string[]` (required): Path(s) to files or directories containing code samples for this case.
+    - `options?: unknown[]`: Optional. An array of options for the ESLint rule for this specific case, same as in an ESLint config file.
+    - `severity?: 0 | 1 | 2`: Optional. The severity for the rule for this specific case (0=off, 1=warn, 2=error). Defaults to 2 (error) if not specified.
 
 ## Metrics and Output
 
@@ -199,20 +242,21 @@ The tool uses [Tinybench](https://github.com/tinylibs/tinybench) for accurate an
 ### Example Output
 
 ```
+
 -------------------------------------|--------
-     Rule Benchmark Results: sort-imports
+Rule Benchmark Results: sort-imports
 -------------------------------------|--------
-Metric                               | Value
-Operations per second                | 1079
-Average time                         | 1.01 ms
-Median time (P50)                    | 0.86 ms
-Minimum time                         | 0.76 ms
-Maximum time                         | 2.62 ms
-P75 Percentile                       | 0.94 ms
-P99 Percentile                       | 2.52 ms
-Standard deviation                   | 0.43 ms
-Relative margin of error             | ±4.83 %
-Total samples                        | 297
+Metric | Value
+Operations per second | 1079
+Average time | 1.01 ms
+Median time (P50) | 0.86 ms
+Minimum time | 0.76 ms
+Maximum time | 2.62 ms
+P75 Percentile | 0.94 ms
+P99 Percentile | 2.52 ms
+Standard deviation | 0.43 ms
+Relative margin of error | ±4.83 %
+Total samples | 297
 -------------------------------------|--------
 
 ```

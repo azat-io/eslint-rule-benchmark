@@ -2,7 +2,6 @@ import type { RuleConfig, CodeSample, TestCase } from '../../types/test-case'
 
 /** Parameters for creating a test case. */
 interface CreateTestCaseParameters {
-  iterationCount?: number
   samples: CodeSample[]
   rule: RuleConfig
   name: string
@@ -19,7 +18,6 @@ interface CreateTestCaseParameters {
 export let createTestCase = (
   parameters: CreateTestCaseParameters,
 ): TestCase => ({
-  iterationCount: parameters.iterationCount ?? 100,
   samples: parameters.samples,
   name: parameters.name,
   rule: parameters.rule,

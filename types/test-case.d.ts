@@ -2,27 +2,6 @@ import type { JSRuleDefinitionTypeOptions } from 'eslint'
 
 import type { LANGUAGES } from '../constants'
 
-/** Defines a test case with all necessary information. */
-export interface TestCase {
-  /** Number of iterations to run. */
-  iterationCount: number
-
-  /** Code samples to test against. */
-  samples: CodeSample[]
-
-  /** Optional description of the test case. */
-  description?: string
-
-  /** Rule to test. */
-  rule: RuleConfig
-
-  /** Display name for the test case. */
-  name: string
-
-  /** Unique identifier for the test case. */
-  id: string
-}
-
 /** Statistical metrics calculated from measurements. */
 export interface StatisticalMetrics {
   /** Number of samples used for calculation. */
@@ -57,6 +36,36 @@ export interface RuleConfig {
 
   /** Path to the file containing the rule. */
   path?: string
+}
+
+/** Defines a test case with all necessary information. */
+export interface TestCase {
+  /** Code samples to test against. */
+  samples: CodeSample[]
+
+  /** Optional description of the test case. */
+  description?: string
+
+  /** Rule to test. */
+  rule: RuleConfig
+
+  /** Display name for the test case. */
+  name: string
+
+  /** Unique identifier for the test case. */
+  id: string
+}
+
+/** Configuration for a single test case, used within UserBenchmarkConfig. */
+export interface Case {
+  /** Rule options (same structure as in ESLint config). */
+  options?: JSRuleDefinitionTypeOptions['RuleOptions']
+
+  /** Path to file(s) which will be used for testing the rule. */
+  testPath: string[] | string
+
+  /** Rule severity (0=off, 1=warn, 2=error). Default: 2 */
+  severity?: 0 | 1 | 2
 }
 
 /** Represents a single timing measurement. */

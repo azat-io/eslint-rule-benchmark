@@ -85,10 +85,14 @@ interface RunCommandOptions {
  *
  * This function sets up the CLI using 'cac', defining two main commands:
  *
- * - 'run': Executes benchmarks based on a provided or discovered configuration
- *   file. Allows overriding reporter options via CLI flags.
- * - 'run-single': Executes a benchmark for a single specified ESLint rule against
- *   given source code, with all parameters provided via CLI flags.
+ * - 'run': Executes benchmarks based on a benchmark configuration file (see
+ *   `UserBenchmarkConfig`). Allows overriding some reporter options via CLI
+ *   flags.
+ * - 'run-single': Executes a benchmark for a single ESLint rule. All parameters
+ *   (rule path, source code path, benchmark settings) are provided via CLI
+ *   flags. This command internally constructs a `UserBenchmarkConfig` object
+ *   with one test specification, which in turn contains a single test case
+ *   derived from the CLI options.
  *
  * It parses command-line arguments and delegates to the appropriate command
  * actions.
@@ -185,8 +189,12 @@ export let run = (): void => {
         let constructedUserConfig: UserBenchmarkConfig = {
           tests: [
             {
+              cases: [
+                {
+                  testPath: options.source,
+                },
+              ],
               name: `CLI: ${options.name}`,
-              testPath: options.source,
               rulePath: options.rule,
               ruleId: options.name,
             },
