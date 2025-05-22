@@ -1,12 +1,23 @@
-import type { Task } from 'tinybench'
 import type { ESLint } from 'eslint'
 
+import type { BenchmarkMetrics } from '../../types/benchmark-metrics'
 import type { BenchmarkConfig } from '../../types/benchmark-config'
 import type { TestCase } from '../../types/test-case'
 import type { LANGUAGES } from '../../constants'
 
 import { createESLintInstance } from '../eslint/create-eslint-instance'
+import { calculateStatistics } from './calculate-statistics'
+import { filterOutliers } from './filter-outliers'
 import { createBench } from './create-bench'
+
+/** Processed benchmark result for a single task. */
+export interface ProcessedBenchmarkTask {
+  /** Metrics calculated from the benchmark samples. */
+  metrics: BenchmarkMetrics
+
+  /** Name of the benchmark task. */
+  name: string
+}
 
 /** Parameters for running a benchmark. */
 interface RunBenchmarkParameters {
@@ -40,21 +51,24 @@ type Language = (typeof LANGUAGES)[number]
  *   // Assuming testCases and config are defined:
  *   const results = await runBenchmark({ testCases, config })
  *   if (results) {
- *     results.forEach(taskResult => {
- *       console.log(`Task: ${taskResult.name}, Ops/sec: ${taskResult.hz}`)
+ *     results.forEach(processedTask => {
+ *       console.log(
+ *         `Task: ${processedTask.name}, Ops/sec: ${processedTask.metrics.hz}`,
+ *       )
  *     })
  *   }
  *
  * @param {RunBenchmarkParameters} parameters - The parameters for running the
  *   benchmark, including the overall benchmark configuration and an array of
  *   test cases.
- * @returns {Promise<Task[] | null>} A promise that resolves to an array of Task
- *   objects from tinybench, where each Task represents the result of
- *   benchmarking a single code sample. Returns null if no tasks were run.
+ * @returns {Promise<ProcessedBenchmarkTask[] | null>} A promise that resolves
+ *   to an array of ProcessedBenchmarkTask objects, each containing the name and
+ *   calculated metrics for a benchmarked code sample. Returns null if no tasks
+ *   were run.
  */
 export let runBenchmark = async (
   parameters: RunBenchmarkParameters,
-): Promise<Task[] | null> => {
+): Promise<ProcessedBenchmarkTask[] | null> => {
   let { configDirectory, testCases, config } = parameters
 
   if (testCases.length === 0) {
@@ -115,5 +129,38 @@ export let runBenchmark = async (
     return null
   }
 
-  return await bench.run()
+  let tinybenchTasks = await bench.run()
+
+  let processedResults: ProcessedBenchmarkTask[] = []
+
+  for (let task of tinybenchTasks) {
+    if (!task.result?.samples) {
+      console.warn(
+        `Task "${task.name}" ran but has no samples or result. Skipping.`,
+      )
+      continue
+    }
+
+    let originalSamples = task.result.samples
+    let { outliersRemovedCount: _outliersRemovedCount, filteredSamples } =
+      filterOutliers(originalSamples)
+
+    let samplesToProcess =
+      filteredSamples.length > 0 ? filteredSamples : originalSamples
+
+    if (filteredSamples.length === 0 && originalSamples.length > 0) {
+      console.warn(
+        `All ${originalSamples.length} samples for task "${task.name}" were filtered out as outliers. Statistics will be based on original samples or appear as zero if original was also empty.`,
+      )
+    }
+
+    let calculatedMetrics = calculateStatistics(samplesToProcess)
+
+    processedResults.push({
+      metrics: calculatedMetrics,
+      name: task.name,
+    })
+  }
+
+  return processedResults.length > 0 ? processedResults : null
 }

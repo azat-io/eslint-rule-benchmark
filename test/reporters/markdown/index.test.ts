@@ -6,9 +6,13 @@ import type {
   SingleRuleResult,
   BenchmarkConfig,
 } from '../../../types/benchmark-config'
+import type { ProcessedBenchmarkTask } from '../../../core/benchmark/run-benchmark'
+import type { BenchmarkMetrics } from '../../../types/benchmark-metrics'
 
-import { createMarkdownReporter } from '../../../reporters/markdown'
-import { markdownReporter } from '../../../reporters/markdown'
+import {
+  createMarkdownReporter,
+  markdownReporter,
+} from '../../../reporters/markdown'
 
 vi.mock('node:fs/promises', () => ({
   writeFile: vi.fn().mockResolvedValue(undefined),
@@ -18,27 +22,30 @@ vi.mock('node:fs/promises', () => ({
 let fsWrite = vi.mocked(writeFile)
 let fsMkdir = vi.mocked(mkdir)
 
-let tinybenchResult = {
-  latency: {
-    samples: [1, 1.1],
-    rme: 1.11,
-    p75: 1.05,
-    p995: 1.1,
-    p999: 1.1,
-    sd: 0.05,
-    min: 0.9,
-    max: 1.1,
-    p99: 1.1,
-    mean: 1,
-    p50: 1,
-  },
-  throughput: { mean: 1234 },
-  runtimeVersion: 'v20.11.1',
-  runtime: 'node',
+let createMockMetrics = (
+  overrides: Partial<BenchmarkMetrics> = {},
+): BenchmarkMetrics => ({
+  sampleCount: 10,
   period: 0.001,
-  totalTime: 2,
-}
+  stdDev: 0.05,
+  median: 0.9,
+  p75: 1.05,
+  min: 0.8,
+  max: 1.2,
+  p99: 1.1,
+  hz: 1000,
+  mean: 1,
+  ...overrides,
+})
 
+let createMockProcessedTask = (
+  metricOverrides: Partial<BenchmarkMetrics> = {},
+): ProcessedBenchmarkTask => ({
+  metrics: createMockMetrics(metricOverrides),
+  name: 'test-benchmark-task-name',
+})
+
+let mockProcessedTask: ProcessedBenchmarkTask
 let mockResult: SingleRuleResult
 let mockConfig: BenchmarkConfig
 
@@ -53,10 +60,11 @@ describe('markdown reporter', () => {
     fsWrite.mockClear()
     fsMkdir.mockClear()
 
+    mockProcessedTask = createMockProcessedTask()
     mockResult = {
-      result: { result: tinybenchResult },
-      rule: { id: 'test-rule' },
-    } as SingleRuleResult
+      rule: { path: 'path/to/rule.js', id: 'test-rule' },
+      result: mockProcessedTask,
+    }
 
     mockConfig = {
       warmup: { enabled: true, iterations: 3 },
@@ -97,9 +105,40 @@ describe('markdown reporter', () => {
 
       expect(saved).toContain('# ESLint Rule Benchmark Report')
       expect(saved).toContain('## bench')
-      expect(saved).toContain('| Operations per second | 1234 |')
+      expect(saved).toContain(`**Rule ID:** \`test-rule\``)
+      expect(saved).toContain(`**Rule Path:** \`path/to/rule.js\``)
+      expect(saved).toContain(
+        `| Operations per second | ${mockProcessedTask.metrics.hz} |`,
+      )
+      expect(saved).toContain(
+        `| Average time | ${mockProcessedTask.metrics.mean.toFixed(5)} ms |`,
+      )
+      expect(saved).toContain(
+        `| Median time (P50) | ${mockProcessedTask.metrics.median.toFixed(5)} ms |`,
+      )
+      expect(saved).toContain(
+        `| Minimum time | ${mockProcessedTask.metrics.min.toFixed(5)} ms |`,
+      )
+      expect(saved).toContain(
+        `| Maximum time | ${mockProcessedTask.metrics.max.toFixed(5)} ms |`,
+      )
+      expect(saved).toContain(
+        `| P75 Percentile | ${mockProcessedTask.metrics.p75.toFixed(5)} ms |`,
+      )
+      expect(saved).toContain(
+        `| P99 Percentile | ${mockProcessedTask.metrics.p99.toFixed(5)} ms |`,
+      )
+      expect(saved).toContain(
+        `| Standard deviation | ${mockProcessedTask.metrics.stdDev.toFixed(5)} ms |`,
+      )
+      expect(saved).toContain(
+        `| Total samples | ${mockProcessedTask.metrics.sampleCount} |`,
+      )
+      expect(saved).not.toContain('Relative margin of error')
+      expect(saved).not.toContain('99.5%')
+      expect(saved).not.toContain('99.9%')
+      expect(saved).not.toContain('## System Information')
       expect(saved).toContain('| Iterations | 10 |')
-      expect(saved).toContain('**Rule ID:** `test-rule`')
 
       expect(infoSpy).toHaveBeenCalledWith(
         expect.stringContaining('Markdown report saved to:'),
@@ -166,20 +205,15 @@ describe('markdown reporter', () => {
   })
 
   it('substitutes "N/A" for invalid time values', async () => {
+    let mockTaskWithNaN = createMockProcessedTask({
+      median: Infinity,
+      mean: undefined,
+      p75: Number.NaN,
+    })
     let resultWithInvalidTimes: SingleRuleResult = {
-      result: {
-        result: {
-          ...tinybenchResult,
-          latency: {
-            ...tinybenchResult.latency,
-            mean: undefined,
-            p75: Number.NaN,
-            p50: Infinity,
-          },
-        },
-      },
       rule: { id: 'test-rule' },
-    } as unknown as SingleRuleResult
+      result: mockTaskWithNaN,
+    }
 
     let reporter = createMarkdownReporter({ format: 'markdown' })
     reporter(resultWithInvalidTimes, mockConfig)

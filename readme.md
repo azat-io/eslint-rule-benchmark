@@ -216,17 +216,14 @@ ESLint Rule Benchmark provides the following performance metrics:
 | Metric                | Description                                          |
 | --------------------- | ---------------------------------------------------- |
 | Operations per second | Number of operations per second                      |
-| Average time          | Average execution time of the rule                   |
+| Average time          | Average execution time of the rule (e.g., in ms)     |
 | Median time (P50)     | Median execution time (50th percentile)              |
 | Minimum time          | Minimum execution time                               |
 | Maximum time          | Maximum execution time                               |
 | P75 Percentile        | 75th percentile (time for 75% of fastest executions) |
 | P99 Percentile        | 99th percentile (time for 99% of fastest executions) |
 | Standard deviation    | Standard deviation (measure of time variability)     |
-| Margin of error       | Relative margin of error in measurements             |
 | Total samples         | Number of measurements taken during the benchmark    |
-| Total warnings        | Number of warnings found by the rule                 |
-| Total errors          | Number of errors found by the rule                   |
 
 Metrics are available in Console, JSON, and Markdown formats, allowing integration with various systems and workflows.
 
@@ -237,28 +234,24 @@ The tool uses [Tinybench](https://github.com/tinylibs/tinybench) for accurate an
 - Warmup phase to minimize JIT compilation impact
 - Multiple iterations for statistical significance
 - Isolation of the tested rule from other rules
-- Outlier filtering for stable results
+- Outlier filtering (Tukey's fences method) for more stable and representative results, especially for maximum execution times.
 
 ### Example Output
 
 ```
-
--------------------------------------|--------
-Rule Benchmark Results: sort-imports
--------------------------------------|--------
-Metric | Value
-Operations per second | 1079
-Average time | 1.01 ms
-Median time (P50) | 0.86 ms
-Minimum time | 0.76 ms
-Maximum time | 2.62 ms
-P75 Percentile | 0.94 ms
-P99 Percentile | 2.52 ms
-Standard deviation | 0.43 ms
-Relative margin of error | ±4.83 %
-Total samples | 297
--------------------------------------|--------
-
+-----------------------------------------------|-----------
+           Rule Benchmark Results: sort-imports
+-----------------------------------------------|-----------
+Operations per second                          | 18429
+Average time                                   | 0.05426 ms
+Median time (P50)                              | 0.05417 ms
+Minimum time                                   | 0.05267 ms
+Maximum time                                   | 0.05654 ms
+P75 Percentile                                 | 0.05462 ms
+P99 Percentile                                 | 0.05638 ms
+Standard deviation                             | 0.00066 ms
+Total samples                                  | 34737
+-----------------------------------------------|-----------
 ```
 
 ## Versioning Policy

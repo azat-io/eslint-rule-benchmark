@@ -1,6 +1,6 @@
-/** Main configuration for a benchmark run. */
-import type { Task } from 'tinybench'
+import type { ProcessedBenchmarkTask } from '../core/benchmark/run-benchmark' // Assuming path
 
+/** Main configuration for a benchmark run. */
 export interface BenchmarkConfig {
   /** Reporter options. */
   reporters: ReporterOptions[]
@@ -32,8 +32,8 @@ export interface SingleRuleResult {
     id: string
   }
 
-  /** Raw benchmark run results for detailed analysis (from tinybench). */
-  result: Task | null
+  /** Processed benchmark results. */
+  result: ProcessedBenchmarkTask | null
 }
 
 /** Configuration for benchmark warmup. */

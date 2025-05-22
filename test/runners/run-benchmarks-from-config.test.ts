@@ -1,10 +1,10 @@
 import type { PathLike, Dirent, Stats } from 'node:fs'
-import type { Task } from 'tinybench'
 
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import * as fsPromises from 'node:fs/promises'
 import path from 'node:path'
 
+import type { ProcessedBenchmarkTask } from '../../core/benchmark/run-benchmark'
 import type { UserBenchmarkConfig } from '../../types/user-benchmark-config'
 import type { ReporterOptions } from '../../types/benchmark-config'
 import type { CodeSample, TestCase } from '../../types/test-case'
@@ -31,7 +31,7 @@ describe('runBenchmarksFromConfig', () => {
   let mockReporterOptions: ReporterOptions[]
   let mockCodeSamples: CodeSample[]
   let mockTestCase: TestCase
-  let mockTask: Task
+  let mockTask: ProcessedBenchmarkTask
   let consoleWarnSpy: ReturnType<typeof vi.spyOn>
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>
   let originalExitCode: undefined | number
@@ -89,7 +89,7 @@ describe('runBenchmarksFromConfig', () => {
       },
       name: `${mockTestCase.name} on ${mockCodeSamples[0]!.filename}`,
       samples: [10, 9.5, 8, 12, 10.5],
-    } as unknown as Task
+    } as unknown as ProcessedBenchmarkTask
 
     mockUserConfig = {
       tests: [
@@ -544,14 +544,14 @@ describe('runBenchmarksFromConfig', () => {
       isFile: () => true,
     } as Stats)
 
-    let mockTaskSpec1Case1: Task = {
+    let mockTaskSpec1Case1: ProcessedBenchmarkTask = {
       ...mockTask,
       name: `${testSpec1Case1Name} on sample1.js`,
-    } as unknown as Task
-    let mockTaskSpec2Case1: Task = {
+    } as unknown as ProcessedBenchmarkTask
+    let mockTaskSpec2Case1: ProcessedBenchmarkTask = {
       ...mockTask,
       name: `${testSpec2Case1Name} on sample2.js`,
-    } as unknown as Task
+    } as unknown as ProcessedBenchmarkTask
 
     mockedRunBenchmark
       .mockResolvedValueOnce([mockTaskSpec1Case1])
@@ -600,7 +600,7 @@ describe('runBenchmarksFromConfig', () => {
     let unmatchedTask = {
       ...mockTask,
       name: 'Unmatched Task',
-    } as unknown as Task
+    } as unknown as ProcessedBenchmarkTask
 
     mockedRunBenchmark.mockResolvedValue([unmatchedTask])
 
@@ -664,11 +664,11 @@ describe('runBenchmarksFromConfig', () => {
     let matchedTaskForSpec1 = {
       ...mockTask,
       name: `${testSpec1Case1Name} on ${mockCodeSamples[0]!.filename}`,
-    } as unknown as Task
+    } as unknown as ProcessedBenchmarkTask
     let unmatchedTask = {
       ...mockTask,
       name: 'Unmatched Task From MultiSetup',
-    } as unknown as Task
+    } as unknown as ProcessedBenchmarkTask
 
     mockedRunBenchmark
       .mockResolvedValueOnce([matchedTaskForSpec1])
@@ -727,7 +727,10 @@ describe('runBenchmarksFromConfig', () => {
       isFile: () => true,
     } as Stats)
 
-    let noNameTask = { ...mockTask, name: undefined } as unknown as Task
+    let noNameTask = {
+      ...mockTask,
+      name: undefined,
+    } as unknown as ProcessedBenchmarkTask
     mockedRunBenchmark.mockResolvedValue([noNameTask])
 
     await runBenchmarksFromConfig({

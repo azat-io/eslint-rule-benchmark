@@ -10,9 +10,9 @@ describe('createBenchmarkConfig', () => {
     })
 
     expect(config.name).toBe('Test Benchmark')
-    expect(config.iterations).toBe(50)
-    expect(config.timeout).toBe(300)
-    expect(config.warmup.iterations).toBe(10)
+    expect(config.iterations).toBe(1000)
+    expect(config.timeout).toBe(5000)
+    expect(config.warmup.iterations).toBe(100)
     expect(config.warmup.enabled).toBeTruthy()
     expect(config.reporters).toHaveLength(1)
     expect(config.reporters[0]!.format).toBe('console')

@@ -6,6 +6,8 @@ import type {
   SingleRuleResult,
   BenchmarkConfig,
 } from '../../../types/benchmark-config'
+import type { ProcessedBenchmarkTask } from '../../../core/benchmark/run-benchmark'
+import type { BenchmarkMetrics } from '../../../types/benchmark-metrics'
 
 import { createJsonReporter, jsonReporter } from '../../../reporters/json'
 
@@ -17,27 +19,30 @@ vi.mock('node:fs/promises', () => ({
 let fsWrite = vi.mocked(writeFile)
 let fsMkdir = vi.mocked(mkdir)
 
-let tinybenchResult = {
-  latency: {
-    samples: [1, 1.1],
-    rme: 1.11,
-    p75: 1.05,
-    p995: 1.1,
-    p999: 1.1,
-    sd: 0.05,
-    min: 0.9,
-    max: 1.1,
-    p99: 1.1,
-    mean: 1,
-    p50: 1,
-  },
-  throughput: { mean: 1234 },
-  runtimeVersion: 'v20.11.1',
-  runtime: 'node',
+let createMockMetrics = (
+  overrides: Partial<BenchmarkMetrics> = {},
+): BenchmarkMetrics => ({
+  sampleCount: 10,
   period: 0.001,
-  totalTime: 2,
-}
+  stdDev: 0.05,
+  median: 0.9,
+  p75: 1.05,
+  min: 0.8,
+  max: 1.2,
+  p99: 1.1,
+  hz: 1000,
+  mean: 1,
+  ...overrides,
+})
 
+let createMockProcessedTask = (
+  metricOverrides: Partial<BenchmarkMetrics> = {},
+): ProcessedBenchmarkTask => ({
+  metrics: createMockMetrics(metricOverrides),
+  name: 'test-benchmark-task-name',
+})
+
+let mockProcessedTask: ProcessedBenchmarkTask
 let mockResult: SingleRuleResult
 let mockConfig: BenchmarkConfig
 
@@ -54,10 +59,11 @@ describe('jSON reporter', () => {
     fsWrite.mockClear()
     fsMkdir.mockClear()
 
+    mockProcessedTask = createMockProcessedTask()
     mockResult = {
-      result: { result: tinybenchResult },
-      rule: { id: 'test-rule' },
-    } as SingleRuleResult
+      rule: { path: 'path/to/rule.js', id: 'test-rule' },
+      result: mockProcessedTask,
+    }
 
     mockConfig = {
       warmup: { enabled: true, iterations: 3 },
@@ -98,20 +104,28 @@ describe('jSON reporter', () => {
         fsWrite.mock.calls[0]![1] as string,
       ) as SingleRuleResult
 
-      expect(saved).toEqual(
-        expect.objectContaining({
-          metrics: expect.objectContaining({
-            averageTime: expect.stringMatching(/ms$/u) as string,
-            operationsPerSecond: 1234,
-          }) as Record<string, unknown>,
-          config: expect.objectContaining({
-            iterations: 10,
-            timeout: 5000,
-          }) as BenchmarkConfig,
-          timestamp: '2021-01-01T00:00:00.000Z',
-          rule: { id: 'test-rule' },
-        }),
-      )
+      expect(saved).toEqual({
+        metrics: {
+          standardDeviation: '0.05000 ms',
+          operationsPerSecond: 1000,
+          averageTime: '1.00000 ms',
+          minimumTime: '0.80000 ms',
+          maximumTime: '1.20000 ms',
+          medianTime: '0.90000 ms',
+          periodInSeconds: 0.001,
+          p75: '1.05000 ms',
+          p99: '1.10000 ms',
+          totalSamples: 10,
+        },
+        config: {
+          warmup: { enabled: true, iterations: 3 },
+          iterations: 10,
+          timeout: 5000,
+          name: 'bench',
+        },
+        rule: { path: 'path/to/rule.js', id: 'test-rule' },
+        timestamp: '2021-01-01T00:00:00.000Z',
+      })
 
       expect(infoSpy).toHaveBeenCalledWith(
         expect.stringContaining('JSON report saved to:'),
@@ -152,7 +166,7 @@ describe('jSON reporter', () => {
     let resultWithoutBenchmark: SingleRuleResult = {
       rule: { path: 'path/to/rule.js', id: 'test-rule' },
       result: null,
-    } as SingleRuleResult
+    }
 
     let reporter = createJsonReporter({ format: 'json' })
 
@@ -188,40 +202,47 @@ describe('jSON reporter', () => {
   })
 
   it('correctly formats invalid time values', async () => {
+    let mockTaskWithNaN = createMockProcessedTask({
+      median: Infinity,
+      mean: undefined,
+      p75: Number.NaN,
+    })
+
     let resultWithInvalidTimes: SingleRuleResult = {
-      result: {
-        result: {
-          ...tinybenchResult,
-          latency: {
-            ...tinybenchResult.latency,
-            mean: undefined,
-            p75: Number.NaN,
-            p50: Infinity,
-          },
-        },
-      },
       rule: { id: 'test-rule' },
-    } as unknown as SingleRuleResult
+      result: mockTaskWithNaN,
+    }
 
     let reporter = createJsonReporter({ format: 'json' })
     reporter(resultWithInvalidTimes, mockConfig)
 
     await setTimeout()
 
-    let savedJson = JSON.parse(fsWrite.mock.calls[0]![1] as string) as {
-      metrics: {
-        operationsPerSecond: number
-        averageTime: string | null
-        medianTime: string | null
-        p75: string | null
-      }
-      config: BenchmarkConfig
-      rule: { id: string }
+    interface SavedJsonMetrics {
+      standardDeviation: string | null
+      operationsPerSecond: number
+      averageTime: string | null
+      minimumTime: string | null
+      maximumTime: string | null
+      medianTime: string | null
+      periodInSeconds: number
+      totalSamples: number
+      p75: string | null
+      p99: string | null
     }
+    interface SavedReport {
+      metrics: SavedJsonMetrics
+    }
+
+    let savedJson = JSON.parse(
+      fsWrite.mock.calls[0]![1] as string,
+    ) as SavedReport
 
     expect(savedJson.metrics.averageTime).toBeNull()
     expect(savedJson.metrics.medianTime).toBeNull()
     expect(savedJson.metrics.p75).toBeNull()
+    expect(savedJson.metrics.operationsPerSecond).toBe(1000)
+    expect(savedJson.metrics.minimumTime).toBe('0.80000 ms')
   })
 
   it('calls json reporter with correct parameters', async () => {

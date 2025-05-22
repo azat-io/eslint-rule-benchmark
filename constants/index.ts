@@ -2,13 +2,13 @@
  * Number of warmup iterations before actual benchmarking. Lower values speed up
  * total benchmark time, but may lead to less stable results.
  */
-export const DEFAULT_WARMUP_ITERATIONS = 10 as const
+export const DEFAULT_WARMUP_ITERATIONS = 100 as const
 
 /**
  * Target time in milliseconds for each warmup phase. This controls how long the
  * warmup phase will try to run.
  */
-export const DEFAULT_WARMUP_TIME_MS = 1 as const
+export const DEFAULT_WARMUP_TIME_MS = 500 as const
 
 /**
  * Whether warmup phase is enabled by default. Warmup helps stabilize JIT
@@ -22,13 +22,13 @@ export const DEFAULT_WARMUP_ENABLED = true as const
  * statistically significant results. Lower values result in fewer iterations
  * and faster overall completion.
  */
-export const DEFAULT_TIMEOUT_MS = 300 as const
+export const DEFAULT_TIMEOUT_MS = 5000 as const
 
 /**
  * Minimum number of benchmark iterations to perform. Actual number may be
  * higher if iterations complete quickly.
  */
-export const DEFAULT_ITERATIONS = 50 as const
+export const DEFAULT_ITERATIONS = 1000 as const
 
 /**
  * Default severity level for benchmark results. This is used to determine the

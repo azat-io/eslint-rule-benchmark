@@ -1,5 +1,3 @@
-import type { Task } from 'tinybench'
-
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
@@ -9,6 +7,7 @@ import type {
   BenchmarkConfig,
 } from '../types/benchmark-config'
 import type { CodeSample, RuleConfig, TestCase, Case } from '../types/test-case'
+import type { ProcessedBenchmarkTask } from '../core/benchmark/run-benchmark'
 import type { UserBenchmarkConfig } from '../types/user-benchmark-config'
 
 import {
@@ -205,7 +204,7 @@ export let runBenchmarksFromConfig = async (
   }
 
   let allCreatedTestCases: TestCase[] = []
-  let allBenchmarkResults: Task[] = []
+  let allBenchmarkResults: ProcessedBenchmarkTask[] = []
 
   let allTestCasePreparationTasks = userConfig.tests.map(async testSpec => {
     let specBenchmarkConfig: BenchmarkConfig = {

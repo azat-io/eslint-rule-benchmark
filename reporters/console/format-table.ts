@@ -107,28 +107,27 @@ let renderTable = (rows: string[][]): string => {
  */
 export let formatTable = (result: SingleRuleResult): string => {
   let { rule } = result
-  let bench = result.result?.result
-  if (!bench) {
+  let metrics = result.result?.metrics
+  if (!metrics) {
     return 'No benchmark results available.'
   }
 
-  let ms = (number?: number): string =>
-    typeof number !== 'number' || !Number.isFinite(number)
+  let ms = (milliseconds?: number): string =>
+    typeof milliseconds !== 'number' || !Number.isFinite(milliseconds)
       ? 'N/A'
-      : `${number.toFixed(2)} ms`
+      : `${milliseconds.toFixed(5)} ms`
 
   let rows: string[][] = [
     [`Rule Benchmark Results: ${rule.id}`],
-    ['Operations per second', Math.round(bench.throughput.mean).toString()],
-    ['Average time', ms(bench.latency.mean)],
-    ['Median time (P50)', ms(bench.latency.p50)],
-    ['Minimum time', ms(bench.latency.min)],
-    ['Maximum time', ms(bench.latency.max)],
-    ['P75 Percentile', ms(bench.latency.p75)],
-    ['P99 Percentile', ms(bench.latency.p99)],
-    ['Standard deviation', ms(bench.latency.sd)],
-    ['Relative margin of error', `±${bench.latency.rme.toFixed(2)} %`],
-    ['Total samples', bench.latency.samples.length.toString()],
+    ['Operations per second', Math.round(metrics.hz).toString()],
+    ['Average time', ms(metrics.mean)],
+    ['Median time (P50)', ms(metrics.median)],
+    ['Minimum time', ms(metrics.min)],
+    ['Maximum time', ms(metrics.max)],
+    ['P75 Percentile', ms(metrics.p75)],
+    ['P99 Percentile', ms(metrics.p99)],
+    ['Standard deviation', ms(metrics.stdDev)],
+    ['Total samples', metrics.sampleCount.toString()],
   ]
 
   return renderTable(rows)

@@ -1,5 +1,3 @@
-import type { TaskResult } from 'tinybench'
-
 import { writeFile, mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
@@ -8,6 +6,7 @@ import type {
   BenchmarkConfig,
   ReporterOptions,
 } from '../../types/benchmark-config'
+import type { BenchmarkMetrics } from '../../types/benchmark-metrics'
 
 /** Options for the Markdown reporter. */
 interface MarkdownReporterOptions {
@@ -59,9 +58,14 @@ let createMarkdownReport = (
 ): string => {
   let timestamp = new Date().toISOString()
   let { rule } = result
-  let benchmarkResult = result.result?.result
+  let metrics = result.result?.metrics
 
-  if (!benchmarkResult) {
+  let formatMs = (valueInMs?: number): string =>
+    valueInMs === undefined || !Number.isFinite(valueInMs)
+      ? 'N/A'
+      : `${valueInMs.toFixed(5)} ms`
+
+  if (!metrics) {
     return [
       createHeader(config, rule, timestamp),
       '## Error',
@@ -74,10 +78,9 @@ let createMarkdownReport = (
 
   let sections = [
     createHeader(config, rule, timestamp),
-    createSummaryTable(benchmarkResult),
-    createPercentileDistribution(benchmarkResult),
+    createSummaryTable(metrics, formatMs),
+    createPercentileDistribution(metrics, formatMs),
     createConfigSection(config),
-    createSystemInfo(benchmarkResult),
   ]
 
   return sections.join('\n\n')
@@ -110,57 +113,56 @@ let createHeader = (
 /**
  * Creates a Markdown table with the summary of benchmark results.
  *
- * @param {TaskResult} benchmarkResult - The benchmark result data.
+ * @param {BenchmarkMetrics} metrics - The benchmark metrics data.
+ * @param {(valueInMs?: number) => string} formatMsFunction - The formatting
+ *   function for milliseconds.
  * @returns {string} A formatted Markdown table.
  */
-let createSummaryTable = (benchmarkResult: TaskResult): string => {
-  let formatMs = (ms: undefined | number): string =>
-    ms === undefined || !Number.isFinite(ms) ? 'N/A' : `${ms.toFixed(2)} ms`
-
-  return [
+let createSummaryTable = (
+  metrics: BenchmarkMetrics,
+  formatMsFunction: (valueInMs?: number) => string,
+): string =>
+  [
     '## Performance Summary',
     '',
     '| Metric | Value |',
     '| ------ | ----- |',
-    `| Operations per second | ${Math.round(benchmarkResult.throughput.mean)} |`,
-    `| Average time | ${formatMs(benchmarkResult.latency.mean)} |`,
-    `| Median time (P50) | ${formatMs(benchmarkResult.latency.p50)} |`,
-    `| Minimum time | ${formatMs(benchmarkResult.latency.min)} |`,
-    `| Maximum time | ${formatMs(benchmarkResult.latency.max)} |`,
-    `| P75 Percentile | ${formatMs(benchmarkResult.latency.p75)} |`,
-    `| P99 Percentile | ${formatMs(benchmarkResult.latency.p99)} |`,
-    `| Standard deviation | ${formatMs(benchmarkResult.latency.sd)} |`,
-    `| Relative margin of error | ±${benchmarkResult.latency.rme.toFixed(2)}% |`,
-    `| Total samples | ${benchmarkResult.latency.samples.length} |`,
+    `| Operations per second | ${Math.round(metrics.hz)} |`,
+    `| Average time | ${formatMsFunction(metrics.mean)} |`,
+    `| Median time (P50) | ${formatMsFunction(metrics.median)} |`,
+    `| Minimum time | ${formatMsFunction(metrics.min)} |`,
+    `| Maximum time | ${formatMsFunction(metrics.max)} |`,
+    `| P75 Percentile | ${formatMsFunction(metrics.p75)} |`,
+    `| P99 Percentile | ${formatMsFunction(metrics.p99)} |`,
+    `| Standard deviation | ${formatMsFunction(metrics.stdDev)} |`,
+    `| Total samples | ${metrics.sampleCount} |`,
   ].join('\n')
-}
 
 /**
  * Creates a Markdown section with percentile distribution information.
  *
- * @param {TaskResult} benchmarkResult - The benchmark result data.
+ * @param {BenchmarkMetrics} metrics - The benchmark metrics data.
+ * @param {(valueInMs?: number) => string} formatMsFunction - The formatting
+ *   function for milliseconds.
  * @returns {string} A formatted Markdown section.
  */
-let createPercentileDistribution = (benchmarkResult: TaskResult): string => {
-  let formatMs = (ms: undefined | number): string =>
-    ms === undefined || !Number.isFinite(ms) ? 'N/A' : `${ms.toFixed(2)} ms`
-
-  return [
+let createPercentileDistribution = (
+  metrics: BenchmarkMetrics,
+  formatMsFunction: (valueInMs?: number) => string,
+): string =>
+  [
     '## Percentile Distribution',
     '',
     'The following table shows how execution time is distributed across percentiles:',
     '',
     '| Percentile | Time |',
     '| ---------- | ---- |',
-    `| 50% (Median) | ${formatMs(benchmarkResult.latency.p50)} |`,
-    `| 75% | ${formatMs(benchmarkResult.latency.p75)} |`,
-    `| 99% | ${formatMs(benchmarkResult.latency.p99)} |`,
-    `| 99.5% | ${formatMs(benchmarkResult.latency.p995)} |`,
-    `| 99.9% | ${formatMs(benchmarkResult.latency.p999)} |`,
+    `| 50% (Median) | ${formatMsFunction(metrics.median)} |`,
+    `| 75% | ${formatMsFunction(metrics.p75)} |`,
+    `| 99% | ${formatMsFunction(metrics.p99)} |`,
     '',
     '> *Note: These percentiles indicate the execution time that X% of samples performed better than.*',
   ].join('\n')
-}
 
 /**
  * Creates a configuration section with benchmark settings.
@@ -178,23 +180,6 @@ let createConfigSection = (config: BenchmarkConfig): string =>
     `| Timeout | ${config.timeout} ms |`,
     `| Warmup Enabled | ${config.warmup.enabled} |`,
     `| Warmup Iterations | ${config.warmup.iterations} |`,
-  ].join('\n')
-
-/**
- * Creates a section with system information.
- *
- * @param {TaskResult} benchmarkResult - The benchmark result data.
- * @returns {string} A formatted Markdown section with system information.
- */
-let createSystemInfo = (benchmarkResult: TaskResult): string =>
-  [
-    '## System Information',
-    '',
-    '| Property | Value |',
-    '| -------- | ----- |',
-    `| Runtime | ${benchmarkResult.runtime} |`,
-    `| Runtime Version | ${benchmarkResult.runtimeVersion} |`,
-    `| Total Run Time | ${benchmarkResult.totalTime.toFixed(2)} ms |`,
   ].join('\n')
 
 /**

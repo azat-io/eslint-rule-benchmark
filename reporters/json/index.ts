@@ -54,10 +54,11 @@ let createJsonReport = (
   result: SingleRuleResult,
   config: BenchmarkConfig,
 ): object => {
-  let benchmarkResult = result.result?.result
+  let metrics = result.result?.metrics // Changed to use our BenchmarkMetrics
 
-  if (!benchmarkResult) {
+  if (!metrics) {
     return {
+      // Config and rule info remain the same for error case
       config: {
         iterations: config.iterations,
         timeout: config.timeout,
@@ -73,27 +74,30 @@ let createJsonReport = (
     }
   }
 
-  let formatMs = (ms: undefined | number): string | null =>
-    ms === undefined || !Number.isFinite(ms) ? null : `${ms.toFixed(2)} ms`
+  // FormatMs now expects milliseconds and formats them
+  let formatMs = (valueInMs?: number): string | null =>
+    valueInMs === undefined || !Number.isFinite(valueInMs)
+      ? null
+      : `${valueInMs.toFixed(5)} ms`
 
   return {
     metrics: {
-      operationsPerSecond: Math.round(benchmarkResult.throughput.mean),
-      marginOfError: `±${benchmarkResult.latency.rme.toFixed(2)}%`,
-      standardDeviation: formatMs(benchmarkResult.latency.sd),
-      totalSamples: benchmarkResult.latency.samples.length,
-      averageTime: formatMs(benchmarkResult.latency.mean),
-      minimumTime: formatMs(benchmarkResult.latency.min),
-      maximumTime: formatMs(benchmarkResult.latency.max),
-      medianTime: formatMs(benchmarkResult.latency.p50),
-      totalTime: formatMs(benchmarkResult.totalTime),
-      runtimeVersion: benchmarkResult.runtimeVersion,
-      p995: formatMs(benchmarkResult.latency.p995),
-      p999: formatMs(benchmarkResult.latency.p999),
-      p75: formatMs(benchmarkResult.latency.p75),
-      p99: formatMs(benchmarkResult.latency.p99),
-      period: formatMs(benchmarkResult.period),
-      runtime: benchmarkResult.runtime,
+      operationsPerSecond: Math.round(metrics.hz),
+      // MarginOfError: Removed
+      standardDeviation: formatMs(metrics.stdDev),
+      medianTime: formatMs(metrics.median),
+      averageTime: formatMs(metrics.mean),
+      minimumTime: formatMs(metrics.min),
+      maximumTime: formatMs(metrics.max),
+      totalSamples: metrics.sampleCount,
+      periodInSeconds: metrics.period, // Stored as a number in seconds
+      // TotalTime: Removed
+      // RuntimeVersion: Removed
+      // P995: Removed
+      // P999: Removed
+      p75: formatMs(metrics.p75),
+      p99: formatMs(metrics.p99),
+      // Runtime: Removed
     },
     config: {
       iterations: config.iterations,
@@ -101,10 +105,7 @@ let createJsonReport = (
       warmup: config.warmup,
       name: config.name,
     },
-    raw: {
-      throughput: benchmarkResult.throughput,
-      latency: benchmarkResult.latency,
-    },
+    // Raw: Removed
     rule: {
       path: result.rule.path,
       id: result.rule.id,

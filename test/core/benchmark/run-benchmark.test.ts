@@ -1,4 +1,4 @@
-import type { Bench } from 'tinybench'
+import type { TaskResult, Bench } from 'tinybench'
 import type { ESLint } from 'eslint'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -8,6 +8,8 @@ import type { BenchmarkConfig } from '../../../types/benchmark-config'
 import type { TestCase } from '../../../types/test-case'
 
 import { createESLintInstance } from '../../../core/eslint/create-eslint-instance'
+import { calculateStatistics } from '../../../core/benchmark/calculate-statistics'
+import { filterOutliers } from '../../../core/benchmark/filter-outliers'
 import { runBenchmark } from '../../../core/benchmark/run-benchmark'
 import { createBench } from '../../../core/benchmark/create-bench'
 
@@ -16,6 +18,9 @@ vi.mock('../../../core/eslint/create-eslint-instance', () => ({
     lintText: vi.fn().mockResolvedValue([{ warningCount: 0, errorCount: 0 }]),
   } as unknown as ESLint),
 }))
+
+const MOCK_SAMPLES_NS_RAW = [52700, 52800, 54300, 54800, 57700, 200000, 10000]
+const MOCK_SAMPLES_MS_RAW = MOCK_SAMPLES_NS_RAW.map(ns => ns / 1000)
 
 vi.mock('../../../core/benchmark/create-bench', async importOriginal => {
   let orig = await importOriginal<typeof CreateBenchModule>()
@@ -28,6 +33,9 @@ vi.mock('../../../core/benchmark/create-bench', async importOriginal => {
         run: vi.fn(async () => {
           await Promise.all(addedTasks.map(task => task.fn()))
           return addedTasks.map(task => ({
+            result: {
+              samples: [...MOCK_SAMPLES_MS_RAW],
+            } as unknown as TaskResult,
             name: task.name,
           }))
         }),
@@ -93,16 +101,34 @@ describe('runBenchmark', () => {
     }
   })
 
-  it('returns array of task results', async () => {
-    let tasks = await runBenchmark({
+  it('returns array of processed benchmark task results', async () => {
+    let processedTasks = await runBenchmark({
       testCases: [testCase],
       configDirectory,
       config,
     })
-    let expectedTaskResults = testCase.samples.map(sample => ({
-      name: `${testCase.name} on ${sample.filename}`,
-    }))
-    expect(tasks).toEqual(expectedTaskResults)
+
+    expect(processedTasks).not.toBeNull()
+    expect(processedTasks!).toHaveLength(1)
+
+    let firstTask = processedTasks![0]!
+    expect(firstTask.name).toBe(
+      `${testCase.name} on ${testCase.samples[0]!.filename}`,
+    )
+
+    let { filteredSamples } = filterOutliers(MOCK_SAMPLES_MS_RAW)
+    let expectedMetrics = calculateStatistics(filteredSamples)
+
+    expect(firstTask.metrics.sampleCount).toBe(expectedMetrics.sampleCount)
+    expect(firstTask.metrics.mean).toBeCloseTo(expectedMetrics.mean)
+    expect(firstTask.metrics.median).toBeCloseTo(expectedMetrics.median)
+    expect(firstTask.metrics.min).toBeCloseTo(expectedMetrics.min)
+    expect(firstTask.metrics.max).toBeCloseTo(expectedMetrics.max)
+    expect(firstTask.metrics.p75).toBeCloseTo(expectedMetrics.p75)
+    expect(firstTask.metrics.p99).toBeCloseTo(expectedMetrics.p99)
+    expect(firstTask.metrics.stdDev).toBeCloseTo(expectedMetrics.stdDev)
+    expect(firstTask.metrics.hz).toBeCloseTo(expectedMetrics.hz)
+    expect(firstTask.metrics.period).toBeCloseTo(expectedMetrics.period)
   })
 
   it('returns null if no test cases are provided', async () => {
@@ -199,7 +225,7 @@ describe('runBenchmark', () => {
       name: 'Good Case',
       id: 'id-2',
     }
-    let tasks = await runBenchmark({
+    let processedTasks = await runBenchmark({
       testCases: [testCase, anotherTestCase],
       configDirectory,
       config,
@@ -210,11 +236,15 @@ describe('runBenchmark', () => {
         `Failed to create ESLint instance for TestCase "${testCase.name}": ${error.message}`,
       ),
     )
-    expect(tasks).toBeInstanceOf(Array)
-    expect(tasks!).toHaveLength(anotherTestCase.samples.length)
-    expect(tasks![0]!.name).toBe(
+    expect(processedTasks).toBeInstanceOf(Array)
+    expect(processedTasks!).toHaveLength(anotherTestCase.samples.length)
+
+    let firstGoodTask = processedTasks![0]!
+    expect(firstGoodTask.name).toBe(
       `${anotherTestCase.name} on ${anotherTestCase.samples[0]!.filename}`,
     )
+    expect(firstGoodTask.metrics).toBeDefined()
+    expect(firstGoodTask.metrics.sampleCount).toBeGreaterThan(0)
 
     consoleErrorSpy.mockRestore()
     consoleWarnSpy.mockRestore()

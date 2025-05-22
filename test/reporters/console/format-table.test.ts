@@ -1,32 +1,33 @@
-import type { TaskResult, Bench } from 'tinybench'
-
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 
+import type { ProcessedBenchmarkTask } from '../../../core/benchmark/run-benchmark'
+import type { BenchmarkMetrics } from '../../../types/benchmark-metrics'
 import type { SingleRuleResult } from '../../../types/benchmark-config'
 
 import { formatTable } from '../../../reporters/console/format-table'
 
-let makeTinybenchResult = (over: Partial<Bench> = {}): Partial<Bench> =>
-  ({
-    latency: {
-      samples: Array.from({ length: 10 }).fill(1),
-      p75: 1.05,
-      rme: 1.11,
-      min: 0.8,
-      max: 1.2,
-      p99: 1.2,
-      sd: 0.05,
-      mean: 1,
-      p50: 1,
-      ...over,
-    },
-    throughput: { mean: 1234 },
-    runtimeVersion: 'v20.11.1',
-    runtime: 'node',
-    period: 0.001,
-    totalTime: 2,
-    ...over,
-  }) as Partial<Bench>
+let createMockMetrics = (
+  overrides: Partial<BenchmarkMetrics> = {},
+): BenchmarkMetrics => ({
+  sampleCount: 10,
+  period: 0.001,
+  stdDev: 0.05,
+  median: 0.9,
+  p75: 1.05,
+  min: 0.8,
+  max: 1.2,
+  p99: 1.1,
+  hz: 1000,
+  mean: 1,
+  ...overrides,
+})
+
+let createMockProcessedTask = (
+  metricOverrides: Partial<BenchmarkMetrics> = {},
+): ProcessedBenchmarkTask => ({
+  metrics: createMockMetrics(metricOverrides),
+  name: 'test-benchmark-task',
+})
 
 describe('formatTable', () => {
   beforeEach(() => {
@@ -38,31 +39,29 @@ describe('formatTable', () => {
   })
 
   it('renders a table with metrics', () => {
+    let mockTask = createMockProcessedTask()
     let string_ = formatTable({
-      result: { result: makeTinybenchResult() },
       rule: { id: 'rule-1' },
+      result: mockTask,
     } as SingleRuleResult)
 
     expect(string_).toMatchSnapshot()
   })
 
   it('prints "N/A" for NaN metrics', () => {
+    let mockTaskWithNaN = createMockProcessedTask({
+      median: Number.NaN,
+      stdDev: Number.NaN,
+      period: Number.NaN,
+      mean: Number.NaN,
+      min: Number.NaN,
+      max: Number.NaN,
+      p75: Number.NaN,
+      p99: Number.NaN,
+      hz: Number.NaN,
+    })
     let string_ = formatTable({
-      result: {
-        result: makeTinybenchResult({
-          latency: {
-            mean: Number.NaN,
-            p50: Number.NaN,
-            min: Number.NaN,
-            max: Number.NaN,
-            p75: Number.NaN,
-            p99: Number.NaN,
-            sd: Number.NaN,
-            samples: [],
-            rme: 0,
-          },
-        } as unknown as Partial<TaskResult>),
-      },
+      result: mockTaskWithNaN,
       rule: { id: 'rule-1' },
     } as SingleRuleResult)
 
