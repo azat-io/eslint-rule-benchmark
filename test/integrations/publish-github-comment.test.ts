@@ -127,7 +127,8 @@ describe('publishGithubComment (GraphQL)', () => {
     let spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     await publishGithubComment('fallback')
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to post comment: file not found'),
+      'Failed to read GitHub event payload:',
+      'file not found',
     )
     spy.mockRestore()
   })
@@ -147,7 +148,8 @@ describe('publishGithubComment (GraphQL)', () => {
     let spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     await publishGithubComment('err test')
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to fetch comments via GraphQL'),
+      'Failed to fetch comments via GraphQL:',
+      'GraphQL query failed',
     )
     spy.mockRestore()
   })
@@ -177,7 +179,8 @@ describe('publishGithubComment (GraphQL)', () => {
     let spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     await publishGithubComment('update fail test')
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to update comment via GraphQL'),
+      'Failed to update comment via GraphQL:',
+      'mutation failed',
     )
     spy.mockRestore()
   })
@@ -200,7 +203,8 @@ describe('publishGithubComment (GraphQL)', () => {
     let spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     await publishGithubComment('create fail test')
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to create comment via GraphQL'),
+      'Failed to create comment via GraphQL:',
+      'create mutation failed',
     )
     spy.mockRestore()
   })
