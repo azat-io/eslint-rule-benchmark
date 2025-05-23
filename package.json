@@ -30,6 +30,8 @@
     },
     "./package.json": "./package.json"
   },
+  "main": "./dist/core/index.js",
+  "types": "./dist/core/index.d.ts",
   "bin": {
     "eslint-rule-benchmark": "./bin/eslint-rule-benchmark.js"
   },
