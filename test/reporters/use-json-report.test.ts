@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import type {
   BenchmarkConfig,
@@ -7,11 +7,26 @@ import type {
 } from '../../types/benchmark-config'
 import type { ProcessedBenchmarkTask } from '../../core/benchmark/run-benchmark'
 import type { UserBenchmarkConfig } from '../../types/user-benchmark-config'
-import type { TestSpecJsonReport } from '../../reporters/use-json-report'
+import type { JsonBenchmarkReport } from '../../reporters/use-json-report'
 import type { BenchmarkMetrics } from '../../types/benchmark-metrics'
 import type { RuleConfig } from '../../types/test-case'
 
 import { useJsonReport } from '../../reporters/use-json-report'
+
+vi.mock('../../reporters/collect-system-info', () => ({
+  collectSystemInfo: () => ({
+    cpuModel: 'Intel(R) Core(TM) i7-12700K CPU @ 3.60GHz',
+    v8Version: '11.3.244.8-node.20',
+    osRelease: '6.2.0-39-generic',
+    nodeVersion: 'v20.11.0',
+    eslintVersion: '9.27.0',
+    platform: 'linux',
+    cpuSpeedMHz: 3600,
+    totalMemoryGb: 32,
+    arch: 'x64',
+    cpuCount: 8,
+  }),
+}))
 
 let createMockMetrics = (
   overrides: Partial<BenchmarkMetrics> = {},
@@ -125,7 +140,7 @@ let createMockUserConfig = (
 })
 
 describe('useJsonReport', () => {
-  it('returns valid JSON string for complete benchmark results', () => {
+  it('returns valid JSON string for complete benchmark results', async () => {
     let sample1Metrics = {
       sampleCount: 10,
       period: 0.001,
@@ -182,13 +197,19 @@ describe('useJsonReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec1]
     let mockUserCfg = createMockUserConfig()
 
-    let jsonOutput = useJsonReport(mockTestSpecResults, mockUserCfg)
-    let parsedArray = JSON.parse(jsonOutput) as TestSpecJsonReport[]
+    let jsonOutput = await useJsonReport(mockTestSpecResults, mockUserCfg)
+    let parsedReport = JSON.parse(jsonOutput) as JsonBenchmarkReport
 
-    expect(Array.isArray(parsedArray)).toBeTruthy()
-    expect(parsedArray).toHaveLength(1)
+    expect(parsedReport.testSpecifications).toBeDefined()
+    expect(parsedReport.systemInfo).toBeDefined()
+    expect(Array.isArray(parsedReport.testSpecifications)).toBeTruthy()
+    expect(parsedReport.testSpecifications).toHaveLength(1)
 
-    let parsed = parsedArray[0]!
+    expect(parsedReport.systemInfo.nodeVersion).toBe('v20.11.0')
+    expect(parsedReport.systemInfo.platform).toBe('linux')
+    expect(parsedReport.systemInfo.eslintVersion).toBe('9.27.0')
+
+    let parsed = parsedReport.testSpecifications[0]!
 
     expect(parsed.name).toBe('My Rule Benchmarks')
     expect(parsed.ruleId).toBe('my-rule')

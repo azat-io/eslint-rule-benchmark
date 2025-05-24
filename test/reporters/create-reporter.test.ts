@@ -39,13 +39,17 @@ describe('createReporter', () => {
     ]
     mockUserConfig = { tests: [] }
 
-    mockedUseMarkdownReport.mockReturnValue('markdown report content')
-    mockedUseConsoleReport.mockReturnValue('console report content')
-    mockedUseJsonReport.mockReturnValue('json report content')
+    mockedUseMarkdownReport.mockResolvedValue('markdown report content')
+    mockedUseConsoleReport.mockResolvedValue('console report content')
+    mockedUseJsonReport.mockResolvedValue('json report content')
   })
 
-  it('should call useConsoleReport and return its result when format is "console"', () => {
-    let result = createReporter(mockTestSpecResults, mockUserConfig, 'console')
+  it('should call useConsoleReport and return its result when format is "console"', async () => {
+    let result = await createReporter(
+      mockTestSpecResults,
+      mockUserConfig,
+      'console',
+    )
     expect(mockedUseConsoleReport).toHaveBeenCalledOnce()
     expect(mockedUseConsoleReport).toHaveBeenCalledWith(
       mockTestSpecResults,
@@ -56,8 +60,8 @@ describe('createReporter', () => {
     expect(mockedUseJsonReport).not.toHaveBeenCalled()
   })
 
-  it('should call useConsoleReport by default if no format is specified', () => {
-    let result = createReporter(mockTestSpecResults, mockUserConfig)
+  it('should call useConsoleReport by default if no format is specified', async () => {
+    let result = await createReporter(mockTestSpecResults, mockUserConfig)
     expect(mockedUseConsoleReport).toHaveBeenCalledOnce()
     expect(mockedUseConsoleReport).toHaveBeenCalledWith(
       mockTestSpecResults,
@@ -66,8 +70,12 @@ describe('createReporter', () => {
     expect(result).toBe('console report content')
   })
 
-  it('should call useMarkdownReport and return its result when format is "markdown"', () => {
-    let result = createReporter(mockTestSpecResults, mockUserConfig, 'markdown')
+  it('should call useMarkdownReport and return its result when format is "markdown"', async () => {
+    let result = await createReporter(
+      mockTestSpecResults,
+      mockUserConfig,
+      'markdown',
+    )
     expect(mockedUseMarkdownReport).toHaveBeenCalledOnce()
     expect(mockedUseMarkdownReport).toHaveBeenCalledWith(
       mockTestSpecResults,
@@ -78,8 +86,12 @@ describe('createReporter', () => {
     expect(mockedUseJsonReport).not.toHaveBeenCalled()
   })
 
-  it('should call useJsonReport and return its result when format is "json"', () => {
-    let result = createReporter(mockTestSpecResults, mockUserConfig, 'json')
+  it('should call useJsonReport and return its result when format is "json"', async () => {
+    let result = await createReporter(
+      mockTestSpecResults,
+      mockUserConfig,
+      'json',
+    )
     expect(mockedUseJsonReport).toHaveBeenCalledOnce()
     expect(mockedUseJsonReport).toHaveBeenCalledWith(
       mockTestSpecResults,
@@ -90,18 +102,18 @@ describe('createReporter', () => {
     expect(mockedUseMarkdownReport).not.toHaveBeenCalled()
   })
 
-  it('should throw an error for an unknown format', () => {
+  it('should throw an error for an unknown format', async () => {
     let unknownFormat = 'xml' as ReporterFormat
-    expect(() =>
+    await expect(() =>
       createReporter(mockTestSpecResults, mockUserConfig, unknownFormat),
-    ).toThrow(/Unknown reporter format "xml"/u)
+    ).rejects.toThrow(/Unknown reporter format "xml"/u)
   })
 
-  it('should list available formats in the error message for an unknown format', () => {
+  it('should list available formats in the error message for an unknown format', async () => {
     let unknownFormat = 'yaml' as ReporterFormat
-    expect(() =>
+    await expect(() =>
       createReporter(mockTestSpecResults, mockUserConfig, unknownFormat),
-    ).toThrow(
+    ).rejects.toThrow(
       'Unknown reporter format "yaml". Available formats: markdown, console, and json',
     )
   })

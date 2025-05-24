@@ -37,7 +37,7 @@ export let runReporters = async (
   await Promise.all(
     reporterOptionsFromCli.map(async reporterOpt => {
       try {
-        let reportContent = createReporter(
+        let reportContent = await createReporter(
           allTestSpecResults,
           userConfig,
           reporterOpt.format,

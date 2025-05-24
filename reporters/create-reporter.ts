@@ -8,7 +8,7 @@ import { useJsonReport } from './use-json-report'
 /** Registry of available reporters. */
 let reporters: Record<
   ReporterFormat,
-  (results: TestSpecResult[], config: UserBenchmarkConfig) => string
+  (results: TestSpecResult[], config: UserBenchmarkConfig) => Promise<string>
 > = {
   markdown: useMarkdownReport,
   console: useConsoleReport,
@@ -24,11 +24,11 @@ let reporters: Record<
  * @param {ReporterFormat} format - The format of the report.
  * @returns {string} The formatted report as a string.
  */
-export let createReporter = (
+export let createReporter = async (
   results: TestSpecResult[],
   userConfig: UserBenchmarkConfig,
   format: ReporterFormat = 'console',
-): string => {
+): Promise<string> => {
   if (!(format in reporters)) {
     throw new Error(
       `Unknown reporter format "${format}". Available formats: ${new Intl.ListFormat(
@@ -41,5 +41,5 @@ export let createReporter = (
     )
   }
 
-  return reporters[format](results, userConfig)
+  return await reporters[format](results, userConfig)
 }

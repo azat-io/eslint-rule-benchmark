@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import type {
   BenchmarkConfig,
@@ -11,6 +11,21 @@ import type { BenchmarkMetrics } from '../../types/benchmark-metrics'
 import type { RuleConfig } from '../../types/test-case'
 
 import { useMarkdownReport } from '../../reporters/use-markdown-report'
+
+vi.mock('../../reporters/collect-system-info', () => ({
+  collectSystemInfo: () => ({
+    cpuModel: 'Intel(R) Core(TM) i7-12700K CPU @ 3.60GHz',
+    v8Version: '11.3.244.8-node.20',
+    osRelease: '6.2.0-39-generic',
+    nodeVersion: 'v20.11.0',
+    eslintVersion: '9.27.0',
+    platform: 'linux',
+    cpuSpeedMHz: 3600,
+    totalMemoryGb: 32,
+    arch: 'x64',
+    cpuCount: 8,
+  }),
+}))
 
 let createMockMetrics = (
   overrides: Partial<BenchmarkMetrics> = {},
@@ -127,7 +142,7 @@ let createMockUserConfig = (
 })
 
 describe('useMarkdownReport', () => {
-  it('returns complete markdown report for valid benchmark results', () => {
+  it('returns complete markdown report for valid benchmark results', async () => {
     let sample1 = createMockProcessedTask(
       'Test Spec 1 - Test Case 1 on sampleA.js',
       { median: 0.9, hz: 1000, mean: 1 },
@@ -157,7 +172,10 @@ describe('useMarkdownReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec1]
     let mockUserCfg = createMockUserConfig()
 
-    let markdownOutput = useMarkdownReport(mockTestSpecResults, mockUserCfg)
+    let markdownOutput = await useMarkdownReport(
+      mockTestSpecResults,
+      mockUserCfg,
+    )
 
     expect(markdownOutput).toContain('# ESLint Rule Benchmark Report')
     expect(markdownOutput).toContain('## My Rule Benchmarks')
@@ -181,7 +199,7 @@ describe('useMarkdownReport', () => {
     expect(markdownOutput).not.toContain('Benchmark Configuration')
   })
 
-  it('handles multiple test specifications', () => {
+  it('handles multiple test specifications', async () => {
     let testSpec1 = createMockTestSpecResult({
       testCaseResults: [
         createMockTestCaseResult({
@@ -243,12 +261,15 @@ describe('useMarkdownReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec1, testSpec2]
     let mockUserCfg = createMockUserConfig()
 
-    let markdownOutput = useMarkdownReport(mockTestSpecResults, mockUserCfg)
+    let markdownOutput = await useMarkdownReport(
+      mockTestSpecResults,
+      mockUserCfg,
+    )
 
     expect(markdownOutput).toMatchSnapshot()
   })
 
-  it('handles test specification with no test cases', () => {
+  it('handles test specification with no test cases', async () => {
     let testSpec = createMockTestSpecResult({
       name: 'Empty Test Specification',
       testCaseResults: [],
@@ -257,7 +278,10 @@ describe('useMarkdownReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
     let mockUserCfg = createMockUserConfig()
 
-    let markdownOutput = useMarkdownReport(mockTestSpecResults, mockUserCfg)
+    let markdownOutput = await useMarkdownReport(
+      mockTestSpecResults,
+      mockUserCfg,
+    )
 
     expect(markdownOutput).toContain('## Empty Test Specification')
     expect(markdownOutput).toContain(
@@ -265,7 +289,7 @@ describe('useMarkdownReport', () => {
     )
   })
 
-  it('handles test case with no samples', () => {
+  it('handles test case with no samples', async () => {
     let testCase = createMockTestCaseResult({
       name: 'Test Case with No Samples',
       samplesResults: [],
@@ -279,23 +303,29 @@ describe('useMarkdownReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
     let mockUserCfg = createMockUserConfig()
 
-    let markdownOutput = useMarkdownReport(mockTestSpecResults, mockUserCfg)
+    let markdownOutput = await useMarkdownReport(
+      mockTestSpecResults,
+      mockUserCfg,
+    )
 
     expect(markdownOutput).toContain(
       '| No samples | N/A | N/A | N/A | N/A | N/A | N/A | N/A |',
     )
   })
 
-  it('handles empty results array', () => {
+  it('handles empty results array', async () => {
     let mockTestSpecResults: TestSpecResult[] = []
     let mockUserCfg = createMockUserConfig()
 
-    let markdownOutput = useMarkdownReport(mockTestSpecResults, mockUserCfg)
+    let markdownOutput = await useMarkdownReport(
+      mockTestSpecResults,
+      mockUserCfg,
+    )
 
     expect(markdownOutput).toBe('No benchmark results available.')
   })
 
-  it('formats metrics with N/A for invalid numbers', () => {
+  it('formats metrics with N/A for invalid numbers', async () => {
     let sample = createMockProcessedTask('Invalid metrics sample', {
       stdDev: undefined,
       median: Infinity,
@@ -319,7 +349,10 @@ describe('useMarkdownReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
     let mockUserCfg = createMockUserConfig()
 
-    let markdownOutput = useMarkdownReport(mockTestSpecResults, mockUserCfg)
+    let markdownOutput = await useMarkdownReport(
+      mockTestSpecResults,
+      mockUserCfg,
+    )
 
     expect(markdownOutput).toContain(
       '| Invalid metrics sample | N/A | N/A | N/A | N/A | N/A | N/A | 0 |',

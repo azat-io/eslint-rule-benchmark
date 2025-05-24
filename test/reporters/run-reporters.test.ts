@@ -47,7 +47,7 @@ describe('runReporters', () => {
       },
     ]
     mockUserConfig = { tests: [] }
-    mockedCreateReporter.mockReturnValue('mocked report content')
+    mockedCreateReporter.mockResolvedValue('mocked report content')
   })
 
   it('should call createReporter and save to file if outputPath is provided', async () => {
@@ -143,7 +143,7 @@ describe('runReporters', () => {
 
   it('should output to console.info when format is console and no outputPath', async () => {
     mockReporterOptions = [{ format: 'console' }]
-    mockedCreateReporter.mockReturnValue('Console report content')
+    mockedCreateReporter.mockResolvedValue('Console report content')
 
     await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
 
@@ -161,7 +161,7 @@ describe('runReporters', () => {
 
   it('should output to console.warn when format is not console and no outputPath', async () => {
     mockReporterOptions = [{ format: 'markdown' }]
-    mockedCreateReporter.mockReturnValue('Markdown report content')
+    mockedCreateReporter.mockResolvedValue('Markdown report content')
 
     await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
 

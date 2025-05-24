@@ -1,10 +1,12 @@
 import type { ProcessedBenchmarkTask } from '../core/benchmark/run-benchmark'
 import type { UserBenchmarkConfig } from '../types/user-benchmark-config'
 import type { TestSpecResult } from '../types/benchmark-config'
+import type { SystemInfo } from './collect-system-info'
 
+import { collectSystemInfo } from './collect-system-info'
 import { formatNumber } from './format-number'
-import { formatMs } from './format-ms'
 import { formatHz } from './format-hz'
+import { formatMs } from './format-ms'
 
 type Alignment = 'center' | 'left'
 
@@ -32,6 +34,26 @@ const EMPTY_ROW_VALUES = [
   'N/A',
   'N/A',
 ]
+
+/**
+ * Formats system information into a compact, grouped display.
+ *
+ * @param {SystemInfo} systemInfo - System information to format.
+ * @returns {string} Formatted system information string.
+ */
+let formatSystemInfo = (systemInfo: SystemInfo): string => {
+  let runtimeInfo = `Node.js ${systemInfo.nodeVersion}, V8 ${systemInfo.v8Version}, ESLint ${systemInfo.eslintVersion}`
+  let platformInfo = `${systemInfo.platform} ${systemInfo.arch} (${systemInfo.osRelease})`
+  let hardwareInfo = `${systemInfo.cpuModel} (${systemInfo.cpuCount} cores, ${systemInfo.cpuSpeedMHz} MHz), ${systemInfo.totalMemoryGb} GB RAM`
+
+  return [
+    'System Information:',
+    '',
+    `Runtime: ${runtimeInfo}`,
+    `Platform: ${platformInfo}`,
+    `Hardware: ${hardwareInfo}`,
+  ].join('\n')
+}
 
 /**
  * Extracts the sample name from the full task name.
@@ -210,12 +232,12 @@ let renderTable = (
  *   specifications.
  * @param {UserBenchmarkConfig} _userConfig - The user's benchmark configuration
  *   (currently unused).
- * @returns {string} Formatted string for console output.
+ * @returns {Promise<string>} Formatted string for console output.
  */
-export let useConsoleReport = (
+export let useConsoleReport = async (
   results: TestSpecResult[],
   _userConfig?: UserBenchmarkConfig,
-): string => {
+): Promise<string> => {
   let outputLines: string[] = []
 
   if (results.length === 0) {
@@ -254,6 +276,11 @@ export let useConsoleReport = (
 
     outputLines.push(renderTable(tableRows, uniformColumnWidths, alignments))
   }
+
+  let systemInfo = await collectSystemInfo()
+
+  outputLines.unshift('')
+  outputLines.push('', formatSystemInfo(systemInfo), '')
 
   return outputLines.join('\n')
 }

@@ -1,9 +1,28 @@
 import type { UserBenchmarkConfig } from '../types/user-benchmark-config'
 import type { TestSpecResult } from '../types/benchmark-config'
+import type { SystemInfo } from './collect-system-info'
 
+import { collectSystemInfo } from './collect-system-info'
 import { formatNumber } from './format-number'
 import { formatMs } from './format-ms'
 import { formatHz } from './format-hz'
+
+/**
+ * Formats system information into markdown format.
+ *
+ * @param {SystemInfo} systemInfo - System information to format.
+ * @returns {string} Formatted system information in markdown.
+ */
+let formatSystemInfoMarkdown = (systemInfo: SystemInfo): string =>
+  [
+    '## System Information',
+    '',
+    `**Runtime:** Node.js ${systemInfo.nodeVersion}, V8 ${systemInfo.v8Version}, ESLint ${systemInfo.eslintVersion}`,
+    '',
+    `**Platform:** ${systemInfo.platform} ${systemInfo.arch} (${systemInfo.osRelease})`,
+    '',
+    `**Hardware:** ${systemInfo.cpuModel} (${systemInfo.cpuCount} cores, ${systemInfo.cpuSpeedMHz} MHz), ${systemInfo.totalMemoryGb} GB RAM`,
+  ].join('\n')
 
 /**
  * Creates a markdown reporter for aggregated benchmark results.
@@ -12,12 +31,12 @@ import { formatHz } from './format-hz'
  *   specifications.
  * @param {UserBenchmarkConfig} _userConfig - The user's benchmark
  *   configuration.
- * @returns {string} Formatted markdown report as a string.
+ * @returns {Promise<string>} Formatted markdown report as a string.
  */
-export let useMarkdownReport = (
+export let useMarkdownReport = async (
   results: TestSpecResult[],
   _userConfig?: UserBenchmarkConfig,
-): string => {
+): Promise<string> => {
   let outputLines: string[] = []
 
   if (results.length === 0) {
@@ -79,6 +98,9 @@ export let useMarkdownReport = (
       outputLines.push('')
     }
   }
+
+  let systemInfo = await collectSystemInfo()
+  outputLines.push('', formatSystemInfoMarkdown(systemInfo))
 
   return outputLines.join('\n')
 }

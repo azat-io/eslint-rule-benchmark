@@ -6,15 +6,14 @@ import type {
 import type { ProcessedBenchmarkTask } from '../core/benchmark/run-benchmark'
 import type { UserBenchmarkConfig } from '../types/user-benchmark-config'
 import type { BenchmarkMetrics } from '../types/benchmark-metrics'
+import type { SystemInfo } from './collect-system-info'
 
+import { collectSystemInfo } from './collect-system-info'
 import { formatMs } from './format-ms'
 
-export interface TestSpecJsonReport {
-  benchmarkConfig: Omit<BenchmarkConfig, 'baselinePath' | 'reporters' | 'name'>
-  testCases: JsonTestCaseReport[]
-  rulePath?: string
-  ruleId: string
-  name: string
+export interface JsonBenchmarkReport {
+  testSpecifications: TestSpecJsonReport[]
+  systemInfo: SystemInfo
 }
 
 interface JsonSampleMetrics {
@@ -28,6 +27,14 @@ interface JsonSampleMetrics {
   totalSamples: number
   p75: string | null
   p99: string | null
+}
+
+interface TestSpecJsonReport {
+  benchmarkConfig: Omit<BenchmarkConfig, 'baselinePath' | 'reporters' | 'name'>
+  testCases: JsonTestCaseReport[]
+  rulePath?: string
+  ruleId: string
+  name: string
 }
 
 interface JsonTestCaseReport {
@@ -113,12 +120,19 @@ let mapTestSpecResultToJsonReport = (
  *   specifications.
  * @param {UserBenchmarkConfig} _userConfig - The user's benchmark configuration
  *   (currently unused).
- * @returns {string} Formatted JSON report as a string.
+ * @returns {Promise<string>} Formatted JSON report as a string.
  */
-export let useJsonReport = (
+export let useJsonReport = async (
   results: TestSpecResult[],
   _userConfig: UserBenchmarkConfig,
-): string => {
-  let reportArray = results.map(mapTestSpecResultToJsonReport)
-  return JSON.stringify(reportArray, null, 2)
+): Promise<string> => {
+  let systemInfo = await collectSystemInfo()
+  let testSpecifications = results.map(mapTestSpecResultToJsonReport)
+
+  let report: JsonBenchmarkReport = {
+    testSpecifications,
+    systemInfo,
+  }
+
+  return JSON.stringify(report, null, 2)
 }

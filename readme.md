@@ -252,6 +252,12 @@ complex-case.ts | 17,244 ops/sec | 0.058 ms | 0.058 ms | 0.053 ms | 0.065 ms | 0
 Sample          | Ops/sec        | Avg Time | Median   | Min      | Max      | StdDev   | Samples
 base-case.ts    | 17,506 ops/sec | 0.057 ms | 0.057 ms | 0.053 ms | 0.067 ms | 0.003 ms | 27,567
 -------------------------------------------------------------------------------------------------
+
+System Information:
+
+Runtime: Node.js v22.15.1, V8 12.4.254.21-node.24, ESLint 9.25.1
+Platform: darwin arm64 (24.5.0)
+Hardware: Apple M1 Pro (10 cores, 2400 MHz), 32 GB RAM
 ```
 
 ## Versioning Policy

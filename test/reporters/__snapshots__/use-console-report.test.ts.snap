@@ -1,7 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`useConsoleReport > handles multiple test specifications with proper spacing 1`] = `
-"-------------------------------------------------------------------------------------------------
+"
+-------------------------------------------------------------------------------------------------
                                   Rule: no-negated-conjunction                                   
 -------------------------------------------------------------------------------------------------
 Sample          | Ops/sec        | Avg Time | Median   | Min      | Max      | StdDev   | Samples
@@ -13,5 +14,12 @@ complex-case.ts | 17,973 ops/sec | 0.056 ms | 0.055 ms | 0.053 ms | 0.062 ms | 0
 -------------------------------------------------------------------------------------------------
 Sample          | Ops/sec        | Avg Time | Median   | Min      | Max      | StdDev   | Samples
 base-case.ts    | 17,941 ops/sec | 0.056 ms | 0.055 ms | 0.053 ms | 0.063 ms | 0.002 ms | 34,813 
--------------------------------------------------------------------------------------------------"
+-------------------------------------------------------------------------------------------------
+
+System Information:
+
+Runtime: Node.js v20.11.0, V8 11.3.244.8-node.20, ESLint 9.27.0
+Platform: linux x64 (6.2.0-39-generic)
+Hardware: Intel(R) Core(TM) i7-12700K CPU @ 3.60GHz (8 cores, 3600 MHz), 32 GB RAM
+"
 `;

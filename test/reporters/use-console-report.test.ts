@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import type {
   BenchmarkConfig,
@@ -11,6 +11,21 @@ import type { BenchmarkMetrics } from '../../types/benchmark-metrics'
 import type { RuleConfig } from '../../types/test-case'
 
 import { useConsoleReport } from '../../reporters/use-console-report'
+
+vi.mock('../../reporters/collect-system-info', () => ({
+  collectSystemInfo: () => ({
+    cpuModel: 'Intel(R) Core(TM) i7-12700K CPU @ 3.60GHz',
+    v8Version: '11.3.244.8-node.20',
+    osRelease: '6.2.0-39-generic',
+    nodeVersion: 'v20.11.0',
+    eslintVersion: '9.27.0',
+    platform: 'linux',
+    cpuSpeedMHz: 3600,
+    totalMemoryGb: 32,
+    arch: 'x64',
+    cpuCount: 8,
+  }),
+}))
 
 let createMockMetrics = (
   overrides: Partial<BenchmarkMetrics> = {},
@@ -127,7 +142,7 @@ let createMockUserConfig = (
 })
 
 describe('useConsoleReport', () => {
-  it('returns complete console report for valid benchmark results', () => {
+  it('returns complete console report for valid benchmark results', async () => {
     let sample1 = createMockProcessedTask(
       'Test Spec 1 - Test Case 1 on sampleA.js',
       { median: 0.9, hz: 1000, mean: 1 },
@@ -157,7 +172,7 @@ describe('useConsoleReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec1]
     let mockUserCfg = createMockUserConfig()
 
-    let consoleOutput = useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
 
     expect(consoleOutput).toContain('My Rule Benchmarks')
     expect(consoleOutput).toContain('Sample')
@@ -185,9 +200,18 @@ describe('useConsoleReport', () => {
     expect(consoleOutput).not.toContain('Rule Path:')
     expect(consoleOutput).not.toContain('Test Case:')
     expect(consoleOutput).not.toContain('Benchmark Configuration')
+
+    expect(consoleOutput).toContain('System Information:')
+    expect(consoleOutput).toContain(
+      'Runtime: Node.js v20.11.0, V8 11.3.244.8-node.20, ESLint 9.27.0',
+    )
+    expect(consoleOutput).toContain('Platform: linux x64 (6.2.0-39-generic)')
+    expect(consoleOutput).toContain(
+      'Hardware: Intel(R) Core(TM) i7-12700K CPU @ 3.60GHz (8 cores, 3600 MHz), 32 GB RAM',
+    )
   })
 
-  it('handles multiple test specifications with proper spacing', () => {
+  it('handles multiple test specifications with proper spacing', async () => {
     let testSpec1 = createMockTestSpecResult({
       testCaseResults: [
         createMockTestCaseResult({
@@ -249,16 +273,16 @@ describe('useConsoleReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec1, testSpec2]
     let mockUserCfg = createMockUserConfig()
 
-    let consoleOutput = useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
 
     let lines = consoleOutput.split('\n')
     let emptyLineCount = lines.filter(line => line === '').length
-    expect(emptyLineCount).toBe(0)
+    expect(emptyLineCount).toBe(4)
 
     expect(consoleOutput).toMatchSnapshot()
   })
 
-  it('handles test specification with no test cases', () => {
+  it('handles test specification with no test cases', async () => {
     let testSpec = createMockTestSpecResult({
       name: 'Empty Test Specification',
       testCaseResults: [],
@@ -267,14 +291,14 @@ describe('useConsoleReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
     let mockUserCfg = createMockUserConfig()
 
-    let consoleOutput = useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
 
     expect(consoleOutput).toContain(
       'No test cases found or all failed for this specification.',
     )
   })
 
-  it('handles test case with no samples', () => {
+  it('handles test case with no samples', async () => {
     let testCase = createMockTestCaseResult({
       name: 'Test Case with No Samples',
       samplesResults: [],
@@ -288,22 +312,22 @@ describe('useConsoleReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
     let mockUserCfg = createMockUserConfig()
 
-    let consoleOutput = useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
 
     expect(consoleOutput).toContain('No samples')
     expect(consoleOutput).toContain('N/A')
   })
 
-  it('handles empty results array', () => {
+  it('handles empty results array', async () => {
     let mockTestSpecResults: TestSpecResult[] = []
     let mockUserCfg = createMockUserConfig()
 
-    let consoleOutput = useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
 
     expect(consoleOutput).toBe('No benchmark results available.')
   })
 
-  it('formats metrics with N/A for invalid numbers', () => {
+  it('formats metrics with N/A for invalid numbers', async () => {
     let sample = createMockProcessedTask('Invalid metrics sample', {
       stdDev: undefined,
       median: Infinity,
@@ -327,14 +351,14 @@ describe('useConsoleReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
     let mockUserCfg = createMockUserConfig()
 
-    let consoleOutput = useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
 
     let naCount = consoleOutput.match(/N\/A/gu)!.length
     expect(naCount).toBe(6)
     expect(consoleOutput).toContain('0')
   })
 
-  it('ensures consistent column widths across all tables', () => {
+  it('ensures consistent column widths across all tables', async () => {
     let testSpec1 = createMockTestSpecResult({
       testCaseResults: [
         createMockTestCaseResult({
@@ -373,7 +397,7 @@ describe('useConsoleReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec1, testSpec2]
     let mockUserCfg = createMockUserConfig()
 
-    let consoleOutput = useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
 
     let lines = consoleOutput.split('\n')
     let separatorLines = lines.filter(line => line.includes('---'))
@@ -383,7 +407,7 @@ describe('useConsoleReport', () => {
     expect(uniqueLengths).toHaveLength(1)
   })
 
-  it('properly aligns table headers and data', () => {
+  it('properly aligns table headers and data', async () => {
     let testCase = createMockTestCaseResult({
       samplesResults: [
         createMockProcessedTask('Alignment Test on test.js', {
@@ -407,7 +431,7 @@ describe('useConsoleReport', () => {
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
     let mockUserCfg = createMockUserConfig()
 
-    let consoleOutput = useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
 
     let dataLines = consoleOutput
       .split('\n')

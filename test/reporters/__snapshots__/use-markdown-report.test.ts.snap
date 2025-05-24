@@ -15,5 +15,13 @@ exports[`useMarkdownReport > handles multiple test specifications 1`] = `
 
 | Sample | Ops/sec | Avg Time | Median | Min | Max | StdDev | Samples |
 | ------ | ------- | -------- | ------ | --- | --- | ------ | ------- |
-| base-case.ts | 17,941 ops/sec | 0.056 ms | 0.055 ms | 0.053 ms | 0.063 ms | 0.002 ms | 34,813 |"
+| base-case.ts | 17,941 ops/sec | 0.056 ms | 0.055 ms | 0.053 ms | 0.063 ms | 0.002 ms | 34,813 |
+
+## System Information
+
+**Runtime:** Node.js v20.11.0, V8 11.3.244.8-node.20, ESLint 9.27.0
+
+**Platform:** linux x64 (6.2.0-39-generic)
+
+**Hardware:** Intel(R) Core(TM) i7-12700K CPU @ 3.60GHz (8 cores, 3600 MHz), 32 GB RAM"
 `;
