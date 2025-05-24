@@ -2,9 +2,10 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import type {
-  SingleRuleResult,
   ReporterOptions,
   BenchmarkConfig,
+  TestSpecResult,
+  TestCaseResult,
 } from '../types/benchmark-config'
 import type { CodeSample, RuleConfig, TestCase, Case } from '../types/test-case'
 import type { ProcessedBenchmarkTask } from '../core/benchmark/run-benchmark'
@@ -22,7 +23,7 @@ import { isSupportedExtension } from '../core/utilities/is-supported-extension'
 import { getFileExtension } from '../core/utilities/get-file-extension'
 import { createTestCase } from '../core/test-case/create-test-case'
 import { runBenchmark } from '../core/benchmark/run-benchmark'
-import { runReporters } from '../reporters'
+import { runReporters } from '../reporters/run-reporters'
 
 /** Parameters for running benchmarks based on a user configuration. */
 interface RunBenchmarksFromConfigParameters {
@@ -203,8 +204,7 @@ export let runBenchmarksFromConfig = async (
     return
   }
 
-  let allCreatedTestCases: TestCase[] = []
-  let allBenchmarkResults: ProcessedBenchmarkTask[] = []
+  let allTestSpecResults: TestSpecResult[] = []
 
   let allTestCasePreparationTasks = userConfig.tests.map(async testSpec => {
     let specBenchmarkConfig: BenchmarkConfig = {
@@ -276,70 +276,64 @@ export let runBenchmarksFromConfig = async (
       console.info(
         `Starting benchmark run for test spec "${testSpec.name}" with ${testCases.length} test case(s)...`,
       )
-      // eslint-disable-next-line no-await-in-loop
-      let specRunResults = await runBenchmark({
-        config: specBenchmarkConfig,
-        configDirectory,
-        testCases,
-      })
 
-      if (specRunResults) {
-        allBenchmarkResults.push(...specRunResults)
-        allCreatedTestCases.push(...testCases)
+      let specRunSampleResults: ProcessedBenchmarkTask[] | null =
+        // eslint-disable-next-line no-await-in-loop
+        await runBenchmark({
+          config: specBenchmarkConfig,
+          configDirectory,
+          testCases,
+        })
+
+      if (specRunSampleResults && specRunSampleResults.length > 0) {
+        let currentTestCaseResults: TestCaseResult[] = []
+
+        for (let tc of testCases) {
+          let samplesForThisTestCase = specRunSampleResults.filter(taskResult =>
+            taskResult.name.startsWith(`${tc.name} on `),
+          )
+
+          if (samplesForThisTestCase.length > 0) {
+            currentTestCaseResults.push({
+              samplesResults: samplesForThisTestCase,
+              description: tc.description,
+              name: tc.name,
+              rule: tc.rule,
+              id: tc.id,
+            })
+          }
+        }
+
+        if (currentTestCaseResults.length > 0) {
+          allTestSpecResults.push({
+            benchmarkConfig: {
+              iterations: specBenchmarkConfig.iterations,
+              timeout: specBenchmarkConfig.timeout,
+              warmup: specBenchmarkConfig.warmup,
+            },
+            testCaseResults: currentTestCaseResults,
+            rulePath: testSpec.rulePath,
+            ruleId: testSpec.ruleId,
+            name: testSpec.name,
+          })
+        }
       }
     }
   }
 
-  if (allCreatedTestCases.length === 0) {
+  if (allTestSpecResults.every(spec => spec.testCaseResults.length === 0)) {
     console.error(
-      'No valid test cases could be generated from the user configuration. Exiting.',
+      'No valid test cases or benchmark results could be generated from the user configuration. Exiting.',
     )
     process.exitCode = 1
     return
   }
 
-  if (allBenchmarkResults.length > 0) {
-    let reportingConfigBase = {
-      warmup: {
-        iterations: userConfig.warmup?.iterations ?? DEFAULT_WARMUP_ITERATIONS,
-        enabled: userConfig.warmup?.enabled ?? DEFAULT_WARMUP_ENABLED,
-      },
-      iterations: userConfig.iterations ?? DEFAULT_ITERATIONS,
-      timeout: userConfig.timeout ?? DEFAULT_TIMEOUT_MS,
-      name: 'User Config Benchmark Run',
-      reporters: reporterOptions,
-    }
-
-    for (let taskItem of allBenchmarkResults) {
-      let correspondingTestCase: undefined | TestCase
-      let taskName = taskItem.name || ''
-
-      for (let tc of allCreatedTestCases) {
-        if (taskName.startsWith(`${tc.name} on `)) {
-          correspondingTestCase = tc
-          break
-        }
-      }
-
-      if (correspondingTestCase) {
-        let reportableResult: SingleRuleResult = {
-          rule: {
-            id: correspondingTestCase.rule.ruleId,
-            path: correspondingTestCase.rule.path,
-          },
-          result: taskItem,
-        }
-        runReporters(reportableResult, reportingConfigBase)
-      } else {
-        console.warn(
-          `Could not find corresponding TestCase for benchmark task "${taskName}". Skipping report for this task. This might indicate an issue with TestCase naming or matching logic.`,
-        )
-      }
-    }
-  } else if (allCreatedTestCases.length > 0) {
-    console.warn(
-      'Benchmark run completed, but no results were returned to report.',
+  if (allTestSpecResults.length > 0) {
+    console.info(
+      `Benchmark run completed. ${allTestSpecResults.length} test specifications processed.`,
     )
+    await runReporters(allTestSpecResults, userConfig, reporterOptions)
   }
 
   console.info('Benchmark run finished.')

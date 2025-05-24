@@ -4,9 +4,12 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import * as fsPromises from 'node:fs/promises'
 import path from 'node:path'
 
+import type {
+  ReporterOptions,
+  TestSpecResult,
+} from '../../types/benchmark-config'
 import type { ProcessedBenchmarkTask } from '../../core/benchmark/run-benchmark'
 import type { UserBenchmarkConfig } from '../../types/user-benchmark-config'
-import type { ReporterOptions } from '../../types/benchmark-config'
 import type { CodeSample, TestCase } from '../../types/test-case'
 
 import { getLanguageByFileName } from '../../core/utilities/get-language-by-file-name'
@@ -15,7 +18,7 @@ import { runBenchmarksFromConfig } from '../../runners/run-benchmarks-from-confi
 import { getFileExtension } from '../../core/utilities/get-file-extension'
 import { createTestCase } from '../../core/test-case/create-test-case'
 import { runBenchmark } from '../../core/benchmark/run-benchmark'
-import { runReporters } from '../../reporters'
+import { runReporters } from '../../reporters/run-reporters'
 import * as constants from '../../constants'
 
 vi.mock('node:fs/promises')
@@ -24,7 +27,7 @@ vi.mock('../../core/utilities/is-supported-extension')
 vi.mock('../../core/utilities/get-file-extension')
 vi.mock('../../core/test-case/create-test-case')
 vi.mock('../../core/benchmark/run-benchmark')
-vi.mock('../../reporters')
+vi.mock('../../reporters/run-reporters')
 
 describe('runBenchmarksFromConfig', () => {
   let mockUserConfig: UserBenchmarkConfig
@@ -178,15 +181,37 @@ describe('runBenchmarksFromConfig', () => {
     })
 
     expect(mockedRunReporters).toHaveBeenCalledOnce()
-    expect(mockedRunReporters).toHaveBeenCalledWith(
-      {
-        rule: {
-          id: mockTestCase.rule.ruleId,
-          path: mockTestCase.rule.path,
+
+    let expectedTestSpecResult: TestSpecResult = {
+      benchmarkConfig: {
+        warmup: {
+          iterations:
+            mockUserConfig.warmup?.iterations ??
+            constants.DEFAULT_WARMUP_ITERATIONS,
+          enabled:
+            mockUserConfig.warmup?.enabled ?? constants.DEFAULT_WARMUP_ENABLED,
         },
-        result: mockTask,
+        iterations: mockUserConfig.iterations ?? constants.DEFAULT_ITERATIONS,
+        timeout: mockUserConfig.timeout ?? constants.DEFAULT_TIMEOUT_MS,
       },
-      expect.objectContaining({ name: 'User Config Benchmark Run' }),
+      testCaseResults: [
+        {
+          description: mockTestCase.description,
+          samplesResults: [mockTask],
+          name: mockTestCase.name,
+          rule: mockTestCase.rule,
+          id: mockTestCase.id,
+        },
+      ],
+      rulePath: testSpec.rulePath,
+      ruleId: testSpec.ruleId,
+      name: testSpec.name,
+    }
+
+    expect(mockedRunReporters).toHaveBeenCalledWith(
+      [expectedTestSpecResult],
+      mockUserConfig,
+      mockReporterOptions,
     )
   })
 
@@ -284,7 +309,7 @@ describe('runBenchmarksFromConfig', () => {
       ),
     )
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('No valid test cases could be generated'),
+      'No valid test cases or benchmark results could be generated from the user configuration. Exiting.',
     )
     expect(process.exitCode).toBe(1)
   })
@@ -307,7 +332,7 @@ describe('runBenchmarksFromConfig', () => {
       ),
     )
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('No valid test cases could be generated'),
+      'No valid test cases or benchmark results could be generated from the user configuration. Exiting.',
     )
     expect(process.exitCode).toBe(1)
   })
@@ -346,7 +371,7 @@ describe('runBenchmarksFromConfig', () => {
       ),
     )
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('No valid test cases could be generated'),
+      'No valid test cases or benchmark results could be generated from the user configuration. Exiting.',
     )
   })
 
@@ -438,29 +463,11 @@ describe('runBenchmarksFromConfig', () => {
       `Skipping case 1 in test "${mockUserConfig.tests[0]!.name}" due to an error: Test case creation error`,
     )
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('No valid test cases could be generated'),
+      'No valid test cases or benchmark results could be generated from the user configuration. Exiting.',
     )
   })
 
-  it('should handle non-Error objects thrown in createTestCase', async () => {
-    mockedCreateTestCase.mockImplementation(() => {
-      throw new Error('String test case error')
-    })
-
-    await runBenchmarksFromConfig({
-      reporterOptions: mockReporterOptions,
-      userConfig: mockUserConfig,
-      configDirectory,
-    })
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      `Skipping case 1 in test "${mockUserConfig.tests[0]!.name}" due to an error: String test case error`,
-    )
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('No valid test cases could be generated'),
-    )
-  })
-
-  it('should handle when empty benchmark results are returned', async () => {
+  it('should handle when empty benchmark results are returned from runBenchmark', async () => {
     mockedRunBenchmark.mockResolvedValue([])
 
     await runBenchmarksFromConfig({
@@ -469,8 +476,8 @@ describe('runBenchmarksFromConfig', () => {
       configDirectory,
     })
 
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('no results were returned'),
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'No valid test cases or benchmark results could be generated from the user configuration. Exiting.',
     )
     expect(mockedRunReporters).not.toHaveBeenCalled()
   })
@@ -585,114 +592,72 @@ describe('runBenchmarksFromConfig', () => {
       }),
     )
 
-    expect(mockedRunReporters).toHaveBeenCalledTimes(2)
-    expect(mockedRunReporters).toHaveBeenCalledWith(
-      expect.objectContaining({ result: mockTaskSpec1Case1 }),
-      expect.any(Object),
-    )
-    expect(mockedRunReporters).toHaveBeenCalledWith(
-      expect.objectContaining({ result: mockTaskSpec2Case1 }),
-      expect.any(Object),
-    )
-  })
+    expect(mockedRunReporters).toHaveBeenCalledTimes(1)
 
-  it("should handle tasks that don't match any test case name", async () => {
-    let unmatchedTask = {
-      ...mockTask,
-      name: 'Unmatched Task',
-    } as unknown as ProcessedBenchmarkTask
-
-    mockedRunBenchmark.mockResolvedValue([unmatchedTask])
-
-    await runBenchmarksFromConfig({
-      reporterOptions: mockReporterOptions,
-      userConfig: mockUserConfig,
-      configDirectory,
-    })
-
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      `Could not find corresponding TestCase for benchmark task "Unmatched Task". Skipping report for this task. This might indicate an issue with TestCase naming or matching logic.`,
-    )
-    expect(mockedRunReporters).not.toHaveBeenCalled()
-  })
-
-  it('should skip reporting for unmatched tasks when there are multiple test cases', async () => {
-    let testSpec1Case1Name = 'Test Spec 1 - Case 1'
-    let mockTestCaseSpec1 = { ...mockTestCase, name: testSpec1Case1Name }
-
-    let testSpec2Case1Name = 'Test Spec 2 - Case 1'
-    let mockTestCaseSpec2: TestCase = {
-      ...mockTestCase,
-      rule: {
-        severity: constants.DEFAULT_SEVERITY,
-        path: 'path/to/rule2.js',
-        ruleId: 'test-rule-2',
-        options: undefined,
+    let testSpec1 = mockUserConfig.tests[0]!
+    let expectedTestSpecResult1: TestSpecResult = {
+      benchmarkConfig: {
+        warmup: {
+          iterations:
+            mockUserConfig.warmup?.iterations ??
+            constants.DEFAULT_WARMUP_ITERATIONS,
+          enabled:
+            mockUserConfig.warmup?.enabled ?? constants.DEFAULT_WARMUP_ENABLED,
+        },
+        iterations: mockUserConfig.iterations ?? constants.DEFAULT_ITERATIONS,
+        timeout: mockUserConfig.timeout ?? constants.DEFAULT_TIMEOUT_MS,
       },
-      samples: [
-        { filename: 'sample2.js', language: 'javascript', code: 'code2' },
+      testCaseResults: [
+        {
+          description: mockTestCaseSpec1Case1.description,
+          samplesResults: [mockTaskSpec1Case1],
+          name: mockTestCaseSpec1Case1.name,
+          rule: mockTestCaseSpec1Case1.rule,
+          id: mockTestCaseSpec1Case1.id,
+        },
       ],
-      name: testSpec2Case1Name,
-      id: 'spec2-case1',
+      rulePath: testSpec1.rulePath,
+      ruleId: testSpec1.ruleId,
+      name: testSpec1.name,
     }
 
-    mockUserConfig.tests.push({
-      cases: [{ testPath: 'path/to/samples/sample2.js' }],
-      rulePath: 'path/to/rule2.js',
-      ruleId: 'test-rule-2',
-      name: 'Test Spec 2',
-    })
+    let testSpec2 = mockUserConfig.tests[1]!
+    let expectedTestSpecResult2: TestSpecResult = {
+      benchmarkConfig: {
+        warmup: {
+          iterations:
+            testSpec2.warmup?.iterations ??
+            mockUserConfig.warmup?.iterations ??
+            constants.DEFAULT_WARMUP_ITERATIONS,
+          enabled:
+            testSpec2.warmup?.enabled ??
+            mockUserConfig.warmup?.enabled ??
+            constants.DEFAULT_WARMUP_ENABLED,
+        },
+        iterations: testSpec2.iterations ?? constants.DEFAULT_ITERATIONS,
+        timeout: mockUserConfig.timeout ?? constants.DEFAULT_TIMEOUT_MS,
+      },
+      testCaseResults: [
+        {
+          description: mockTestCaseSpec2Case1.description,
+          samplesResults: [mockTaskSpec2Case1],
+          name: mockTestCaseSpec2Case1.name,
+          rule: mockTestCaseSpec2Case1.rule,
+          id: mockTestCaseSpec2Case1.id,
+        },
+      ],
+      rulePath: testSpec2.rulePath,
+      ruleId: testSpec2.ruleId,
+      name: testSpec2.name,
+    }
 
-    mockedCreateTestCase.mockImplementation(parameters => {
-      if (parameters.name === testSpec1Case1Name) {
-        return mockTestCaseSpec1
-      }
-      if (parameters.name === testSpec2Case1Name) {
-        return mockTestCaseSpec2
-      }
-      throw new Error('Unexpected createTestCase call')
-    })
-
-    mockedFsReadFile
-      .mockResolvedValueOnce('let a = 1;')
-      .mockResolvedValueOnce('code2')
-    mockedFsStat.mockResolvedValue({
-      isDirectory: () => false,
-      isFile: () => true,
-    } as Stats)
-
-    let matchedTaskForSpec1 = {
-      ...mockTask,
-      name: `${testSpec1Case1Name} on ${mockCodeSamples[0]!.filename}`,
-    } as unknown as ProcessedBenchmarkTask
-    let unmatchedTask = {
-      ...mockTask,
-      name: 'Unmatched Task From MultiSetup',
-    } as unknown as ProcessedBenchmarkTask
-
-    mockedRunBenchmark
-      .mockResolvedValueOnce([matchedTaskForSpec1])
-      .mockResolvedValueOnce([unmatchedTask])
-
-    await runBenchmarksFromConfig({
-      reporterOptions: mockReporterOptions,
-      userConfig: mockUserConfig,
-      configDirectory,
-    })
-
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Could not find corresponding TestCase for benchmark task "Unmatched Task From MultiSetup"',
-      ),
-    )
-    expect(mockedRunReporters).toHaveBeenCalledTimes(1)
     expect(mockedRunReporters).toHaveBeenCalledWith(
-      expect.objectContaining({ result: matchedTaskForSpec1 }),
-      expect.any(Object),
+      [expectedTestSpecResult1, expectedTestSpecResult2],
+      mockUserConfig,
+      mockReporterOptions,
     )
   })
-
-  it('should handle tasks with no name', async () => {
+  it('should handle tasks with no name (empty string name)', async () => {
     mockUserConfig.tests = [
       {
         cases: [{ testPath: 'path/to/samples/sample-no-name.js' }],
@@ -729,7 +694,7 @@ describe('runBenchmarksFromConfig', () => {
 
     let noNameTask = {
       ...mockTask,
-      name: undefined,
+      name: '',
     } as unknown as ProcessedBenchmarkTask
     mockedRunBenchmark.mockResolvedValue([noNameTask])
 
@@ -739,11 +704,28 @@ describe('runBenchmarksFromConfig', () => {
       configDirectory,
     })
 
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Could not find corresponding TestCase for benchmark task ""',
-      ) as string,
+    mockedCreateTestCase.mockReturnValue({
+      ...mockNoNameTestCase,
+      samples: [
+        {
+          filename: 'sample-no-name.js',
+          language: 'javascript',
+          code: 'no_name_code',
+        },
+      ],
+    })
+    mockedRunBenchmark.mockResolvedValue([noNameTask])
+
+    await runBenchmarksFromConfig({
+      reporterOptions: mockReporterOptions,
+      userConfig: mockUserConfig,
+      configDirectory,
+    })
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'No valid test cases or benchmark results could be generated from the user configuration. Exiting.',
     )
+    expect(mockedRunReporters).not.toHaveBeenCalled()
   })
 
   it('should handle array of test paths for a case', async () => {

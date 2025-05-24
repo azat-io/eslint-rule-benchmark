@@ -239,19 +239,19 @@ The tool uses [Tinybench](https://github.com/tinylibs/tinybench) for accurate an
 ### Example Output
 
 ```
------------------------------------------------|-----------
-           Rule Benchmark Results: sort-imports
------------------------------------------------|-----------
-Operations per second                          | 18429
-Average time                                   | 0.05426 ms
-Median time (P50)                              | 0.05417 ms
-Minimum time                                   | 0.05267 ms
-Maximum time                                   | 0.05654 ms
-P75 Percentile                                 | 0.05462 ms
-P99 Percentile                                 | 0.05638 ms
-Standard deviation                             | 0.00066 ms
-Total samples                                  | 34737
------------------------------------------------|-----------
+-------------------------------------------------------------------------------------------------
+                                  Rule: no-negated-conjunction
+-------------------------------------------------------------------------------------------------
+Sample          | Ops/sec        | Avg Time | Median   | Min      | Max      | StdDev   | Samples
+base-case.ts    | 18,013 ops/sec | 0.056 ms | 0.055 ms | 0.053 ms | 0.063 ms | 0.002 ms | 36,829
+complex-case.ts | 17,244 ops/sec | 0.058 ms | 0.058 ms | 0.053 ms | 0.065 ms | 0.002 ms | 25,664
+-------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+                                  Rule: no-negated-disjunction
+-------------------------------------------------------------------------------------------------
+Sample          | Ops/sec        | Avg Time | Median   | Min      | Max      | StdDev   | Samples
+base-case.ts    | 17,506 ops/sec | 0.057 ms | 0.057 ms | 0.053 ms | 0.067 ms | 0.003 ms | 27,567
+-------------------------------------------------------------------------------------------------
 ```
 
 ## Versioning Policy
