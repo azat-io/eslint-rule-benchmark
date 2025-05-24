@@ -34,6 +34,7 @@ export default defineConfig({
         path.join(__dirname, 'types'),
       ],
       insertTypesEntry: true,
+      copyDtsFiles: true,
       strictOutput: true,
     }),
     prettierFormat(),
