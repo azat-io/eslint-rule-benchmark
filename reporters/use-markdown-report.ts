@@ -13,16 +13,35 @@ import { formatHz } from './format-hz'
  * @param {SystemInfo} systemInfo - System information to format.
  * @returns {string} Formatted system information in markdown.
  */
-let formatSystemInfoMarkdown = (systemInfo: SystemInfo): string =>
-  [
-    '## System Information',
+let formatSystemInfoMarkdown = (systemInfo: SystemInfo): string => {
+  let runTime = [
+    `Node.js ${systemInfo.nodeVersion}`,
+    `V8 ${systemInfo.v8Version}`,
+    `ESLint ${systemInfo.eslintVersion}`,
+  ]
+
+  let platform = [
+    `${systemInfo.platform} ${systemInfo.arch} (${systemInfo.osRelease})`,
+  ]
+
+  let hardware = [
+    `${systemInfo.cpuModel} (${systemInfo.cpuCount} cores, ${systemInfo.cpuSpeedMHz} MHz)`,
+    `${systemInfo.totalMemoryGb} GB RAM`,
+  ]
+
+  let formatList = new Intl.ListFormat('en-US', {
+    type: 'conjunction',
+    style: 'narrow',
+  })
+
+  return [
+    '### System Information',
     '',
-    `**Runtime:** Node.js ${systemInfo.nodeVersion}, V8 ${systemInfo.v8Version}, ESLint ${systemInfo.eslintVersion}`,
-    '',
-    `**Platform:** ${systemInfo.platform} ${systemInfo.arch} (${systemInfo.osRelease})`,
-    '',
-    `**Hardware:** ${systemInfo.cpuModel} (${systemInfo.cpuCount} cores, ${systemInfo.cpuSpeedMHz} MHz), ${systemInfo.totalMemoryGb} GB RAM`,
+    `**Runtime:** ${formatList.format(runTime)}`,
+    `**Platform:** ${formatList.format(platform)}`,
+    `**Hardware:** ${formatList.format(hardware)}`,
   ].join('\n')
+}
 
 /**
  * Creates a markdown reporter for aggregated benchmark results.
@@ -43,12 +62,12 @@ export let useMarkdownReport = async (
     return 'No benchmark results available.'
   }
 
-  outputLines.push('# ESLint Rule Benchmark Report')
+  outputLines.push('## ESLint Rule Benchmark Report')
 
   for (let i = 0; i < results.length; i++) {
     let testSpecResult = results[i]!
 
-    outputLines.push('', `## ${testSpecResult.name}`, '')
+    outputLines.push('', `### ${testSpecResult.name}`, '')
 
     if (testSpecResult.testCaseResults.length === 0) {
       outputLines.push(

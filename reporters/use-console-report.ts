@@ -42,16 +42,32 @@ const EMPTY_ROW_VALUES = [
  * @returns {string} Formatted system information string.
  */
 let formatSystemInfo = (systemInfo: SystemInfo): string => {
-  let runtimeInfo = `Node.js ${systemInfo.nodeVersion}, V8 ${systemInfo.v8Version}, ESLint ${systemInfo.eslintVersion}`
-  let platformInfo = `${systemInfo.platform} ${systemInfo.arch} (${systemInfo.osRelease})`
-  let hardwareInfo = `${systemInfo.cpuModel} (${systemInfo.cpuCount} cores, ${systemInfo.cpuSpeedMHz} MHz), ${systemInfo.totalMemoryGb} GB RAM`
+  let runTime = [
+    `Node.js ${systemInfo.nodeVersion}`,
+    `V8 ${systemInfo.v8Version}`,
+    `ESLint ${systemInfo.eslintVersion}`,
+  ]
+
+  let platform = [
+    `${systemInfo.platform} ${systemInfo.arch} (${systemInfo.osRelease})`,
+  ]
+
+  let hardware = [
+    `${systemInfo.cpuModel} (${systemInfo.cpuCount} cores, ${systemInfo.cpuSpeedMHz} MHz)`,
+    `${systemInfo.totalMemoryGb} GB RAM`,
+  ]
+
+  let formatList = new Intl.ListFormat('en-US', {
+    type: 'conjunction',
+    style: 'narrow',
+  })
 
   return [
     'System Information:',
     '',
-    `Runtime: ${runtimeInfo}`,
-    `Platform: ${platformInfo}`,
-    `Hardware: ${hardwareInfo}`,
+    `Runtime: ${formatList.format(runTime)}`,
+    `Platform: ${formatList.format(platform)}`,
+    `Hardware: ${formatList.format(hardware)}`,
   ].join('\n')
 }
 
