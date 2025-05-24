@@ -1,5 +1,47 @@
 # Changelog
 
+## v0.5.0
+
+[compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.4.0...v0.5.0)
+
+### 🚀 Features
+
+- Add github pr comment reporting ([acc651b](https://github.com/azat-io/eslint-rule-benchmark/commit/acc651b))
+- Allow multiple cases per test in benchmark config ([ca81107](https://github.com/azat-io/eslint-rule-benchmark/commit/ca81107))
+- Improve benchmark result stability ([0816847](https://github.com/azat-io/eslint-rule-benchmark/commit/0816847))
+- Enhance report structure for aggregated results ([722c1d2](https://github.com/azat-io/eslint-rule-benchmark/commit/722c1d2))
+- Add system info to benchmark reports ([11a42cf](https://github.com/azat-io/eslint-rule-benchmark/commit/11a42cf))
+- Add github pr comments integration ([ea5f046](https://github.com/azat-io/eslint-rule-benchmark/commit/ea5f046))
+
+### 🏎 Performance Improvements
+
+- Optimize github comment handling using graphql ([3505cde](https://github.com/azat-io/eslint-rule-benchmark/commit/3505cde))
+
+### 🐞 Bug Fixes
+
+- Resolve config paths correctly relative to config ([cd179d3](https://github.com/azat-io/eslint-rule-benchmark/commit/cd179d3))
+- Fix eslint rules option type ([78db882](https://github.com/azat-io/eslint-rule-benchmark/commit/78db882))
+- Fix path validation ([417655f](https://github.com/azat-io/eslint-rule-benchmark/commit/417655f))
+
+### 💅 Refactors
+
+- Improve error messages ([bfb0779](https://github.com/azat-io/eslint-rule-benchmark/commit/bfb0779))
+- Decompose github comment publishing func ([2f6474b](https://github.com/azat-io/eslint-rule-benchmark/commit/2f6474b))
+
+### 🏡 Chore
+
+- Add branch check script ([78a87f6](https://github.com/azat-io/eslint-rule-benchmark/commit/78a87f6))
+- Update dependencies ([50dbd7a](https://github.com/azat-io/eslint-rule-benchmark/commit/50dbd7a))
+- Add main scripes ([ebfcd97](https://github.com/azat-io/eslint-rule-benchmark/commit/ebfcd97))
+
+### 🤖 CI
+
+- Back npm publish script ([9acbd08](https://github.com/azat-io/eslint-rule-benchmark/commit/9acbd08))
+
+### ❤️ Contributors
+
+- Azat S. ([@azat-io](https://github.com/azat-io))
+
 ## v0.4.0
 
 [compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.3.0...v0.4.0)
