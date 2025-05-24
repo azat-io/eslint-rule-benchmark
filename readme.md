@@ -24,7 +24,7 @@ Allows to catch regressions and quantify optimization gains.
 - **Automatic regression detection** with customizable thresholds
 - **Detailed statistics** with various metrics (mean time, median, percentiles)
 - **Multiple report formats** (console, JSON, Markdown)
-- **CI/CD integration** for continuous performance monitoring
+- **GitHub Actions integration** with automatic PR comment reports
 
 ## Installation
 
@@ -213,17 +213,15 @@ export default defineConfig({
 
 ESLint Rule Benchmark provides the following performance metrics:
 
-| Metric                | Description                                          |
-| --------------------- | ---------------------------------------------------- |
-| Operations per second | Number of operations per second                      |
-| Average time          | Average execution time of the rule (e.g., in ms)     |
-| Median time (P50)     | Median execution time (50th percentile)              |
-| Minimum time          | Minimum execution time                               |
-| Maximum time          | Maximum execution time                               |
-| P75 Percentile        | 75th percentile (time for 75% of fastest executions) |
-| P99 Percentile        | 99th percentile (time for 99% of fastest executions) |
-| Standard deviation    | Standard deviation (measure of time variability)     |
-| Total samples         | Number of measurements taken during the benchmark    |
+| Metric                | Description                                       |
+| --------------------- | ------------------------------------------------- |
+| Operations per second | Number of operations per second                   |
+| Average time          | Average execution time of the rule (e.g., in ms)  |
+| Median time (P50)     | Median execution time (50th percentile)           |
+| Minimum time          | Minimum execution time                            |
+| Maximum time          | Maximum execution time                            |
+| Standard deviation    | Standard deviation (measure of time variability)  |
+| Total samples         | Number of measurements taken during the benchmark |
 
 Metrics are available in Console, JSON, and Markdown formats, allowing integration with various systems and workflows.
 
@@ -258,6 +256,52 @@ System Information:
 Runtime: Node.js v22.15.1, V8 12.4.254.21-node.24, ESLint 9.25.1
 Platform: darwin arm64 (24.5.0)
 Hardware: Apple M1 Pro (10 cores, 2400 MHz), 32 GB RAM
+```
+
+## GitHub Actions Integration
+
+ESLint Rule Benchmark automatically publishes benchmark results as comments to GitHub Pull Requests when running in GitHub Actions environment.
+
+### Setup
+
+The integration works automatically when:
+
+- Running in GitHub Actions (`GITHUB_ACTIONS=true`)
+- Event is a pull request (`pull_request` or `pull_request_target`)
+- Required environment variables are present:
+  - `GITHUB_TOKEN` - GitHub token with PR comment permissions
+  - `GITHUB_REPOSITORY` - Repository identifier (automatically set by GitHub Actions)
+  - `GITHUB_EVENT_PATH` - Path to event payload (automatically set by GitHub Actions)
+
+### Example Workflow
+
+Create `.github/workflows/benchmark.yml`:
+
+```yaml
+name: ESLint Rule Benchmark
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci
+
+      - name: Run benchmark
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx eslint-rule-benchmark run
 ```
 
 ## Versioning Policy

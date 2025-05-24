@@ -4,6 +4,8 @@ import path from 'node:path'
 import type { ReporterOptions, TestSpecResult } from '../types/benchmark-config'
 import type { UserBenchmarkConfig } from '../types/user-benchmark-config'
 
+import { publishGithubComment } from '../integrations/publish-github-comment'
+import { isGithubPullRequest } from '../integrations/is-github-pull-request'
 import { createReporter } from './create-reporter'
 
 /**
@@ -14,6 +16,12 @@ import { createReporter } from './create-reporter'
  * generates a report using `createReporter` with all test specification results
  * and then either prints it to the console or saves it to a file, based on the
  * reporter's configuration.
+ *
+ * Additionally, when running in a GitHub Actions pull request context, this
+ * function automatically generates a markdown report and publishes it as a
+ * comment to the pull request, independent of the configured reporter options.
+ * This GitHub integration works seamlessly without requiring additional
+ * configuration from the user.
  *
  * @param {TestSpecResult[]} allTestSpecResults - An array containing the
  *   results for all test specifications.
@@ -67,4 +75,21 @@ export let runReporters = async (
       }
     }),
   )
+
+  if (isGithubPullRequest()) {
+    try {
+      let markdownReport = await createReporter(
+        allTestSpecResults,
+        userConfig,
+        'markdown',
+      )
+
+      await publishGithubComment(markdownReport)
+
+      console.info('GitHub comment published successfully.')
+    } catch (error) {
+      let errorValue = error as Error
+      console.error(`Error publishing GitHub comment: ${errorValue.message}`)
+    }
+  }
 }

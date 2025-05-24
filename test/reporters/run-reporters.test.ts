@@ -8,11 +8,15 @@ import type {
 } from '../../types/benchmark-config'
 import type { UserBenchmarkConfig } from '../../types/user-benchmark-config'
 
+import { publishGithubComment } from '../../integrations/publish-github-comment'
+import { isGithubPullRequest } from '../../integrations/is-github-pull-request'
 import { createReporter } from '../../reporters/create-reporter'
 import { runReporters } from '../../reporters/run-reporters'
 
 vi.mock('node:fs/promises')
 vi.mock('../../reporters/create-reporter')
+vi.mock('../../integrations/is-github-pull-request')
+vi.mock('../../integrations/publish-github-comment')
 
 describe('runReporters', () => {
   let mockTestSpecResults: TestSpecResult[]
@@ -21,6 +25,8 @@ describe('runReporters', () => {
   let mockedCreateReporter = vi.mocked(createReporter)
   let mockedFsWriteFile = vi.mocked(fsPromises.writeFile)
   let mockedFsMkdir = vi.mocked(fsPromises.mkdir)
+  let mockedIsGithubPullRequest = vi.mocked(isGithubPullRequest)
+  let mockedPublishGithubComment = vi.mocked(publishGithubComment)
   let consoleWarnSpy: ReturnType<typeof vi.spyOn>
   let consoleLogSpy: ReturnType<typeof vi.spyOn>
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>
@@ -48,6 +54,8 @@ describe('runReporters', () => {
     ]
     mockUserConfig = { tests: [] }
     mockedCreateReporter.mockResolvedValue('mocked report content')
+    mockedIsGithubPullRequest.mockReturnValue(false)
+    mockedPublishGithubComment.mockResolvedValue()
   })
 
   it('should call createReporter and save to file if outputPath is provided', async () => {
@@ -178,5 +186,77 @@ describe('runReporters', () => {
     expect(consoleWarnSpy).toHaveBeenCalledWith('Markdown report content')
     expect(mockedFsWriteFile).not.toHaveBeenCalled()
     expect(consoleInfoSpy).not.toHaveBeenCalled()
+  })
+
+  it('should not publish to GitHub if not in GitHub PR context', async () => {
+    mockReporterOptions = [{ format: 'console' }]
+    mockedIsGithubPullRequest.mockReturnValue(false)
+
+    await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
+
+    expect(mockedIsGithubPullRequest).toHaveBeenCalledOnce()
+    expect(mockedPublishGithubComment).not.toHaveBeenCalled()
+  })
+
+  it('should publish markdown report to GitHub when in PR context', async () => {
+    mockReporterOptions = [{ format: 'console' }]
+    mockedIsGithubPullRequest.mockReturnValue(true)
+    mockedCreateReporter.mockResolvedValueOnce('Console report content')
+    mockedCreateReporter.mockResolvedValueOnce('GitHub markdown report')
+
+    await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
+
+    expect(mockedIsGithubPullRequest).toHaveBeenCalledOnce()
+    expect(mockedCreateReporter).toHaveBeenCalledTimes(2)
+    expect(mockedCreateReporter).toHaveBeenNthCalledWith(
+      1,
+      mockTestSpecResults,
+      mockUserConfig,
+      'console',
+    )
+    expect(mockedCreateReporter).toHaveBeenNthCalledWith(
+      2,
+      mockTestSpecResults,
+      mockUserConfig,
+      'markdown',
+    )
+    expect(mockedPublishGithubComment).toHaveBeenCalledOnce()
+    expect(mockedPublishGithubComment).toHaveBeenCalledWith(
+      'GitHub markdown report',
+    )
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      'GitHub comment published successfully.',
+    )
+  })
+
+  it('should log error if GitHub comment publishing fails but continue execution', async () => {
+    mockReporterOptions = [{ format: 'console' }]
+    mockedIsGithubPullRequest.mockReturnValue(true)
+    mockedCreateReporter.mockResolvedValueOnce('Console report content')
+    mockedCreateReporter.mockResolvedValueOnce('GitHub markdown report')
+    mockedPublishGithubComment.mockRejectedValue(new Error('GitHub API error'))
+
+    await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
+
+    expect(mockedIsGithubPullRequest).toHaveBeenCalledOnce()
+    expect(mockedPublishGithubComment).toHaveBeenCalledOnce()
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error publishing GitHub comment: GitHub API error',
+    )
+    expect(consoleInfoSpy).toHaveBeenCalledWith('Console report content')
+  })
+
+  it('should not publish to GitHub when no regular reporters are configured', async () => {
+    mockReporterOptions = []
+    mockedIsGithubPullRequest.mockReturnValue(true)
+
+    await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      'No reporters configured. Skipping report generation.',
+    )
+    expect(mockedIsGithubPullRequest).not.toHaveBeenCalled()
+    expect(mockedCreateReporter).not.toHaveBeenCalled()
+    expect(mockedPublishGithubComment).not.toHaveBeenCalled()
   })
 })
