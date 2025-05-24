@@ -4,6 +4,7 @@ import type { TestSpecResult } from '../types/benchmark-config'
 import type { SystemInfo } from './collect-system-info'
 
 import { collectSystemInfo } from './collect-system-info'
+import { formatDeviation } from './format-deviation'
 import { formatNumber } from './format-number'
 import { formatHz } from './format-hz'
 import { formatMs } from './format-ms'
@@ -101,7 +102,7 @@ let formatMetricsRow = (
   formatMs(sample.metrics.median),
   formatMs(sample.metrics.min),
   formatMs(sample.metrics.max),
-  formatMs(sample.metrics.stdDev),
+  formatDeviation(sample.metrics.stdDev),
   formatNumber(sample.metrics.sampleCount),
 ]
 

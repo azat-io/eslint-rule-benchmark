@@ -9,6 +9,7 @@ import type { BenchmarkMetrics } from '../types/benchmark-metrics'
 import type { SystemInfo } from './collect-system-info'
 
 import { collectSystemInfo } from './collect-system-info'
+import { formatDeviation } from './format-deviation'
 import { formatMs } from './format-ms'
 
 /**
@@ -117,7 +118,7 @@ interface JsonSampleResult {
  * @returns {JsonSampleMetrics} JsonSampleMetrics object.
  */
 let mapMetricsToJson = (metrics: BenchmarkMetrics): JsonSampleMetrics => ({
-  standardDeviation: formatMs(metrics.stdDev),
+  standardDeviation: formatDeviation(metrics.stdDev),
   operationsPerSecond: Math.round(metrics.hz),
   medianTime: formatMs(metrics.median),
   averageTime: formatMs(metrics.mean),

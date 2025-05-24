@@ -186,10 +186,10 @@ describe('useMarkdownReport', () => {
       '| ------ | ------- | -------- | ------ | --- | --- | ------ | ------- |',
     )
     expect(markdownOutput).toContain(
-      '| sampleA.js | 1,000 ops/sec | 1.000 ms | 0.900 ms | 0.800 ms | 1.200 ms | 0.050 ms | 10 |',
+      '| sampleA.js | 1,000 ops/sec | 1.000 ms | 0.900 ms | 0.800 ms | 1.200 ms | ±0.050 ms | 10 |',
     )
     expect(markdownOutput).toContain(
-      '| sampleB.js | 500 ops/sec | 2.000 ms | 1.900 ms | 0.800 ms | 1.200 ms | 0.050 ms | 10 |',
+      '| sampleB.js | 500 ops/sec | 2.000 ms | 1.900 ms | 0.800 ms | 1.200 ms | ±0.050 ms | 10 |',
     )
     expect(markdownOutput).not.toContain('Test Specification:')
     expect(markdownOutput).not.toContain('Rule ID:')

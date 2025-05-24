@@ -3,6 +3,7 @@ import type { TestSpecResult } from '../types/benchmark-config'
 import type { SystemInfo } from './collect-system-info'
 
 import { collectSystemInfo } from './collect-system-info'
+import { formatDeviation } from './format-deviation'
 import { formatNumber } from './format-number'
 import { formatMs } from './format-ms'
 import { formatHz } from './format-hz'
@@ -103,7 +104,7 @@ export let useMarkdownReport = async (
           formatMs(sampleResult.metrics.median),
           formatMs(sampleResult.metrics.min),
           formatMs(sampleResult.metrics.max),
-          formatMs(sampleResult.metrics.stdDev),
+          formatDeviation(sampleResult.metrics.stdDev),
           formatNumber(sampleResult.metrics.sampleCount),
         ]
 

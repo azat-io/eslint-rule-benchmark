@@ -7,15 +7,15 @@ exports[`useMarkdownReport > handles multiple test specifications 1`] = `
 
 | Sample | Ops/sec | Avg Time | Median | Min | Max | StdDev | Samples |
 | ------ | ------- | -------- | ------ | --- | --- | ------ | ------- |
-| base-case.ts | 17,896 ops/sec | 0.056 ms | 0.055 ms | 0.052 ms | 0.063 ms | 0.002 ms | 37,011 |
-| complex-case.ts | 17,973 ops/sec | 0.056 ms | 0.055 ms | 0.053 ms | 0.062 ms | 0.002 ms | 32,886 |
+| base-case.ts | 17,896 ops/sec | 0.056 ms | 0.055 ms | 0.052 ms | 0.063 ms | ±0.002 ms | 37,011 |
+| complex-case.ts | 17,973 ops/sec | 0.056 ms | 0.055 ms | 0.053 ms | 0.062 ms | ±0.002 ms | 32,886 |
 
 
 ### Rule: no-negated-disjunction
 
 | Sample | Ops/sec | Avg Time | Median | Min | Max | StdDev | Samples |
 | ------ | ------- | -------- | ------ | --- | --- | ------ | ------- |
-| base-case.ts | 17,941 ops/sec | 0.056 ms | 0.055 ms | 0.053 ms | 0.063 ms | 0.002 ms | 34,813 |
+| base-case.ts | 17,941 ops/sec | 0.056 ms | 0.055 ms | 0.053 ms | 0.063 ms | ±0.002 ms | 34,813 |
 
 ### System Information
 
