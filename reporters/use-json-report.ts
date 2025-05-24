@@ -11,44 +11,102 @@ import type { SystemInfo } from './collect-system-info'
 import { collectSystemInfo } from './collect-system-info'
 import { formatMs } from './format-ms'
 
+/**
+ * Top-level JSON report structure containing benchmark results and system
+ * information.
+ */
 export interface JsonBenchmarkReport {
+  /** Array of test specification results in JSON format. */
   testSpecifications: TestSpecJsonReport[]
+
+  /** Information about the system where benchmarks were executed. */
   systemInfo: SystemInfo
 }
 
+/** Performance metrics for a single code sample in JSON-serializable format. */
 interface JsonSampleMetrics {
+  /** Standard deviation of execution times in formatted string. */
   standardDeviation: string | null
+
+  /** Number of operations executed per second. */
   operationsPerSecond: number
+
+  /** Average execution time in formatted string. */
   averageTime: string | null
+
+  /** Minimum execution time in formatted string. */
   minimumTime: string | null
+
+  /** Maximum execution time in formatted string. */
   maximumTime: string | null
+
+  /** Median execution time in formatted string. */
   medianTime: string | null
+
+  /** Duration of the benchmark period in seconds. */
   periodInSeconds: number
+
+  /** Total number of samples collected during benchmarking. */
   totalSamples: number
+
+  /** 75th percentile execution time in formatted string. */
   p75: string | null
+
+  /** 99th percentile execution time in formatted string. */
   p99: string | null
 }
 
+/** JSON representation of benchmark results for a single test specification. */
 interface TestSpecJsonReport {
+  /**
+   * Benchmark configuration settings (excluding baselinePath, reporters, and
+   * name).
+   */
   benchmarkConfig: Omit<BenchmarkConfig, 'baselinePath' | 'reporters' | 'name'>
+
+  /** Array of test case results within this specification. */
   testCases: JsonTestCaseReport[]
+
+  /** Optional file path to the ESLint rule being tested. */
   rulePath?: string
+
+  /** Identifier of the ESLint rule being tested. */
   ruleId: string
+
+  /** Human-readable name of the test specification. */
   name: string
 }
 
+/** JSON representation of benchmark results for a single test case. */
 interface JsonTestCaseReport {
+  /** Array of sample benchmark results for this test case. */
   samples: JsonSampleResult[]
+
+  /** Configuration options passed to the ESLint rule. */
   ruleOptions?: unknown
+
+  /** Optional description of the test case. */
   description?: string
+
+  /** Identifier of the ESLint rule being tested. */
   ruleId: string
+
+  /** Human-readable name of the test case. */
   name: string
+
+  /** Unique identifier of the test case. */
   id: string
 }
 
+/** JSON representation of benchmark results for a single code sample. */
 interface JsonSampleResult {
+  /** Performance metrics for this sample (null if benchmark failed). */
   metrics?: JsonSampleMetrics
+
+  /** Name identifier of the code sample. */
   sampleName: string
+
+  /** Error message if the benchmark failed for this sample. */
   error?: string
 }
 

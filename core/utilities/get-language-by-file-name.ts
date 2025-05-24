@@ -7,6 +7,12 @@ type Extensions = (typeof SUPPORTED_EXTENSIONS)[number]
 
 type Language = (typeof LANGUAGES)[number]
 
+/**
+ * Maps file extensions to their corresponding languages.
+ *
+ * This mapping is used to determine the language of a file based on its
+ * extension. If the extension is not supported, it defaults to 'javascript'.
+ */
 let extensionMap = {
   jsx: 'javascript-react',
   tsx: 'typescript-react',

@@ -1,10 +1,29 @@
 import type { RuleConfig, CodeSample, TestCase } from '../../types/test-case'
 
-/** Parameters for creating a test case. */
+/** Parameters for creating a test case for ESLint rule benchmarking. */
 interface CreateTestCaseParameters {
+  /**
+   * Array of code samples to benchmark the ESLint rule against. Each sample
+   * represents a piece of code that will be linted.
+   */
   samples: CodeSample[]
+
+  /**
+   * Configuration for the ESLint rule being tested. Includes rule ID, options,
+   * and severity level.
+   */
   rule: RuleConfig
+
+  /**
+   * Human-readable name for this test case. Typically follows format "Test Spec
+   * Name - Case Description".
+   */
   name: string
+
+  /**
+   * Unique identifier for this test case. Used for tracking results and
+   * generating reports.
+   */
   id: string
 }
 

@@ -11,6 +11,7 @@ import { formatMs } from './format-ms'
 type Alignment = 'center' | 'left'
 
 const MIN_COLUMN_WIDTH = 5
+
 const CELL_PADDING = 1
 
 const TABLE_HEADERS = [

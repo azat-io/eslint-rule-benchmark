@@ -1,5 +1,9 @@
 import { SUPPORTED_EXTENSIONS } from '../../constants'
 
+/**
+ * Type representing the supported file extensions for the benchmark runner.
+ * This is derived from the SUPPORTED_EXTENSIONS constant.
+ */
 type Extensions = (typeof SUPPORTED_EXTENSIONS)[number]
 
 /**

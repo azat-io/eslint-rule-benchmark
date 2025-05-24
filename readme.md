@@ -12,172 +12,122 @@
 [![Code Coverage](https://img.shields.io/codecov/c/github/azat-io/eslint-rule-benchmark.svg?color=ffa500&labelColor=324cc2)](https://npmjs.com/package/eslint-rule-benchmark)
 [![GitHub License](https://img.shields.io/badge/license-MIT-232428.svg?color=ffa500&labelColor=324cc2)](https://github.com/azat-io/eslint-rule-benchmark/blob/main/license.md)
 
-ESLint Rule Benchmark is a tool that times individual ESLint rules, capturing ops /sec, mean and median runtimes, and rich latency percentiles to surface performance hotspots.
+ESLint Rule Benchmark times individual ESLint rules, capturing ops/sec, mean and median runtimes and rich latency percentiles to surface performance hotspots.
 
-Allows to catch regressions and quantify optimization gains.
+It helps you catch regressions and quantify optimization gains.
 
-## Features
+## Why?
 
-- **Precise timing measurements** for individual ESLint rules
-- **Testing against real projects** and code files
-- **Native TypeScript support** for rules written in .ts files
-- **Automatic regression detection** with customizable thresholds
-- **Detailed statistics** with various metrics (mean time, median, percentiles)
-- **Multiple report formats** (console, JSON, Markdown)
-- **GitHub Actions integration** with automatic PR comment reports
+- **Prevent performance regressions** – catch slow rules before they reach production
+- **Compare implementations** – find the fastest approach with side-by-side benchmarks
+- **Expose detailed metrics** – ops/sec, mean, median, percentiles and more
+- **Track performance trends** – export JSON results for historical analysis
+- **Benchmark real code** – measure against actual projects, not synthetic snippets
+- **Use TypeScript natively** – run `.ts` rules out of the box
+- **Automate CI/CD checks** – post performance impact straight to pull requests
+- **Generate multiple report formats** – output to console, JSON or Markdown
 
-## Installation
+## Quick Start
+
+1. Install package:
 
 ```bash
 npm install --save-dev eslint-rule-benchmark
 ```
 
-## Usage
+2. Create a simple benchmark config `benchmark/config.js` or `benchmark/config.ts`:
 
-ESLint Rule Benchmark provides two main commands:
+```js
+import { defineConfig } from 'eslint-rule-benchmark'
 
-### 1. `run` - Benchmarking with a Configuration File
-
-This command is used to run a suite of benchmarks defined in a configuration file. It allows for defining multiple test scenarios, global benchmark settings, and per-test overrides.
-
-**Syntax:**
-
-```sh
-eslint-rule-benchmark run [options]
+export default defineConfig({
+  tests: [
+    {
+      name: 'My Rule Performance',
+      ruleId: 'my-plugin/my-rule',
+      rulePath: '../rules/my-rule.js',
+      cases: [
+        {
+          testPath: './my-rule/base-case.js',
+        },
+      ],
+    },
+  ],
+})
 ```
 
-**Options:**
+3. Run benchmarks:
 
-- `--config <path>`: Path to your benchmark configuration file (e.g., `benchmark.config.js`, `benchmark.config.ts`). If not provided, the tool will search for default configuration files (e.g., `benchmark/config.js`, `benchmark/config.ts`, etc. in the current directory).
-- `--report <format>`: Specify the output report format. Available formats: `console` (default), `json`, `markdown`.
-- `--output <file>`: Specify a file path to save the report (applicable for `json` and `markdown` formats).
-
-**Example:**
-
-```sh
-# Run benchmarks using a configuration file
-eslint-rule-benchmark run --config ./my-benchmarks.config.js
-
-# Run and generate a JSON report
-eslint-rule-benchmark run --config ./my-benchmarks.config.js --report json --output benchmark-results.json
-```
-
-### 2. `run-single` - Benchmarking a Single Rule via CLI
-
-This command allows for quick benchmarking of a single ESLint rule without needing a separate configuration file. All parameters are passed via CLI options.
-
-**Syntax:**
-
-```sh
-eslint-rule-benchmark run-single --rule <rulePath> --name <ruleName> --source <sourcePath> [options]
-```
-
-**Required Options:**
-
-- `--rule <rulePath>`: Path to the JavaScript/TypeScript file implementing the ESLint rule.
-- `--name <ruleName>`: The identifier (name) of the ESLint rule (e.g., `my-plugin/my-rule`). This is used as the `ruleId`.
-- `--source <sourcePath>`: Path to the directory or a single file containing code samples to test the rule against.
-
-**Optional Options:**
-
-- `--iterations <number>`: Number of benchmark iterations (default: 50).
-- `--warmup <number>`: Number of warmup iterations (default: 10).
-- `--max-duration <number>`: Target time in milliseconds for benchmarking each sample (default: 300ms).
-- `--report <format>`: Report format (`console`, `json`, `markdown`). Default: `console`.
-- `--output <file>`: Output file for the report.
-- `--config <eslintConfigPath>`: Optional path to an ESLint configuration file to use during linting.
-
-**Example:**
-
-```sh
-eslint-rule-benchmark run-single --rule ./rules/sort-imports.ts --name my-plugin/sort-imports --source ./test-code/ --report console
+```bash
+npx eslint-rule-benchmark run
 ```
 
 ## Configuration File
 
-For more complex scenarios or when benchmarking multiple rules, you can use a configuration file. By default, `eslint-rule-benchmark run` will look for files like `benchmark.config.js`, `benchmark.config.ts`, or files in a `./benchmark/` directory.
+By default, `eslint-rule-benchmark run` will look for the `config.{js,cjs,mts,ts,cts,mts}` configuration file in the `./benchmark/` directory.
 
 The configuration file should export a configuration object, preferably using the `defineConfig` helper for type safety and autocompletion.
-
-**Example `benchmark.config.ts`:**
 
 ```typescript
 import { defineConfig } from 'eslint-rule-benchmark'
 
 export default defineConfig({
-  /* Optional: Default iterations for all tests */
-  iterations: 100,
+  /* Number of measurement iterations. Default: 1000. */
+  iterations: 1000,
 
-  /* Optional: Default warmup configuration */
+  /* Warmup configuration. */
   warmup: {
-    /* Optional: Number of warmup iterations */
-    iterations: 20,
+    /* Number of warmup iterations. Default: 100. */
+    iterations: 100,
 
-    /* Optional: Whether to enable warmup */
+    /* Whether to enable warmup. Default: true. */
     enabled: true,
   },
-  /* Optional: Default timeout for each test */
-  timeout: 500,
+  /* Max time per benchmark. Default: 5000. */
+  timeout: 5000,
 
-  /* Array of benchmark test specifications */
+  /* Array of benchmark test specifications. */
   tests: [
     {
-      /* Required: Descriptive name for this test group/specification */
-      name: 'My Custom Rule: no-vars',
+      /* Descriptive name for this test group/specification. */
+      name: 'Rule: sort-imports',
 
-      /* Required: ESLint rule identifier (e.g., plugin-name/rule-name) */
-      ruleId: 'my-plugin/no-vars',
+      /* ESLint rule identifier. */
+      ruleId: 'sort-imports',
 
-      /* Required: Path to the rule's implementation */
-      rulePath: './lib/rules/no-vars.js',
+      /* Path to the rule's implementation. */
+      rulePath: '../lib/rules/sort-imports.ts',
 
-      /* Optional: Override global benchmark settings for this specific test group */
+      /* Override global benchmark settings for this specific test group. */
       iterations: 50,
-
-      /* Optional: Override global warmup settings for this specific test group */
       timeout: 300,
-
-      /* Optional: Override global warmup settings for this specific test group */
       warmup: {
-        /* Optional: Number of warmup iterations */
         iterations: 10,
       },
 
-      /* Required: Array of test cases for this rule */
+      /* Array of test cases for this rule. */
       cases: [
         {
-          /* Required: Path(s) to files or directories for this specific case */
-          testPath: './test/fixtures/no-vars/valid.js',
+          testPath: './sort-imports/base-case.ts',
 
-          /* Optional: ESLint rule options specific to this case */
-          options: [{ allowLet: true }],
+          /* ESLint rule options specific to this case. */
+          options: [{ order: 'asc', ignoreCase: true }],
 
-          /* Optional: ESLint rule severity for this case (0, 1, 2) - defaults to 2 */
+          /* ESLint rule severity for this case (0, 1, 2). Default: 2. */
           severity: 2,
         },
         {
-          /* Optional: Descriptive name for this specific test case */
-          testPath: './test/fixtures/no-vars/invalid.js',
-
-          /* Optional: ESLint rule options specific to this case */
-          options: [{ allowLet: false }],
+          testPath: './sort-imports/complex-case.ts',
         },
       ],
     },
     {
-      name: 'Another Rule: prefer-const',
-      ruleId: 'prefer-const',
+      name: 'Rule: sort-vars',
+      ruleId: 'sort-vars',
+      rulePath: '../lib/rules/sort-vars.ts',
       cases: [
         {
-          testPath: [
-            './test/fixtures/general/file1.js',
-            './test/fixtures/general/file2.ts',
-          ],
-        },
-        {
-          name: 'Prefer Const with specific options',
-          testPath: './test/fixtures/general/file3.js',
-          options: [{ destructuring: 'all' }],
+          testPath: './sort-vars/base-case.ts',
         },
       ],
     },
@@ -185,29 +135,6 @@ export default defineConfig({
   ],
 })
 ```
-
-**Configuration Fields:**
-
-- **Global Settings (optional, at the root of the config object):**
-  - `iterations: number`: Default number of measurement iterations for each code sample.
-  - `warmup: object`: Default warmup configuration.
-    - `iterations: number`: Number of warmup iterations.
-    - `enabled: boolean`: Whether warmup is enabled (defaults to `true`).
-  - `timeout: number`: Default target time in milliseconds for tinybench to run each sample's benchmark.
-- **`tests: array` (required):** An array of test specification objects. Each object defines a rule to be benchmarked and can contain multiple test cases.
-  - `name: string` (required): A descriptive name for this test specification (e.g., "Rule: no-console Performance"). Used in reports.
-  - `ruleId: string` (required): The ESLint rule identifier (e.g., `plugin-name/rule-name` or `core-rule-name`).
-  - `rulePath: string` (required for local/custom rules): The file path to the rule's implementation.
-  - `iterations?: number`: Optional. Overrides global `iterations` for all cases in this test specification.
-  - `warmup?: object`: Optional. Overrides global `warmup` settings for all cases in this test specification.
-    - `iterations?: number`
-    - `enabled?: boolean`
-  - `timeout?: number`: Optional. Overrides global `timeout` for all cases in this test specification.
-  - **`cases: array` (required):** An array of test case objects for this rule. Each case defines a specific scenario.
-    - `name?: string`: Optional. A descriptive name for this specific test case. If not provided, one might be generated.
-    - `testPath: string | string[]` (required): Path(s) to files or directories containing code samples for this case.
-    - `options?: unknown[]`: Optional. An array of options for the ESLint rule for this specific case, same as in an ESLint config file.
-    - `severity?: 0 | 1 | 2`: Optional. The severity for the rule for this specific case (0=off, 1=warn, 2=error). Defaults to 2 (error) if not specified.
 
 ## Metrics and Output
 
@@ -224,15 +151,6 @@ ESLint Rule Benchmark provides the following performance metrics:
 | Total samples         | Number of measurements taken during the benchmark |
 
 Metrics are available in Console, JSON, and Markdown formats, allowing integration with various systems and workflows.
-
-## How It Works
-
-The tool uses [Tinybench](https://github.com/tinylibs/tinybench) for accurate and reliable benchmarking:
-
-- Warmup phase to minimize JIT compilation impact
-- Multiple iterations for statistical significance
-- Isolation of the tested rule from other rules
-- Outlier filtering (Tukey's fences method) for more stable and representative results, especially for maximum execution times.
 
 ### Example Output
 
@@ -264,14 +182,7 @@ ESLint Rule Benchmark automatically publishes benchmark results as comments to G
 
 ### Setup
 
-The integration works automatically when:
-
-- Running in GitHub Actions (`GITHUB_ACTIONS=true`)
-- Event is a pull request (`pull_request` or `pull_request_target`)
-- Required environment variables are present:
-  - `GITHUB_TOKEN` - GitHub token with PR comment permissions
-  - `GITHUB_REPOSITORY` - Repository identifier (automatically set by GitHub Actions)
-  - `GITHUB_EVENT_PATH` - Path to event payload (automatically set by GitHub Actions)
+ESLint Rule Benchmark automatically posts benchmark results as comments on pull requests.
 
 ### Example Workflow
 
@@ -291,18 +202,34 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - run: npm ci
-
       - name: Run benchmark
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx eslint-rule-benchmark run
 ```
+
+## FAQ
+
+### How accurate are the measurements?
+
+The tool uses Tinybench with warmup phases and outlier filtering for high accuracy.
+
+### How It Works
+
+The tool uses [Tinybench](https://github.com/tinylibs/tinybench) for accurate and reliable benchmarking:
+
+- Warmup phase to minimize JIT compilation impact
+- Multiple iterations for statistical significance
+- Isolation of the tested rule from other rules
+- Outlier filtering (Tukey's fences method) for more stable and representative results, especially for maximum execution times.
+
+### Can I benchmark TypeScript rules?
+
+Yes! Native TypeScript support is included.
 
 ## Versioning Policy
 
