@@ -143,5 +143,6 @@ export let createESLintInstance = async (
     overrideConfig: [flatConfig],
     overrideConfigFile: null,
     allowInlineConfig: false,
+    fix: true,
   })
 }
