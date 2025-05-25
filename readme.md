@@ -145,34 +145,28 @@ export default defineConfig({
 
 ESLint Rule Benchmark provides the following performance metrics:
 
-| Metric                | Description                                       |
-| --------------------- | ------------------------------------------------- |
-| Operations per second | Number of operations per second                   |
-| Average time          | Average execution time of the rule (e.g., in ms)  |
-| Median time (P50)     | Median execution time (50th percentile)           |
-| Minimum time          | Minimum execution time                            |
-| Maximum time          | Maximum execution time                            |
-| Standard deviation    | Standard deviation (measure of time variability)  |
-| Total samples         | Number of measurements taken during the benchmark |
+| Metric                | Description                                      |
+| --------------------- | ------------------------------------------------ |
+| Operations per second | Number of operations per second                  |
+| Average time          | Average execution time of the rule (e.g., in ms) |
+| Median time (P50)     | Median execution time (50th percentile)          |
+| Minimum time          | Minimum execution time                           |
+| Maximum time          | Maximum execution time                           |
+| Standard deviation    | Standard deviation (measure of time variability) |
 
 Metrics are available in Console, JSON, and Markdown formats, allowing integration with various systems and workflows.
 
 ### Example Output
 
 ```
---------------------------------------------------------------------------------------------------
-                                   Rule: no-negated-conjunction
---------------------------------------------------------------------------------------------------
-Sample          | Ops/sec        | Avg Time | Median   | Min      | Max      | StdDev    | Samples
-base-case.ts    | 17,517 ops/sec | 0.057 ms | 0.056 ms | 0.053 ms | 0.065 ms | ±0.002 ms | 35,454
-complex-case.ts | 17,582 ops/sec | 0.057 ms | 0.056 ms | 0.053 ms | 0.065 ms | ±0.002 ms | 33,267
---------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------
-                                   Rule: no-negated-disjunction
---------------------------------------------------------------------------------------------------
-Sample          | Ops/sec        | Avg Time | Median   | Min      | Max      | StdDev    | Samples
-base-case.ts    | 17,386 ops/sec | 0.058 ms | 0.057 ms | 0.054 ms | 0.066 ms | ±0.003 ms | 33,066
---------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------
+                                          Rule: sort-imports
+------------------------------------------------------------------------------------------------------
+Sample               | Ops/sec       | Avg Time | Median   | Min      | Max      | StdDev    | Samples
+base-alphabetical.ts | 7,569 ops/sec | 0.132 ms | 0.131 ms | 0.125 ms | 0.148 ms | ±0.004 ms | 7,421
+base-natural.ts      | 7,485 ops/sec | 0.134 ms | 0.132 ms | 0.126 ms | 0.151 ms | ±0.005 ms | 7,010
+base-line-length.ts  | 7,508 ops/sec | 0.133 ms | 0.131 ms | 0.125 ms | 0.150 ms | ±0.005 ms | 7,828
+------------------------------------------------------------------------------------------------------
 
 System Information:
 

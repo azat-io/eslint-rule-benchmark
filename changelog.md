@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.7.0
+
+[compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.6.0...v0.7.0)
+
+### 🚀 Features
+
+- Remove samples column from reports ([b1f3aa8](https://github.com/azat-io/eslint-rule-benchmark/commit/b1f3aa8))
+
+### 📖 Documentation
+
+- Add example of working with github actions ([9ec3983](https://github.com/azat-io/eslint-rule-benchmark/commit/9ec3983))
+
+### ❤️ Contributors
+
+- Azat S. ([@azat-io](https://github.com/azat-io))
+
 ## v0.6.0
 
 [compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.5.0...v0.6.0)
