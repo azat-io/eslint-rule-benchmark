@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.6.0
+
+[compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.5.0...v0.6.0)
+
+### 🚀 Features
+
+- Improve deviation formatting ([31725fc](https://github.com/azat-io/eslint-rule-benchmark/commit/31725fc))
+- Use fix flag in eslint instance ([52b15ca](https://github.com/azat-io/eslint-rule-benchmark/commit/52b15ca))
+
+### 🐞 Bug Fixes
+
+- Copy type definition files to dist ([449f827](https://github.com/azat-io/eslint-rule-benchmark/commit/449f827))
+
+### 💅 Refactors
+
+- Update system info formatting ([68b7127](https://github.com/azat-io/eslint-rule-benchmark/commit/68b7127))
+
+### 📖 Documentation
+
+- Improve docs ([84cbe46](https://github.com/azat-io/eslint-rule-benchmark/commit/84cbe46))
+
+### ❤️ Contributors
+
+- Azat S. ([@azat-io](https://github.com/azat-io))
+
 ## v0.5.0
 
 [compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.4.0...v0.5.0)
