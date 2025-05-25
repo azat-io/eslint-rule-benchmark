@@ -4,7 +4,6 @@ import type { SystemInfo } from './collect-system-info'
 
 import { collectSystemInfo } from './collect-system-info'
 import { formatDeviation } from './format-deviation'
-import { formatNumber } from './format-number'
 import { formatMs } from './format-ms'
 import { formatHz } from './format-hz'
 
@@ -80,15 +79,13 @@ export let useMarkdownReport = async (
     let tableRows: string[] = []
 
     tableRows.push(
-      '| Sample | Ops/sec | Avg Time | Median | Min | Max | StdDev | Samples |',
-      '| ------ | ------- | -------- | ------ | --- | --- | ------ | ------- |',
+      '| Sample | Ops/sec | Avg Time | Median | Min | Max | StdDev |',
+      '| ------ | ------- | -------- | ------ | --- | --- | ------ |',
     )
 
     for (let testCaseResult of testSpecResult.testCaseResults) {
       if (testCaseResult.samplesResults.length === 0) {
-        tableRows.push(
-          `| No samples | N/A | N/A | N/A | N/A | N/A | N/A | N/A |`,
-        )
+        tableRows.push(`| No samples | N/A | N/A | N/A | N/A | N/A | N/A |`)
         continue
       }
 
@@ -105,7 +102,6 @@ export let useMarkdownReport = async (
           formatMs(sampleResult.metrics.min),
           formatMs(sampleResult.metrics.max),
           formatDeviation(sampleResult.metrics.stdDev),
-          formatNumber(sampleResult.metrics.sampleCount),
         ]
 
         tableRows.push(`| ${rowData.join(' | ')} |`)

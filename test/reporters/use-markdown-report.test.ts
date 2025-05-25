@@ -180,16 +180,16 @@ describe('useMarkdownReport', () => {
     expect(markdownOutput).toContain('# ESLint Rule Benchmark Report')
     expect(markdownOutput).toContain('## My Rule Benchmarks')
     expect(markdownOutput).toContain(
-      '| Sample | Ops/sec | Avg Time | Median | Min | Max | StdDev | Samples |',
+      '| Sample | Ops/sec | Avg Time | Median | Min | Max | StdDev |',
     )
     expect(markdownOutput).toContain(
-      '| ------ | ------- | -------- | ------ | --- | --- | ------ | ------- |',
+      '| ------ | ------- | -------- | ------ | --- | --- | ------ |',
     )
     expect(markdownOutput).toContain(
-      '| sampleA.js | 1,000 ops/sec | 1.000 ms | 0.900 ms | 0.800 ms | 1.200 ms | ±0.050 ms | 10 |',
+      '| sampleA.js | 1,000 ops/sec | 1.000 ms | 0.900 ms | 0.800 ms | 1.200 ms | ±0.050 ms |',
     )
     expect(markdownOutput).toContain(
-      '| sampleB.js | 500 ops/sec | 2.000 ms | 1.900 ms | 0.800 ms | 1.200 ms | ±0.050 ms | 10 |',
+      '| sampleB.js | 500 ops/sec | 2.000 ms | 1.900 ms | 0.800 ms | 1.200 ms | ±0.050 ms |',
     )
     expect(markdownOutput).not.toContain('Test Specification:')
     expect(markdownOutput).not.toContain('Rule ID:')
@@ -309,7 +309,7 @@ describe('useMarkdownReport', () => {
     )
 
     expect(markdownOutput).toContain(
-      '| No samples | N/A | N/A | N/A | N/A | N/A | N/A | N/A |',
+      '| No samples | N/A | N/A | N/A | N/A | N/A | N/A |',
     )
   })
 
@@ -355,7 +355,7 @@ describe('useMarkdownReport', () => {
     )
 
     expect(markdownOutput).toContain(
-      '| Invalid metrics sample | N/A | N/A | N/A | N/A | N/A | N/A | 0 |',
+      '| Invalid metrics sample | N/A | N/A | N/A | N/A | N/A | N/A |',
     )
   })
 })

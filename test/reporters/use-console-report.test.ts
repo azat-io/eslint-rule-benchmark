@@ -182,7 +182,6 @@ describe('useConsoleReport', () => {
     expect(consoleOutput).toContain('Min')
     expect(consoleOutput).toContain('Max')
     expect(consoleOutput).toContain('StdDev')
-    expect(consoleOutput).toContain('Samples')
 
     expect(consoleOutput).toContain('sampleA.js')
     expect(consoleOutput).toContain('1,000 ops/sec')
@@ -439,7 +438,7 @@ describe('useConsoleReport', () => {
 
     for (let line of dataLines) {
       let columns = line.split('|').map(col => col.trim())
-      expect(columns.filter(col => col.length > 0)).toHaveLength(8)
+      expect(columns.filter(col => col.length > 0)).toHaveLength(7)
     }
   })
 })

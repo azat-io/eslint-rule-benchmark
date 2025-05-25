@@ -5,7 +5,6 @@ import type { SystemInfo } from './collect-system-info'
 
 import { collectSystemInfo } from './collect-system-info'
 import { formatDeviation } from './format-deviation'
-import { formatNumber } from './format-number'
 import { formatHz } from './format-hz'
 import { formatMs } from './format-ms'
 
@@ -23,12 +22,10 @@ const TABLE_HEADERS = [
   'Min',
   'Max',
   'StdDev',
-  'Samples',
 ]
 
 const EMPTY_ROW_VALUES = [
   'No samples',
-  'N/A',
   'N/A',
   'N/A',
   'N/A',
@@ -103,7 +100,6 @@ let formatMetricsRow = (
   formatMs(sample.metrics.min),
   formatMs(sample.metrics.max),
   formatDeviation(sample.metrics.stdDev),
-  formatNumber(sample.metrics.sampleCount),
 ]
 
 /**
