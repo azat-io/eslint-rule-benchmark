@@ -16,7 +16,7 @@ ESLint Rule Benchmark times individual ESLint rules, capturing ops/sec, mean and
 
 It helps you catch regressions and quantify optimization gains.
 
-## Why?
+## Key Features
 
 - **Prevent performance regressions** – catch slow rules before they reach production
 - **Compare implementations** – find the fastest approach with side-by-side benchmarks
@@ -26,6 +26,11 @@ It helps you catch regressions and quantify optimization gains.
 - **Use TypeScript natively** – run `.ts` rules out of the box
 - **Automate CI/CD checks** – post performance impact straight to pull requests
 - **Generate multiple report formats** – output to console, JSON or Markdown
+
+## Used by
+
+- [eslint-plugin-perfectionist](https://github.com/azat-io/eslint-plugin-perfectionist)
+- [eslint-plugin-de-morgan](https://github.com/azat-io/eslint-plugin-de-morgan)
 
 ## Quick Start
 
@@ -180,6 +185,22 @@ Hardware: Apple M1 Pro (10 cores, 2400 MHz), 32 GB RAM
 
 ESLint Rule Benchmark automatically publishes benchmark results as comments to GitHub Pull Requests when running in GitHub Actions environment.
 
+<picture>
+  <source
+    srcset="https://raw.githubusercontent.com/azat-io/eslint-rule-benchmark/main/assets/github-actions-example-light.webp"
+    media="(prefers-color-scheme: light)"
+  />
+  <source
+    srcset="https://raw.githubusercontent.com/azat-io/eslint-rule-benchmark/main/assets/github-actions-example-dark.webp"
+    media="(prefers-color-scheme: dark)"
+  />
+  <img
+    src="https://raw.githubusercontent.com/azat-io/eslint-rule-benchmark/main/assets/github-actions-example-light.webp"
+    alt="ESLint Rule Benchmark GitHub Actions Example"
+    width="800"
+  />
+</picture>
+
 ### Setup
 
 ESLint Rule Benchmark automatically posts benchmark results as comments on pull requests.
@@ -218,7 +239,7 @@ jobs:
 
 The tool uses Tinybench with warmup phases and outlier filtering for high accuracy.
 
-### How It Works
+### How it works?
 
 The tool uses [Tinybench](https://github.com/tinylibs/tinybench) for accurate and reliable benchmarking:
 
