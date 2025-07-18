@@ -102,11 +102,17 @@ const BOT_COMMENT_MARKER = '<!-- eslint-rule-benchmark-report -->'
  * comment. Uses GraphQL pagination to handle pull requests with many comments.
  *
  * @example
- *   ;```typescript
- *   const gql = createGraphQLClient();
- *   const context = { pullRequestNumber: 123, owner: 'owner', repository: 'repo', pullRequestNodeId: '' };
- *   const { botCommentInfo, pullRequestNodeId } = await findBotComment(gql, context);
- *   ```
+ *   const gql = createGraphQLClient()
+ *   const context = {
+ *     pullRequestNumber: 123,
+ *     owner: 'owner',
+ *     repository: 'repo',
+ *     pullRequestNodeId: '',
+ *   }
+ *   const { botCommentInfo, pullRequestNodeId } = await findBotComment(
+ *     gql,
+ *     context,
+ *   )
  *
  * @param {GraphQLClient} gql - Configured GraphQL client instance for GitHub
  *   API calls
@@ -206,12 +212,10 @@ let findBotComment = async (
  * GitHub event payload file and parses repository information.
  *
  * @example
- *   ```typescript
- *   const context = await getPullRequestContext();
+ *   const context = await getPullRequestContext()
  *   if (context) {
- *   console.log(`Processing PR #${context.pullRequestNumber}`);
+ *     console.log(`Processing PR #${context.pullRequestNumber}`)
  *   }
- *   ```
  *
  * @returns {Promise<PullRequestContext | null>} Promise resolving to pull
  *   request context or null if extraction fails
@@ -253,10 +257,8 @@ let getPullRequestContext = async (): Promise<PullRequestContext | null> => {
  * Creates a new comment on a GitHub pull request using GraphQL mutation.
  *
  * @example
- *   ;```typescript
- *   const gql = createGraphQLClient();
- *   await createBotComment(gql, 'PR_123456', '# Benchmark Results\n...');
- *   ```
+ *   const gql = createGraphQLClient()
+ *   await createBotComment(gql, 'PR_123456', '# Benchmark Results\n...')
  *
  * @param {GraphQLClient} gql - Configured GraphQL client instance for GitHub
  *   API calls
@@ -295,10 +297,12 @@ let createBotComment = async (
  * Updates the content of an existing comment using GraphQL mutation.
  *
  * @example
- *   ;```typescript
- *   const gql = createGraphQLClient();
- *   await updateBotComment(gql, 'IC_123456', '# Updated Benchmark Results\n...');
- *   ```
+ *   const gql = createGraphQLClient()
+ *   await updateBotComment(
+ *     gql,
+ *     'IC_123456',
+ *     '# Updated Benchmark Results\n...',
+ *   )
  *
  * @param {GraphQLClient} gql - Configured GraphQL client instance for GitHub
  *   API calls
@@ -335,10 +339,8 @@ let updateBotComment = async (
  * GITHUB_TOKEN environment variable for authentication.
  *
  * @example
- *   ;```typescript
- *   const gql = createGraphQLClient();
- *   const result = await gql('query { viewer { login } }');
- *   ```
+ *   const gql = createGraphQLClient()
+ *   const result = await gql('query { viewer { login } }')
  *
  * @returns {GraphQLClient} Configured GraphQL client function ready for GitHub
  *   API calls
@@ -365,21 +367,17 @@ let createGraphQLClient = (): GraphQLClient => {
  * - Includes error handling for all GitHub API operations
  *
  * @example
- *   ```typescript
  *   const report = `
  *   # Benchmark Results
  *   | Rule | Time (ms) | Change |
  *   |------|-----------|--------|
  *   | rule1 | 150 | +5% |
- *   `;
- *   await publishGithubComment(report);
- *   ```
+ *   `
+ *   await publishGithubComment(report)
  *
  * @example
- *   ;```typescript
  *   // Simple usage with plain text
- *   await publishGithubComment('All benchmarks passed! ✅');
- *   ```
+ *   await publishGithubComment('All benchmarks passed! ✅')
  *
  * @param {string} markdownReport - The benchmark report formatted as markdown
  *   string
