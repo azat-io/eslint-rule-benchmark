@@ -7,7 +7,7 @@ import { formatNumber } from './format-number'
  * @param {number} milliseconds - The number of milliseconds to format.
  * @returns {string} A string representation of the formatted milliseconds.
  */
-export let formatMs = (milliseconds?: number): string => {
+export function formatMs(milliseconds?: number): string {
   if (typeof milliseconds !== 'number' || !Number.isFinite(milliseconds)) {
     return 'N/A'
   }

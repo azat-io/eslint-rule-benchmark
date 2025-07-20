@@ -12,7 +12,8 @@ type Extensions = (typeof SUPPORTED_EXTENSIONS)[number]
  * @param {string} extension - The file extension to check.
  * @returns {boolean} True if the extension is supported, false otherwise.
  */
-export let isSupportedExtension = (
+export function isSupportedExtension(
   extension: string,
-): extension is Extensions =>
-  (SUPPORTED_EXTENSIONS as readonly string[]).includes(extension)
+): extension is Extensions {
+  return (SUPPORTED_EXTENSIONS as readonly string[]).includes(extension)
+}

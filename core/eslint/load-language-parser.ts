@@ -32,6 +32,40 @@ const LANGUAGE_PARSER_MAP = {
 } as const
 
 /**
+ * Attempts to load parser for the specified language.
+ *
+ * @param {Jiti} jiti - Jiti instance for dynamic imports.
+ * @param {Language} language - The language to load parser for
+ * @returns {Promise<ParserLoadResult>} Promise resolving to the parser load
+ *   result
+ */
+export async function loadLanguageParser(
+  jiti: Jiti,
+  language: Language,
+): Promise<ParserLoadResult> {
+  let result: ParserLoadResult = {}
+
+  let parserName = LANGUAGE_PARSER_MAP[language]
+  if (!parserName) {
+    return { parser: null }
+  }
+
+  try {
+    let moduleExport = await jiti.import(parserName)
+    result.parser = extractParser(moduleExport)
+
+    if (!result.parser) {
+      result.error = `Parser not found in module: ${parserName}`
+    }
+  } catch (error) {
+    let errorValue = error as Error
+    result.error = errorValue.message
+  }
+
+  return result
+}
+
+/**
  * Extracts a parser from the imported module.
  *
  * This function handles different module export formats:
@@ -43,7 +77,7 @@ const LANGUAGE_PARSER_MAP = {
  * @returns {Linter.Parser | undefined} The parser if found, undefined
  *   otherwise.
  */
-let extractParser = (moduleExport: unknown): Linter.Parser | undefined => {
+function extractParser(moduleExport: unknown): Linter.Parser | undefined {
   if (
     moduleExport &&
     typeof moduleExport === 'object' &&
@@ -74,38 +108,4 @@ let extractParser = (moduleExport: unknown): Linter.Parser | undefined => {
   }
 
   return undefined
-}
-
-/**
- * Attempts to load parser for the specified language.
- *
- * @param {Jiti} jiti - Jiti instance for dynamic imports.
- * @param {Language} language - The language to load parser for
- * @returns {Promise<ParserLoadResult>} Promise resolving to the parser load
- *   result
- */
-export let loadLanguageParser = async (
-  jiti: Jiti,
-  language: Language,
-): Promise<ParserLoadResult> => {
-  let result: ParserLoadResult = {}
-
-  let parserName = LANGUAGE_PARSER_MAP[language]
-  if (!parserName) {
-    return { parser: null }
-  }
-
-  try {
-    let moduleExport = await jiti.import(parserName)
-    result.parser = extractParser(moduleExport)
-
-    if (!result.parser) {
-      result.error = `Parser not found in module: ${parserName}`
-    }
-  } catch (error) {
-    let errorValue = error as Error
-    result.error = errorValue.message
-  }
-
-  return result
 }

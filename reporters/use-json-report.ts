@@ -112,23 +112,28 @@ interface JsonSampleResult {
 }
 
 /**
- * Maps a ProcessedBenchmarkTask to JsonSampleMetrics.
+ * Creates a JSON report string from aggregated benchmark results.
  *
- * @param {BenchmarkMetrics} metrics - The benchmark metrics.
- * @returns {JsonSampleMetrics} JsonSampleMetrics object.
+ * @param {TestSpecResult[]} results - An array of results for all test
+ *   specifications.
+ * @param {UserBenchmarkConfig} _userConfig - The user's benchmark configuration
+ *   (currently unused).
+ * @returns {Promise<string>} Formatted JSON report as a string.
  */
-let mapMetricsToJson = (metrics: BenchmarkMetrics): JsonSampleMetrics => ({
-  standardDeviation: formatDeviation(metrics.stdDev),
-  operationsPerSecond: Math.round(metrics.hz),
-  medianTime: formatMs(metrics.median),
-  averageTime: formatMs(metrics.mean),
-  minimumTime: formatMs(metrics.min),
-  maximumTime: formatMs(metrics.max),
-  totalSamples: metrics.sampleCount,
-  periodInSeconds: metrics.period,
-  p75: formatMs(metrics.p75),
-  p99: formatMs(metrics.p99),
-})
+export async function useJsonReport(
+  results: TestSpecResult[],
+  _userConfig: UserBenchmarkConfig,
+): Promise<string> {
+  let systemInfo = await collectSystemInfo()
+  let testSpecifications = results.map(mapTestSpecResultToJsonReport)
+
+  let report: JsonBenchmarkReport = {
+    testSpecifications,
+    systemInfo,
+  }
+
+  return JSON.stringify(report, null, 2)
+}
 
 /**
  * Creates a JSON-compatible object for a single Test Specification result.
@@ -136,9 +141,9 @@ let mapMetricsToJson = (metrics: BenchmarkMetrics): JsonSampleMetrics => ({
  * @param {TestSpecResult} testSpecResult - The result for a test specification.
  * @returns {TestSpecJsonReport} A structured JSON-compatible object.
  */
-let mapTestSpecResultToJsonReport = (
+function mapTestSpecResultToJsonReport(
   testSpecResult: TestSpecResult,
-): TestSpecJsonReport => {
+): TestSpecJsonReport {
   let testCasesReport: JsonTestCaseReport[] =
     testSpecResult.testCaseResults.map(
       (testCase: TestCaseResult): JsonTestCaseReport => {
@@ -173,25 +178,22 @@ let mapTestSpecResultToJsonReport = (
 }
 
 /**
- * Creates a JSON report string from aggregated benchmark results.
+ * Maps a ProcessedBenchmarkTask to JsonSampleMetrics.
  *
- * @param {TestSpecResult[]} results - An array of results for all test
- *   specifications.
- * @param {UserBenchmarkConfig} _userConfig - The user's benchmark configuration
- *   (currently unused).
- * @returns {Promise<string>} Formatted JSON report as a string.
+ * @param {BenchmarkMetrics} metrics - The benchmark metrics.
+ * @returns {JsonSampleMetrics} JsonSampleMetrics object.
  */
-export let useJsonReport = async (
-  results: TestSpecResult[],
-  _userConfig: UserBenchmarkConfig,
-): Promise<string> => {
-  let systemInfo = await collectSystemInfo()
-  let testSpecifications = results.map(mapTestSpecResultToJsonReport)
-
-  let report: JsonBenchmarkReport = {
-    testSpecifications,
-    systemInfo,
+function mapMetricsToJson(metrics: BenchmarkMetrics): JsonSampleMetrics {
+  return {
+    standardDeviation: formatDeviation(metrics.stdDev),
+    operationsPerSecond: Math.round(metrics.hz),
+    medianTime: formatMs(metrics.median),
+    averageTime: formatMs(metrics.mean),
+    minimumTime: formatMs(metrics.min),
+    maximumTime: formatMs(metrics.max),
+    totalSamples: metrics.sampleCount,
+    periodInSeconds: metrics.period,
+    p75: formatMs(metrics.p75),
+    p99: formatMs(metrics.p99),
   }
-
-  return JSON.stringify(report, null, 2)
 }

@@ -42,9 +42,9 @@ let jiti = createJiti(import.meta.url, {
  *   the ESLint instance.
  * @returns {Promise<ESLint>} Promise resolving to configured ESLint instance.
  */
-export let createESLintInstance = async (
+export async function createESLintInstance(
   instanceOptions: CreateESLintInstanceOptions,
-): Promise<ESLint> => {
+): Promise<ESLint> {
   let { configDirectory, languages, rule } = instanceOptions
 
   let { path: rulePath, severity, options, ruleId } = rule

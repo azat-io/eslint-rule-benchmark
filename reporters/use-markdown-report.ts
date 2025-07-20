@@ -8,42 +8,6 @@ import { formatMs } from './format-ms'
 import { formatHz } from './format-hz'
 
 /**
- * Formats system information into markdown format.
- *
- * @param {SystemInfo} systemInfo - System information to format.
- * @returns {string} Formatted system information in markdown.
- */
-let formatSystemInfoMarkdown = (systemInfo: SystemInfo): string => {
-  let runTime = [
-    `Node.js ${systemInfo.nodeVersion}`,
-    `V8 ${systemInfo.v8Version}`,
-    `ESLint ${systemInfo.eslintVersion}`,
-  ]
-
-  let platform = [
-    `${systemInfo.platform} ${systemInfo.arch} (${systemInfo.osRelease})`,
-  ]
-
-  let hardware = [
-    `${systemInfo.cpuModel} (${systemInfo.cpuCount} cores, ${systemInfo.cpuSpeedMHz} MHz)`,
-    `${systemInfo.totalMemoryGb} GB RAM`,
-  ]
-
-  let formatList = new Intl.ListFormat('en-US', {
-    type: 'conjunction',
-    style: 'narrow',
-  })
-
-  return [
-    '### System Information',
-    '',
-    `**Runtime:** ${formatList.format(runTime)}`,
-    `**Platform:** ${formatList.format(platform)}`,
-    `**Hardware:** ${formatList.format(hardware)}`,
-  ].join('\n')
-}
-
-/**
  * Creates a markdown reporter for aggregated benchmark results.
  *
  * @param {TestSpecResult[]} results - An array of results for all test
@@ -52,10 +16,10 @@ let formatSystemInfoMarkdown = (systemInfo: SystemInfo): string => {
  *   configuration.
  * @returns {Promise<string>} Formatted markdown report as a string.
  */
-export let useMarkdownReport = async (
+export async function useMarkdownReport(
   results: TestSpecResult[],
   _userConfig?: UserBenchmarkConfig,
-): Promise<string> => {
+): Promise<string> {
   let outputLines: string[] = []
 
   if (results.length === 0) {
@@ -119,4 +83,40 @@ export let useMarkdownReport = async (
   outputLines.push('', formatSystemInfoMarkdown(systemInfo))
 
   return outputLines.join('\n')
+}
+
+/**
+ * Formats system information into markdown format.
+ *
+ * @param {SystemInfo} systemInfo - System information to format.
+ * @returns {string} Formatted system information in markdown.
+ */
+function formatSystemInfoMarkdown(systemInfo: SystemInfo): string {
+  let runTime = [
+    `Node.js ${systemInfo.nodeVersion}`,
+    `V8 ${systemInfo.v8Version}`,
+    `ESLint ${systemInfo.eslintVersion}`,
+  ]
+
+  let platform = [
+    `${systemInfo.platform} ${systemInfo.arch} (${systemInfo.osRelease})`,
+  ]
+
+  let hardware = [
+    `${systemInfo.cpuModel} (${systemInfo.cpuCount} cores, ${systemInfo.cpuSpeedMHz} MHz)`,
+    `${systemInfo.totalMemoryGb} GB RAM`,
+  ]
+
+  let formatList = new Intl.ListFormat('en-US', {
+    type: 'conjunction',
+    style: 'narrow',
+  })
+
+  return [
+    '### System Information',
+    '',
+    `**Runtime:** ${formatList.format(runTime)}`,
+    `**Platform:** ${formatList.format(platform)}`,
+    `**Hardware:** ${formatList.format(hardware)}`,
+  ].join('\n')
 }

@@ -137,12 +137,14 @@ let collectionRulePath: string
 let defaultRulePath: string
 let defaultCollectionRulePath: string
 
-let getRules = (eslint: unknown): Linter.RuleEntry[] =>
-  (eslint as ESLintForTesting).overrideConfig?.[0]!
+function getRules(eslint: unknown): Linter.RuleEntry[] {
+  return (eslint as ESLintForTesting).overrideConfig?.[0]!
     .rules as unknown as Linter.RuleEntry[]
+}
 
-let firstKey = (object?: Record<string, unknown>): string =>
-  Object.keys(object!)[0]!
+function firstKey(object?: Record<string, unknown>): string {
+  return Object.keys(object!)[0]!
+}
 
 describe('createESLintInstance', () => {
   beforeAll(() => {

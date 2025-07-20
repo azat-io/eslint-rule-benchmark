@@ -57,6 +57,35 @@ interface RuleLoadResult {
 }
 
 /**
+ * Loads an ESLint rule from the specified file path.
+ *
+ * @param {Jiti} jiti - Jiti instance for dynamic imports.
+ * @param {LoadRuleFromFileOptions} options - Options for loading the rule.
+ * @returns {Promise<RuleLoadResult>} Promise resolving to the rule load result.
+ */
+export async function loadRuleFromFile(
+  jiti: Jiti,
+  options: LoadRuleFromFileOptions,
+): Promise<RuleLoadResult> {
+  let result: RuleLoadResult = {}
+  let { configDirectory, rulePath, ruleId } = options
+
+  try {
+    let absolutePath = path.isAbsolute(rulePath)
+      ? rulePath
+      : path.resolve(configDirectory, rulePath)
+
+    let moduleExport: ESLintRuleImport = await jiti.import(absolutePath)
+    result.rule = extractRule(moduleExport, ruleId)
+  } catch (error) {
+    let errorValue = error as Error
+    result.error = errorValue.message
+  }
+
+  return result
+}
+
+/**
  * Extracts an ESLint rule from the imported module.
  *
  * This function handles different module export formats:
@@ -70,10 +99,10 @@ interface RuleLoadResult {
  * @returns {Rule.RuleModule | undefined} The ESLint rule if found, undefined
  *   otherwise.
  */
-let extractRule = (
+function extractRule(
   moduleExport: ESLintRuleImport,
   ruleId: string,
-): Rule.RuleModule | undefined => {
+): Rule.RuleModule | undefined {
   if (moduleExport.meta && moduleExport.create) {
     return moduleExport as Rule.RuleModule
   }
@@ -95,33 +124,4 @@ let extractRule = (
   }
 
   return undefined
-}
-
-/**
- * Loads an ESLint rule from the specified file path.
- *
- * @param {Jiti} jiti - Jiti instance for dynamic imports.
- * @param {LoadRuleFromFileOptions} options - Options for loading the rule.
- * @returns {Promise<RuleLoadResult>} Promise resolving to the rule load result.
- */
-export let loadRuleFromFile = async (
-  jiti: Jiti,
-  options: LoadRuleFromFileOptions,
-): Promise<RuleLoadResult> => {
-  let result: RuleLoadResult = {}
-  let { configDirectory, rulePath, ruleId } = options
-
-  try {
-    let absolutePath = path.isAbsolute(rulePath)
-      ? rulePath
-      : path.resolve(configDirectory, rulePath)
-
-    let moduleExport: ESLintRuleImport = await jiti.import(absolutePath)
-    result.rule = extractRule(moduleExport, ruleId)
-  } catch (error) {
-    let errorValue = error as Error
-    result.error = errorValue.message
-  }
-
-  return result
 }

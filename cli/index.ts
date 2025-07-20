@@ -100,7 +100,7 @@ interface RunCommandOptions {
  * @returns {void} This function does not return a value but may exit the
  *   process.
  */
-export let run = (): void => {
+export function run(): void {
   let cli = cac('eslint-rule-benchmark')
 
   cli.version(version).help()

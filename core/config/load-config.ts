@@ -48,9 +48,9 @@ let explorer = lilconfig('eslint-rule-benchmark', {
  * @param {string} configPath - Optional path to the configuration file.
  * @returns {Promise<LoadConfigResult>} Load configuration result.
  */
-export let loadConfig = async (
+export async function loadConfig(
   configPath?: string,
-): Promise<LoadConfigResult> => {
+): Promise<LoadConfigResult> {
   let searchDirectory = process.cwd()
   if (configPath) {
     searchDirectory = configPath

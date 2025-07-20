@@ -38,114 +38,6 @@ interface RunBenchmarksFromConfigParameters {
 }
 
 /**
- * Asynchronously loads code samples from a specified path or an array of paths.
- *
- * This function processes each given path. If a path points to a directory, it
- * reads files with supported extensions within that directory. If a path points
- * to a file with a supported extension, it reads that file. The content of each
- * valid file is read, and a CodeSample object is created, including its
- * content, filename, and determined language. Unsupported files or paths
- * leading to errors are skipped with a console warning.
- *
- * @example
- *   const samples = await loadCodeSamples('./src/my-rule/test-cases/')
- *   const specificSamples = await loadCodeSamples([
- *     './src/a.js',
- *     './src/b.ts',
- *   ])
- *
- * @param {string | string[]} testPath - A single path (string) or an array of
- *   paths to files or directories containing code samples.
- * @param {string} configDirectory - The path to the user configuration
- *   directory.
- * @returns {Promise<CodeSample[]>} A promise that resolves to an array of
- *   CodeSample objects. Each object represents a successfully loaded code
- *   sample.
- * @throws {Error} If no supported source files are found across all provided
- *   paths, or if no valid code samples could be loaded from the found files.
- */
-let loadCodeSamples = async (
-  testPath: string[] | string,
-  configDirectory: string,
-): Promise<CodeSample[]> => {
-  let pathsToProcess = Array.isArray(testPath) ? testPath : [testPath]
-
-  let fileArrays = await Promise.all(
-    pathsToProcess.map(async currentPath => {
-      let filesForCurrentPath: string[] = []
-      try {
-        let resolvedPath = path.resolve(configDirectory, currentPath)
-        let stats = await fs.stat(resolvedPath)
-
-        if (stats.isDirectory()) {
-          let filesInDirectory = await fs.readdir(resolvedPath)
-          for (let fileName of filesInDirectory.filter(item =>
-            isSupportedExtension(getFileExtension(item)),
-          )) {
-            filesForCurrentPath.push(path.join(resolvedPath, fileName))
-          }
-        } else if (
-          stats.isFile() &&
-          isSupportedExtension(getFileExtension(resolvedPath))
-        ) {
-          filesForCurrentPath.push(resolvedPath)
-        }
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          console.warn(
-            `Warning: Could not process path ${currentPath}: ${error.message}. Skipping.`,
-          )
-        } else {
-          console.warn(
-            `Warning: Could not process path ${currentPath}: ${String(error)}. Skipping.`,
-          )
-        }
-      }
-      return filesForCurrentPath
-    }),
-  )
-
-  let sourceFiles: string[] = fileArrays.flat()
-
-  if (sourceFiles.length === 0) {
-    throw new Error(
-      `No supported source files found for testPath: ${JSON.stringify(testPath)}`,
-    )
-  }
-
-  let codeSamples: CodeSample[] = []
-  await Promise.all(
-    sourceFiles.map(async file => {
-      try {
-        let code = await fs.readFile(file, 'utf8')
-        codeSamples.push({
-          language: getLanguageByFileName(file),
-          filename: path.basename(file),
-          code,
-        })
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          console.warn(
-            `Warning: Skipping file ${file} due to read error: ${error.message}`,
-          )
-        } else {
-          console.warn(
-            `Warning: Skipping file ${file} due to read error: ${String(error)}`,
-          )
-        }
-      }
-    }),
-  )
-
-  if (codeSamples.length === 0) {
-    throw new Error(
-      `No valid code samples could be loaded from testPath: ${JSON.stringify(testPath)}`,
-    )
-  }
-  return codeSamples
-}
-
-/**
  * Orchestrates the entire benchmark process based on a user-provided
  * configuration.
  *
@@ -194,9 +86,9 @@ let loadCodeSamples = async (
  *   been run and reported, or when the process exits due to critical errors
  *   (e.g., no valid test cases).
  */
-export let runBenchmarksFromConfig = async (
+export async function runBenchmarksFromConfig(
   parameters: RunBenchmarksFromConfigParameters,
-): Promise<void> => {
+): Promise<void> {
   let { reporterOptions, configDirectory, userConfig } = parameters
 
   if (userConfig.tests.length === 0) {
@@ -337,4 +229,112 @@ export let runBenchmarksFromConfig = async (
   }
 
   console.info('Benchmark run finished.')
+}
+
+/**
+ * Asynchronously loads code samples from a specified path or an array of paths.
+ *
+ * This function processes each given path. If a path points to a directory, it
+ * reads files with supported extensions within that directory. If a path points
+ * to a file with a supported extension, it reads that file. The content of each
+ * valid file is read, and a CodeSample object is created, including its
+ * content, filename, and determined language. Unsupported files or paths
+ * leading to errors are skipped with a console warning.
+ *
+ * @example
+ *   const samples = await loadCodeSamples('./src/my-rule/test-cases/')
+ *   const specificSamples = await loadCodeSamples([
+ *     './src/a.js',
+ *     './src/b.ts',
+ *   ])
+ *
+ * @param {string | string[]} testPath - A single path (string) or an array of
+ *   paths to files or directories containing code samples.
+ * @param {string} configDirectory - The path to the user configuration
+ *   directory.
+ * @returns {Promise<CodeSample[]>} A promise that resolves to an array of
+ *   CodeSample objects. Each object represents a successfully loaded code
+ *   sample.
+ * @throws {Error} If no supported source files are found across all provided
+ *   paths, or if no valid code samples could be loaded from the found files.
+ */
+async function loadCodeSamples(
+  testPath: string[] | string,
+  configDirectory: string,
+): Promise<CodeSample[]> {
+  let pathsToProcess = Array.isArray(testPath) ? testPath : [testPath]
+
+  let fileArrays = await Promise.all(
+    pathsToProcess.map(async currentPath => {
+      let filesForCurrentPath: string[] = []
+      try {
+        let resolvedPath = path.resolve(configDirectory, currentPath)
+        let stats = await fs.stat(resolvedPath)
+
+        if (stats.isDirectory()) {
+          let filesInDirectory = await fs.readdir(resolvedPath)
+          for (let fileName of filesInDirectory.filter(item =>
+            isSupportedExtension(getFileExtension(item)),
+          )) {
+            filesForCurrentPath.push(path.join(resolvedPath, fileName))
+          }
+        } else if (
+          stats.isFile() &&
+          isSupportedExtension(getFileExtension(resolvedPath))
+        ) {
+          filesForCurrentPath.push(resolvedPath)
+        }
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.warn(
+            `Warning: Could not process path ${currentPath}: ${error.message}. Skipping.`,
+          )
+        } else {
+          console.warn(
+            `Warning: Could not process path ${currentPath}: ${String(error)}. Skipping.`,
+          )
+        }
+      }
+      return filesForCurrentPath
+    }),
+  )
+
+  let sourceFiles: string[] = fileArrays.flat()
+
+  if (sourceFiles.length === 0) {
+    throw new Error(
+      `No supported source files found for testPath: ${JSON.stringify(testPath)}`,
+    )
+  }
+
+  let codeSamples: CodeSample[] = []
+  await Promise.all(
+    sourceFiles.map(async file => {
+      try {
+        let code = await fs.readFile(file, 'utf8')
+        codeSamples.push({
+          language: getLanguageByFileName(file),
+          filename: path.basename(file),
+          code,
+        })
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.warn(
+            `Warning: Skipping file ${file} due to read error: ${error.message}`,
+          )
+        } else {
+          console.warn(
+            `Warning: Skipping file ${file} due to read error: ${String(error)}`,
+          )
+        }
+      }
+    }),
+  )
+
+  if (codeSamples.length === 0) {
+    throw new Error(
+      `No valid code samples could be loaded from testPath: ${JSON.stringify(testPath)}`,
+    )
+  }
+  return codeSamples
 }

@@ -5,7 +5,7 @@
  *   error).
  * @returns {'off' | 'warn' | 'error'} String representation of severity level.
  */
-export let toSeverity = (level: 0 | 1 | 2): 'error' | 'warn' | 'off' => {
+export function toSeverity(level: 0 | 1 | 2): 'error' | 'warn' | 'off' {
   switch (level) {
     case 0:
       return 'off'

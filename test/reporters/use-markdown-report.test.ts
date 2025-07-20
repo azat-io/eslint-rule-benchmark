@@ -27,80 +27,6 @@ vi.mock('../../reporters/collect-system-info', () => ({
   }),
 }))
 
-let createMockMetrics = (
-  overrides: Partial<BenchmarkMetrics> = {},
-): BenchmarkMetrics => ({
-  sampleCount: 10,
-  period: 0.001,
-  stdDev: 0.05,
-  median: 0.9,
-  p75: 1.05,
-  min: 0.8,
-  max: 1.2,
-  p99: 1.1,
-  hz: 1000,
-  mean: 1,
-  ...overrides,
-})
-
-let createMockProcessedTask = (
-  name: string,
-  metricOverrides: Partial<BenchmarkMetrics> = {},
-): ProcessedBenchmarkTask => ({
-  metrics: createMockMetrics(metricOverrides),
-  name,
-})
-
-let createMockRuleConfig = (
-  ruleId: string = 'test-rule',
-  path?: string,
-  options?: unknown[],
-): RuleConfig => ({
-  options: options ?? undefined,
-  severity: 2,
-  ruleId,
-  path,
-})
-
-interface CreateMockTestCaseResultParameters {
-  samplesResults?: ProcessedBenchmarkTask[]
-  ruleConfig?: RuleConfig
-  description?: string
-  name?: string
-  id?: string
-}
-
-let createMockTestCaseResult = (
-  parameters: CreateMockTestCaseResultParameters = {},
-): TestCaseResult => {
-  let name = parameters.name ?? 'Test Case 1'
-  let id = parameters.id ?? 'tc-1'
-  let ruleConfig = parameters.ruleConfig ?? createMockRuleConfig()
-  let samplesResults = parameters.samplesResults ?? [
-    createMockProcessedTask(`${name} on sampleA.js`),
-  ]
-  let { description } = parameters
-
-  return {
-    rule: ruleConfig,
-    samplesResults,
-    description,
-    name,
-    id,
-  }
-}
-
-let createMockBenchmarkConfig = (
-  overrides: Partial<
-    Omit<BenchmarkConfig, 'baselinePath' | 'reporters' | 'name'>
-  > = {},
-): Omit<BenchmarkConfig, 'baselinePath' | 'reporters' | 'name'> => ({
-  warmup: { enabled: true, iterations: 3 },
-  iterations: 10,
-  timeout: 5000,
-  ...overrides,
-})
-
 interface CreateMockTestSpecResultParameters {
   benchmarkConfigOverrides?: Partial<
     Omit<BenchmarkConfig, 'baselinePath' | 'reporters' | 'name'>
@@ -111,9 +37,17 @@ interface CreateMockTestSpecResultParameters {
   name?: string
 }
 
-let createMockTestSpecResult = (
+interface CreateMockTestCaseResultParameters {
+  samplesResults?: ProcessedBenchmarkTask[]
+  ruleConfig?: RuleConfig
+  description?: string
+  name?: string
+  id?: string
+}
+
+function createMockTestSpecResult(
   parameters: CreateMockTestSpecResultParameters = {},
-): TestSpecResult => {
+): TestSpecResult {
   let {
     ruleId = 'test-spec-rule',
     benchmarkConfigOverrides,
@@ -134,12 +68,88 @@ let createMockTestSpecResult = (
   }
 }
 
-let createMockUserConfig = (
+function createMockTestCaseResult(
+  parameters: CreateMockTestCaseResultParameters = {},
+): TestCaseResult {
+  let name = parameters.name ?? 'Test Case 1'
+  let id = parameters.id ?? 'tc-1'
+  let ruleConfig = parameters.ruleConfig ?? createMockRuleConfig()
+  let samplesResults = parameters.samplesResults ?? [
+    createMockProcessedTask(`${name} on sampleA.js`),
+  ]
+  let { description } = parameters
+
+  return {
+    rule: ruleConfig,
+    samplesResults,
+    description,
+    name,
+    id,
+  }
+}
+
+function createMockBenchmarkConfig(
+  overrides: Partial<
+    Omit<BenchmarkConfig, 'baselinePath' | 'reporters' | 'name'>
+  > = {},
+): Omit<BenchmarkConfig, 'baselinePath' | 'reporters' | 'name'> {
+  return {
+    warmup: { enabled: true, iterations: 3 },
+    iterations: 10,
+    timeout: 5000,
+    ...overrides,
+  }
+}
+
+function createMockMetrics(
+  overrides: Partial<BenchmarkMetrics> = {},
+): BenchmarkMetrics {
+  return {
+    sampleCount: 10,
+    period: 0.001,
+    stdDev: 0.05,
+    median: 0.9,
+    p75: 1.05,
+    min: 0.8,
+    max: 1.2,
+    p99: 1.1,
+    hz: 1000,
+    mean: 1,
+    ...overrides,
+  }
+}
+
+function createMockRuleConfig(
+  ruleId: string = 'test-rule',
+  path?: string,
+  options?: unknown[],
+): RuleConfig {
+  return {
+    options: options ?? undefined,
+    severity: 2,
+    ruleId,
+    path,
+  }
+}
+
+function createMockProcessedTask(
+  name: string,
+  metricOverrides: Partial<BenchmarkMetrics> = {},
+): ProcessedBenchmarkTask {
+  return {
+    metrics: createMockMetrics(metricOverrides),
+    name,
+  }
+}
+
+function createMockUserConfig(
   overrides: Partial<UserBenchmarkConfig> = {},
-): UserBenchmarkConfig => ({
-  tests: [],
-  ...overrides,
-})
+): UserBenchmarkConfig {
+  return {
+    tests: [],
+    ...overrides,
+  }
+}
 
 describe('useMarkdownReport', () => {
   it('returns complete markdown report for valid benchmark results', async () => {

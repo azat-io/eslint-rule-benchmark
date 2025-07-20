@@ -32,11 +32,11 @@ import { createReporter } from './create-reporter'
  * @returns {Promise<void>} A promise that resolves when all reports have been
  *   processed.
  */
-export let runReporters = async (
+export async function runReporters(
   allTestSpecResults: TestSpecResult[],
   userConfig: UserBenchmarkConfig,
   reporterOptionsFromCli: ReporterOptions[],
-): Promise<void> => {
+): Promise<void> {
   if (reporterOptionsFromCli.length === 0) {
     console.warn('No reporters configured. Skipping report generation.')
     return

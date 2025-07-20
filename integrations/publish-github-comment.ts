@@ -98,6 +98,86 @@ type GraphQLClient = (
 const BOT_COMMENT_MARKER = '<!-- eslint-rule-benchmark-report -->'
 
 /**
+ * Publishes benchmark results as a comment to a GitHub Pull Request.
+ *
+ * This function handles the complete workflow of posting benchmark results:
+ *
+ * - Checks if running in a GitHub Pull Request context
+ * - Searches for existing bot comments to update instead of creating duplicates
+ * - Uses GraphQL API for efficient comment management
+ * - Includes error handling for all GitHub API operations
+ *
+ * @example
+ *   const report = `
+ *   # Benchmark Results
+ *   | Rule | Time (ms) | Change |
+ *   |------|-----------|--------|
+ *   | rule1 | 150 | +5% |
+ *   `
+ *   await publishGithubComment(report)
+ *
+ * @example
+ *   // Simple usage with plain text
+ *   await publishGithubComment('All benchmarks passed! ✅')
+ *
+ * @param {string} markdownReport - The benchmark report formatted as markdown
+ *   string
+ * @returns {Promise<void>} Promise that resolves when the comment operation
+ *   completes
+ */
+export async function publishGithubComment(
+  markdownReport: string,
+): Promise<void> {
+  if (!isGithubPullRequest()) {
+    return
+  }
+
+  try {
+    let context = await getPullRequestContext()
+    if (!context) {
+      return
+    }
+
+    let gql = createGraphQLClient()
+    let { pullRequestNodeId, botCommentInfo } = await findBotComment(
+      gql,
+      context,
+    )
+
+    let reportBodyWithMarker = `${BOT_COMMENT_MARKER}\n\n${markdownReport}`
+
+    if (botCommentInfo) {
+      try {
+        await updateBotComment(gql, botCommentInfo.id, reportBodyWithMarker)
+      } catch (error) {
+        let errorValue = error as Error
+        console.error(
+          'Failed to update comment via GraphQL:',
+          errorValue.message,
+        )
+      }
+    } else {
+      if (!pullRequestNodeId) {
+        console.error('Cannot create comment, Pull Request Node ID not found.')
+        return
+      }
+
+      try {
+        await createBotComment(gql, pullRequestNodeId, reportBodyWithMarker)
+      } catch (error) {
+        let errorValue = error as Error
+        console.error(
+          'Failed to create comment via GraphQL:',
+          errorValue.message,
+        )
+      }
+    }
+  } catch (error) {
+    console.error('Failed to post comment:', error)
+  }
+}
+
+/**
  * Searches through all comments in a pull request to find an existing bot
  * comment. Uses GraphQL pagination to handle pull requests with many comments.
  *
@@ -125,13 +205,13 @@ const BOT_COMMENT_MARKER = '<!-- eslint-rule-benchmark-report -->'
  *   Promise resolving to bot comment info and PR node ID, or null if not found
  * @throws Will throw an error if the GraphQL query fails
  */
-let findBotComment = async (
+async function findBotComment(
   gql: GraphQLClient,
   context: PullRequestContext,
 ): Promise<{
   botCommentInfo: BotCommentInfo | null
   pullRequestNodeId: string | null
-}> => {
+}> {
   let botCommentInfo: BotCommentInfo | null = null
   let pullRequestNodeId: string | null = null
   let cursor: string | null = null
@@ -222,7 +302,7 @@ let findBotComment = async (
  * @throws Will log error and return null if event payload cannot be read or
  *   parsed
  */
-let getPullRequestContext = async (): Promise<PullRequestContext | null> => {
+async function getPullRequestContext(): Promise<PullRequestContext | null> {
   try {
     let eventPayloadString = await fs.readFile(
       process.env['GITHUB_EVENT_PATH']!,
@@ -269,11 +349,11 @@ let getPullRequestContext = async (): Promise<PullRequestContext | null> => {
  *   created
  * @throws Will throw an error if the GraphQL mutation fails
  */
-let createBotComment = async (
+async function createBotComment(
   gql: GraphQLClient,
   pullRequestNodeId: string,
   body: string,
-): Promise<void> => {
+): Promise<void> {
   await gql(
     `
       mutation ($subjectId: ID!, $body: String!) {
@@ -312,11 +392,11 @@ let createBotComment = async (
  *   successfully updated
  * @throws Will throw an error if the GraphQL mutation fails
  */
-let updateBotComment = async (
+async function updateBotComment(
   gql: GraphQLClient,
   commentId: string,
   body: string,
-): Promise<void> => {
+): Promise<void> {
   await gql(
     `
       mutation ($commentId: ID!, $body: String!) {
@@ -346,7 +426,7 @@ let updateBotComment = async (
  *   API calls
  * @throws Will throw an error if GITHUB_TOKEN is not available
  */
-let createGraphQLClient = (): GraphQLClient => {
+function createGraphQLClient(): GraphQLClient {
   let githubToken = process.env['GITHUB_TOKEN']
 
   return graphql.defaults({
@@ -354,84 +434,4 @@ let createGraphQLClient = (): GraphQLClient => {
       authorization: `token ${githubToken}`,
     },
   })
-}
-
-/**
- * Publishes benchmark results as a comment to a GitHub Pull Request.
- *
- * This function handles the complete workflow of posting benchmark results:
- *
- * - Checks if running in a GitHub Pull Request context
- * - Searches for existing bot comments to update instead of creating duplicates
- * - Uses GraphQL API for efficient comment management
- * - Includes error handling for all GitHub API operations
- *
- * @example
- *   const report = `
- *   # Benchmark Results
- *   | Rule | Time (ms) | Change |
- *   |------|-----------|--------|
- *   | rule1 | 150 | +5% |
- *   `
- *   await publishGithubComment(report)
- *
- * @example
- *   // Simple usage with plain text
- *   await publishGithubComment('All benchmarks passed! ✅')
- *
- * @param {string} markdownReport - The benchmark report formatted as markdown
- *   string
- * @returns {Promise<void>} Promise that resolves when the comment operation
- *   completes
- */
-export let publishGithubComment = async (
-  markdownReport: string,
-): Promise<void> => {
-  if (!isGithubPullRequest()) {
-    return
-  }
-
-  try {
-    let context = await getPullRequestContext()
-    if (!context) {
-      return
-    }
-
-    let gql = createGraphQLClient()
-    let { pullRequestNodeId, botCommentInfo } = await findBotComment(
-      gql,
-      context,
-    )
-
-    let reportBodyWithMarker = `${BOT_COMMENT_MARKER}\n\n${markdownReport}`
-
-    if (botCommentInfo) {
-      try {
-        await updateBotComment(gql, botCommentInfo.id, reportBodyWithMarker)
-      } catch (error) {
-        let errorValue = error as Error
-        console.error(
-          'Failed to update comment via GraphQL:',
-          errorValue.message,
-        )
-      }
-    } else {
-      if (!pullRequestNodeId) {
-        console.error('Cannot create comment, Pull Request Node ID not found.')
-        return
-      }
-
-      try {
-        await createBotComment(gql, pullRequestNodeId, reportBodyWithMarker)
-      } catch (error) {
-        let errorValue = error as Error
-        console.error(
-          'Failed to create comment via GraphQL:',
-          errorValue.message,
-        )
-      }
-    }
-  } catch (error) {
-    console.error('Failed to post comment:', error)
-  }
 }

@@ -40,9 +40,9 @@ interface CreateBenchmarkConfigParameters {
  *   benchmark configuration.
  * @returns {BenchmarkConfig} A configured benchmark configuration.
  */
-export let createBenchmarkConfig = (
+export function createBenchmarkConfig(
   parameters: CreateBenchmarkConfigParameters,
-): BenchmarkConfig => {
+): BenchmarkConfig {
   let warmup: WarmupConfig = {
     iterations: parameters.warmup?.iterations ?? DEFAULT_WARMUP_ITERATIONS,
     enabled: parameters.warmup?.enabled ?? DEFAULT_WARMUP_ENABLED,

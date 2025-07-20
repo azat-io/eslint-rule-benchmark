@@ -14,10 +14,10 @@
  * @returns {{ filteredSamples: number[]; outliersRemovedCount: number }} An
  *   object containing the filtered samples and the count of removed outliers.
  */
-export let filterOutliers = (
+export function filterOutliers(
   samples: number[],
   multiplier: number = 1.5,
-): { outliersRemovedCount: number; filteredSamples: number[] } => {
+): { outliersRemovedCount: number; filteredSamples: number[] } {
   if (samples.length === 0) {
     return { outliersRemovedCount: 0, filteredSamples: [] }
   }

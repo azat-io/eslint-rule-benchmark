@@ -66,9 +66,9 @@ type Language = (typeof LANGUAGES)[number]
  *   calculated metrics for a benchmarked code sample. Returns null if no tasks
  *   were run.
  */
-export let runBenchmark = async (
+export async function runBenchmark(
   parameters: RunBenchmarkParameters,
-): Promise<ProcessedBenchmarkTask[] | null> => {
+): Promise<ProcessedBenchmarkTask[] | null> {
   let { configDirectory, testCases, config } = parameters
 
   if (testCases.length === 0) {
@@ -109,9 +109,7 @@ export let runBenchmark = async (
     } catch (error: unknown) {
       let errorValue = error as Error
       console.error(
-        `Failed to create ESLint instance for TestCase "${testCase.name}": ${
-          errorValue.message
-        }. Skipping this test case.`,
+        `Failed to create ESLint instance for TestCase "${testCase.name}": ${errorValue.message}. Skipping this test case.`,
       )
       continue
     }

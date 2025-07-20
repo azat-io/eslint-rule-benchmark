@@ -34,7 +34,7 @@ let extensionMap = {
  * @returns {Language} The language of the file or 'javascript' if the extension
  *   is not supported.
  */
-export let getLanguageByFileName = (filePath: string): Language => {
+export function getLanguageByFileName(filePath: string): Language {
   let extension = getFileExtension(filePath)
 
   if (isSupportedExtension(extension)) {

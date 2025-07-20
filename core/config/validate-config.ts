@@ -7,54 +7,6 @@ import type {
 } from '../../types/user-benchmark-config'
 
 /**
- * Validates BaseBenchmarkSettings (iterations, timeout, warmup).
- *
- * @param {Partial<BaseBenchmarkSettings>} [settings] - The settings object to
- *   validate. Defaults to an empty object if not provided.
- * @returns {string[]} Array of validation error messages.
- */
-let validateBaseBenchmarkSettings = (
-  settings: Partial<BaseBenchmarkSettings> = {},
-): string[] => {
-  let errors: string[] = []
-
-  if (
-    settings.iterations !== undefined &&
-    (typeof settings.iterations !== 'number' || settings.iterations <= 0)
-  ) {
-    errors.push(`"iterations" must be a positive number`)
-  }
-
-  if (
-    settings.timeout !== undefined &&
-    (typeof settings.timeout !== 'number' || settings.timeout <= 0)
-  ) {
-    errors.push(`"timeout" must be a positive number`)
-  }
-
-  if (settings.warmup !== undefined) {
-    if (typeof settings.warmup === 'object') {
-      if (
-        settings.warmup.iterations !== undefined &&
-        (typeof settings.warmup.iterations !== 'number' ||
-          settings.warmup.iterations < 0)
-      ) {
-        errors.push(`"warmup.iterations" must be a non-negative number`)
-      }
-      if (
-        settings.warmup.enabled !== undefined &&
-        typeof settings.warmup.enabled !== 'boolean'
-      ) {
-        errors.push(`"warmup.enabled" must be a boolean`)
-      }
-    } else {
-      errors.push(`"warmup" must be an object`)
-    }
-  }
-  return errors
-}
-
-/**
  * Validates the user benchmark configuration according to the new structure,
  * including global settings, individual test specifications (`testSpec`), and
  * their nested test cases (`caseItem`).
@@ -78,10 +30,10 @@ let validateBaseBenchmarkSettings = (
  * @returns {Promise<string[]>} A promise that resolves to an array of
  *   validation error messages. An empty array indicates a valid configuration.
  */
-export let validateConfig = async (
+export async function validateConfig(
   config: Partial<UserBenchmarkConfig>,
   configDirectory: string,
-): Promise<string[]> => {
+): Promise<string[]> {
   let errors: string[] = []
 
   if (
@@ -200,5 +152,53 @@ export let validateConfig = async (
 
   errors.push(...allTestErrors.flat())
 
+  return errors
+}
+
+/**
+ * Validates BaseBenchmarkSettings (iterations, timeout, warmup).
+ *
+ * @param {Partial<BaseBenchmarkSettings>} [settings] - The settings object to
+ *   validate. Defaults to an empty object if not provided.
+ * @returns {string[]} Array of validation error messages.
+ */
+function validateBaseBenchmarkSettings(
+  settings: Partial<BaseBenchmarkSettings> = {},
+): string[] {
+  let errors: string[] = []
+
+  if (
+    settings.iterations !== undefined &&
+    (typeof settings.iterations !== 'number' || settings.iterations <= 0)
+  ) {
+    errors.push(`"iterations" must be a positive number`)
+  }
+
+  if (
+    settings.timeout !== undefined &&
+    (typeof settings.timeout !== 'number' || settings.timeout <= 0)
+  ) {
+    errors.push(`"timeout" must be a positive number`)
+  }
+
+  if (settings.warmup !== undefined) {
+    if (typeof settings.warmup === 'object') {
+      if (
+        settings.warmup.iterations !== undefined &&
+        (typeof settings.warmup.iterations !== 'number' ||
+          settings.warmup.iterations < 0)
+      ) {
+        errors.push(`"warmup.iterations" must be a non-negative number`)
+      }
+      if (
+        settings.warmup.enabled !== undefined &&
+        typeof settings.warmup.enabled !== 'boolean'
+      ) {
+        errors.push(`"warmup.enabled" must be a boolean`)
+      }
+    } else {
+      errors.push(`"warmup" must be an object`)
+    }
+  }
   return errors
 }

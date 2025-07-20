@@ -28,8 +28,8 @@ interface CreateBenchOptions {
  * @param {CreateBenchOptions} options - Benchmark configuration options.
  * @returns {Bench} Configured Tinybench instance ready for use.
  */
-export let createBench = (options: CreateBenchOptions = {}): Bench =>
-  new Bench({
+export function createBench(options: CreateBenchOptions = {}): Bench {
+  return new Bench({
     warmupIterations: options.warmup
       ? (options.warmupIterations ?? DEFAULT_WARMUP_ITERATIONS)
       : 0,
@@ -37,3 +37,4 @@ export let createBench = (options: CreateBenchOptions = {}): Bench =>
     iterations: options.iterations ?? DEFAULT_ITERATIONS,
     time: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
   })
+}

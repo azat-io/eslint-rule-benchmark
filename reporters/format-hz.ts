@@ -7,7 +7,7 @@ import { formatNumber } from './format-number'
  * @param {number} hz - The number of operations per second (Hz) to format.
  * @returns {string} A string representation of the formatted Hz.
  */
-export let formatHz = (hz?: number): string => {
+export function formatHz(hz?: number): string {
   if (typeof hz !== 'number' || !Number.isFinite(hz)) {
     return 'N/A'
   }

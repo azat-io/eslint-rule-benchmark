@@ -34,11 +34,11 @@ interface CreateTestCaseParameters {
  *   case.
  * @returns {TestCase} A configured test case.
  */
-export let createTestCase = (
-  parameters: CreateTestCaseParameters,
-): TestCase => ({
-  samples: parameters.samples,
-  name: parameters.name,
-  rule: parameters.rule,
-  id: parameters.id,
-})
+export function createTestCase(parameters: CreateTestCaseParameters): TestCase {
+  return {
+    samples: parameters.samples,
+    name: parameters.name,
+    rule: parameters.rule,
+    id: parameters.id,
+  }
+}

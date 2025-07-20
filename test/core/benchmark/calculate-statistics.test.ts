@@ -5,11 +5,13 @@ import type { BenchmarkMetrics } from '../../../types/benchmark-metrics'
 import { calculateStatistics } from '../../../core/benchmark/calculate-statistics'
 
 describe('calculateStatistics', () => {
-  let isApproximatelyEqual = (
+  function isApproximatelyEqual(
     value1: number,
     value2: number,
     epsilon: number = 1e-9,
-  ): boolean => Math.abs(value1 - value2) < epsilon
+  ): boolean {
+    return Math.abs(value1 - value2) < epsilon
+  }
 
   it('should return zeroed metrics for an empty array', () => {
     let expectedMetrics: BenchmarkMetrics = {

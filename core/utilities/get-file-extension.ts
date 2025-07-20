@@ -5,7 +5,7 @@
  * @returns {string} The file extension or an empty string if no extension is
  *   found.
  */
-export let getFileExtension = (filename: string): string => {
+export function getFileExtension(filename: string): string {
   let lastDotIndex = filename.lastIndexOf('.')
   if (lastDotIndex <= 0) {
     return ''

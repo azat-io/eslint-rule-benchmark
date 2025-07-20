@@ -12,10 +12,11 @@ interface WithParseMethod {
   parse(): object
 }
 
-let createMockJiti = (): Jiti =>
-  ({
+function createMockJiti(): Jiti {
+  return {
     import: vi.fn(),
-  }) as unknown as Jiti
+  } as unknown as Jiti
+}
 
 describe('loadLanguageParser', () => {
   let mockJiti: Jiti

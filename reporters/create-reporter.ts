@@ -24,11 +24,11 @@ let reporters: Record<
  * @param {ReporterFormat} format - The format of the report.
  * @returns {string} The formatted report as a string.
  */
-export let createReporter = async (
+export async function createReporter(
   results: TestSpecResult[],
   userConfig: UserBenchmarkConfig,
   format: ReporterFormat = 'console',
-): Promise<string> => {
+): Promise<string> {
   if (!(format in reporters)) {
     throw new Error(
       `Unknown reporter format "${format}". Available formats: ${new Intl.ListFormat(

@@ -6,7 +6,7 @@ import { formatMs } from './format-ms'
  * @param {number} deviation - The deviation value in milliseconds.
  * @returns {string} A formatted string representing the deviation.
  */
-export let formatDeviation = (deviation: number): string => {
+export function formatDeviation(deviation: number): string {
   if (typeof deviation !== 'number' || !Number.isFinite(deviation)) {
     return 'N/A'
   }

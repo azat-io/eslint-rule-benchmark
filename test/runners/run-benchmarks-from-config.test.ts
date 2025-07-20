@@ -592,7 +592,7 @@ describe('runBenchmarksFromConfig', () => {
       }),
     )
 
-    expect(mockedRunReporters).toHaveBeenCalledTimes(1)
+    expect(mockedRunReporters).toHaveBeenCalledOnce()
 
     let testSpec1 = mockUserConfig.tests[0]!
     let expectedTestSpecResult1: TestSpecResult = {

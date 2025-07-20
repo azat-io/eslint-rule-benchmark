@@ -6,7 +6,7 @@
  *   number, it returns 'N/A'.
  * @returns {string} A string representation of the formatted number.
  */
-export let formatNumber = (value?: number): string => {
+export function formatNumber(value?: number): string {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     return 'N/A'
   }

@@ -5,10 +5,11 @@ import path from 'node:path'
 
 import { loadRuleFromFile } from '../../../core/eslint/load-rule-from-file'
 
-let createMockJiti = (): Jiti =>
-  ({
+function createMockJiti(): Jiti {
+  return {
     import: vi.fn(),
-  }) as unknown as Jiti
+  } as unknown as Jiti
+}
 
 describe('loadRuleFromFile', () => {
   let mockJiti: Jiti

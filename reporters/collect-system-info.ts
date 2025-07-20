@@ -40,7 +40,7 @@ export interface SystemInfo {
  *
  * @returns {SystemInfo} Object containing system specifications and versions.
  */
-export let collectSystemInfo = async (): Promise<SystemInfo> => {
+export async function collectSystemInfo(): Promise<SystemInfo> {
   let require = createRequire(import.meta.url)
   let eslintPackagePath = require.resolve('eslint/package.json')
   let eslintPackageContent = await fs.readFile(eslintPackagePath, 'utf8')

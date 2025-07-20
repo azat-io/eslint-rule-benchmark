@@ -63,5 +63,6 @@ import type { UserBenchmarkConfig } from '../../types/user-benchmark-config'
  * @param {UserBenchmarkConfig} config - User configuration object.
  * @returns {UserBenchmarkConfig} The same configuration with proper typing.
  */
-export let defineConfig = (config: UserBenchmarkConfig): UserBenchmarkConfig =>
-  config
+export function defineConfig(config: UserBenchmarkConfig): UserBenchmarkConfig {
+  return config
+}

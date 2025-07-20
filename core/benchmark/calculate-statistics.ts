@@ -9,7 +9,7 @@ import type { BenchmarkMetrics } from '../../types/benchmark-metrics'
  *   case.
  * @returns {BenchmarkMetrics} An object containing calculated metrics.
  */
-export let calculateStatistics = (samples: number[]): BenchmarkMetrics => {
+export function calculateStatistics(samples: number[]): BenchmarkMetrics {
   if (samples.length === 0) {
     return {
       sampleCount: 0,
