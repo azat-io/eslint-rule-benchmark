@@ -69,6 +69,9 @@ interface RunCommandOptions {
    */
   report?: ReporterFormat
 
+  /** Optional. Path to an ESLint configuration file to use for linting. */
+  eslintConfig?: string
+
   /**
    * Optional. Path to the benchmark configuration file. If not provided,
    * searches for default config files.
@@ -108,6 +111,7 @@ export function run(): void {
   cli
     .command('run', 'Run benchmarks from config')
     .option('--config <path>', 'Path to configuration file')
+    .option('--eslint-config <config>', 'Path to ESLint config file')
     .option('--report <format>', 'Report format (console, json, markdown)', {
       default: DEFAULT_REPORTER_FORMAT,
     })
@@ -135,6 +139,7 @@ export function run(): void {
         ]
 
         await runBenchmarksFromConfig({
+          eslintConfigFile: options.eslintConfig,
           reporterOptions: reporterOptionsArray,
           userConfig: config,
           configDirectory,
