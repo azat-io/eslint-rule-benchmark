@@ -8,6 +8,7 @@ import type { LANGUAGES } from '../../constants'
 
 import { loadLanguageParser } from './load-language-parser'
 import { loadRuleFromFile } from './load-rule-from-file'
+import { SUPPORTED_EXTENSIONS } from '../../constants'
 import { toSeverity } from './to-severity'
 
 /** Options for creating an ESLint instance. */
@@ -127,6 +128,7 @@ export async function createESLintInstance(
   }
 
   let flatConfig: Linter.Config = {
+    files: SUPPORTED_EXTENSIONS.map(extension => `**/*.${extension}`),
     rules: {
       [uniqueRuleId]: ruleEntry,
     },
