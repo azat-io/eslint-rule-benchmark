@@ -27,14 +27,14 @@ interface RunSingleCommandOptions {
    */
   report: ReporterFormat
 
+  /** Optional path to an ESLint configuration file to use for linting. */
+  eslintConfig?: string
+
   /** Maximum allowed duration in ms. */
   maxDuration: number
 
   /** The number of iterations to run the benchmark for the rule. */
   iterations: number
-
-  /** Optional path to an ESLint configuration file to use for linting. */
-  config?: string
 
   /** Optional path to a file where the benchmark report should be saved. */
   output?: string
@@ -150,7 +150,7 @@ export function run(): void {
     .command('run-single', 'Run benchmark on a single ESLint rule')
     .option('--rule <rule>', 'Path to the ESLint rule file')
     .option('--name <name>', 'Name of the rule to benchmark')
-    .option('--config <config>', 'Path to ESLint config file')
+    .option('--eslint-config <config>', 'Path to ESLint config file')
     .option('--source <source>', 'Path to directory or file with test cases')
     .option('--iterations <number>', 'Number of benchmark iterations', {
       default: DEFAULT_ITERATIONS,
@@ -227,6 +227,7 @@ export function run(): void {
         console.info(`Using source: ${options.source}`)
 
         await runBenchmarksFromConfig({
+          eslintConfigFile: options.eslintConfig,
           reporterOptions: reporterOptionsArray,
           userConfig: constructedUserConfig,
           configDirectory,

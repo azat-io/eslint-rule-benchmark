@@ -483,4 +483,19 @@ describe('createESLintInstance', () => {
 
     expect(config.rules).toBeDefined()
   })
+
+  it('sets custom config file when provided', async () => {
+    constructorOptions = {}
+
+    await createESLintInstance({
+      eslintConfigFile: '/path/to/custom/eslint.config.js',
+      rule: { ruleId: 'test-rule', severity: 2 },
+      configDirectory: temporaryDirectory,
+      languages: ['javascript'],
+    })
+
+    expect(constructorOptions['overrideConfigFile']).toBe(
+      '/path/to/custom/eslint.config.js',
+    )
+  })
 })
