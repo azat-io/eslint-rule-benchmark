@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.8.0
+
+[compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.7.0...v0.8.0)
+
+### 🚀 Features
+
+- Add eslint-config option to run-single command ([cb5e4e6](https://github.com/azat-io/eslint-rule-benchmark/commit/cb5e4e6))
+- Add eslint-config option to run command ([ff5997c](https://github.com/azat-io/eslint-rule-benchmark/commit/ff5997c))
+- Lint all supported extensions by default ([f041a96](https://github.com/azat-io/eslint-rule-benchmark/commit/f041a96))
+
+### 💅 Refactors
+
+- Fix jsdoc examples ([0e7d361](https://github.com/azat-io/eslint-rule-benchmark/commit/0e7d361))
+
+### 🏡 Chore
+
+- Update dependencies ([d6b7fa3](https://github.com/azat-io/eslint-rule-benchmark/commit/d6b7fa3))
+- Update typescript config ([ce09b65](https://github.com/azat-io/eslint-rule-benchmark/commit/ce09b65))
+- Update dependencies ([d025baa](https://github.com/azat-io/eslint-rule-benchmark/commit/d025baa))
+
+### ❤️ Contributors
+
+- Azat S. ([@azat-io](https://github.com/azat-io))
+- Christopher Buss <christopher.buss+github@protonmail.com>
+
 ## v0.7.0
 
 [compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.6.0...v0.7.0)
