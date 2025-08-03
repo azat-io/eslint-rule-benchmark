@@ -33,6 +33,9 @@ interface RunBenchmarksFromConfigParameters {
   /** The user-defined benchmark configuration. */
   userConfig: UserBenchmarkConfig
 
+  /** Optional path to custom ESLint config file. */
+  eslintConfigFile?: string
+
   /** User configuration directory path */
   configDirectory: string
 }
@@ -89,7 +92,8 @@ interface RunBenchmarksFromConfigParameters {
 export async function runBenchmarksFromConfig(
   parameters: RunBenchmarksFromConfigParameters,
 ): Promise<void> {
-  let { reporterOptions, configDirectory, userConfig } = parameters
+  let { eslintConfigFile, reporterOptions, configDirectory, userConfig } =
+    parameters
 
   if (userConfig.tests.length === 0) {
     console.warn('User configuration contains no tests. Exiting.')
@@ -173,6 +177,7 @@ export async function runBenchmarksFromConfig(
         // eslint-disable-next-line no-await-in-loop
         await runBenchmark({
           config: specBenchmarkConfig,
+          eslintConfigFile,
           configDirectory,
           testCases,
         })

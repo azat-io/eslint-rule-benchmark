@@ -12,6 +12,9 @@ import { toSeverity } from './to-severity'
 
 /** Options for creating an ESLint instance. */
 interface CreateESLintInstanceOptions {
+  /** Optional path to custom ESLint config file. */
+  eslintConfigFile?: string
+
   /** The path to the user configuration directory. */
   configDirectory: string
 
@@ -45,7 +48,7 @@ let jiti = createJiti(import.meta.url, {
 export async function createESLintInstance(
   instanceOptions: CreateESLintInstanceOptions,
 ): Promise<ESLint> {
-  let { configDirectory, languages, rule } = instanceOptions
+  let { eslintConfigFile, configDirectory, languages, rule } = instanceOptions
 
   let { path: rulePath, severity, options, ruleId } = rule
 
@@ -140,8 +143,8 @@ export async function createESLintInstance(
 
   return new FlatESLint({
     ruleFilter: ({ ruleId: currentRuleId }) => currentRuleId === uniqueRuleId,
+    overrideConfigFile: eslintConfigFile ?? null,
     overrideConfig: [flatConfig],
-    overrideConfigFile: null,
     allowInlineConfig: false,
     fix: true,
   })
