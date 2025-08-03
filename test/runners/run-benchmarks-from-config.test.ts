@@ -833,4 +833,25 @@ describe('runBenchmarksFromConfig', () => {
       configDirectory,
     })
   })
+
+  it('should pass eslintConfigFile parameter to runBenchmark when provided', async () => {
+    let customEslintConfigPath = '/path/to/custom/eslint.config.js'
+
+    await runBenchmarksFromConfig({
+      eslintConfigFile: customEslintConfigPath,
+      reporterOptions: mockReporterOptions,
+      userConfig: mockUserConfig,
+      configDirectory,
+    })
+
+    expect(mockedRunBenchmark).toHaveBeenCalledWith({
+      config: expect.objectContaining({
+        warmup: expect.any(Object) as object,
+        name: expect.any(String) as string,
+      }) as object,
+      testCases: expect.any(Array) as unknown as TestCase[],
+      eslintConfigFile: customEslintConfigPath,
+      configDirectory,
+    })
+  })
 })
