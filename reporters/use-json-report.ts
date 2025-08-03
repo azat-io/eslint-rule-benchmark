@@ -114,11 +114,9 @@ interface JsonSampleResult {
 /**
  * Creates a JSON report string from aggregated benchmark results.
  *
- * @param {TestSpecResult[]} results - An array of results for all test
- *   specifications.
- * @param {UserBenchmarkConfig} _userConfig - The user's benchmark configuration
- *   (currently unused).
- * @returns {Promise<string>} Formatted JSON report as a string.
+ * @param results - An array of results for all test specifications.
+ * @param _userConfig - The user's benchmark configuration (currently unused).
+ * @returns Formatted JSON report as a string.
  */
 export async function useJsonReport(
   results: TestSpecResult[],
@@ -138,8 +136,8 @@ export async function useJsonReport(
 /**
  * Creates a JSON-compatible object for a single Test Specification result.
  *
- * @param {TestSpecResult} testSpecResult - The result for a test specification.
- * @returns {TestSpecJsonReport} A structured JSON-compatible object.
+ * @param testSpecResult - The result for a test specification.
+ * @returns A structured JSON-compatible object.
  */
 function mapTestSpecResultToJsonReport(
   testSpecResult: TestSpecResult,
@@ -180,8 +178,8 @@ function mapTestSpecResultToJsonReport(
 /**
  * Maps a ProcessedBenchmarkTask to JsonSampleMetrics.
  *
- * @param {BenchmarkMetrics} metrics - The benchmark metrics.
- * @returns {JsonSampleMetrics} JsonSampleMetrics object.
+ * @param metrics - The benchmark metrics.
+ * @returns JsonSampleMetrics object.
  */
 function mapMetricsToJson(metrics: BenchmarkMetrics): JsonSampleMetrics {
   return {

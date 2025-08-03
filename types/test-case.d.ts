@@ -64,7 +64,7 @@ export interface Case {
   /** Path to file(s) which will be used for testing the rule. */
   testPath: string[] | string
 
-  /** Rule severity (0=off, 1=warn, 2=error). Default: 2 */
+  /** Rule severity (0=off, 1=warn, 2=error). Default: 2. */
   severity?: 0 | 1 | 2
 }
 

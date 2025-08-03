@@ -34,10 +34,9 @@ const LANGUAGE_PARSER_MAP = {
 /**
  * Attempts to load parser for the specified language.
  *
- * @param {Jiti} jiti - Jiti instance for dynamic imports.
- * @param {Language} language - The language to load parser for
- * @returns {Promise<ParserLoadResult>} Promise resolving to the parser load
- *   result
+ * @param jiti - Jiti instance for dynamic imports.
+ * @param language - The language to load parser for.
+ * @returns Promise resolving to the parser load result.
  */
 export async function loadLanguageParser(
   jiti: Jiti,
@@ -71,11 +70,10 @@ export async function loadLanguageParser(
  * This function handles different module export formats:
  *
  * 1. Direct parser export
- * 2. Default export that could be the parser
+ * 2. Default export that could be the parser.
  *
- * @param {unknown} moduleExport - The imported module.
- * @returns {Linter.Parser | undefined} The parser if found, undefined
- *   otherwise.
+ * @param moduleExport - The imported module.
+ * @returns The parser if found, undefined otherwise.
  */
 function extractParser(moduleExport: unknown): Linter.Parser | undefined {
   if (

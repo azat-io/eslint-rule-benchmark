@@ -38,7 +38,7 @@ export const DEFAULT_SEVERITY = 2 as const
 
 /**
  * Default output format for benchmark results. Options include: 'console',
- * 'json', 'markdown', 'html'
+ * 'json', 'markdown', 'html'.
  */
 export const DEFAULT_REPORTER_FORMAT = 'console' as const
 

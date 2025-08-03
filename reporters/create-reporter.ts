@@ -18,11 +18,10 @@ let reporters: Record<
 /**
  * Creates a reporter based on the specified options.
  *
- * @param {TestSpecResult[]} results - An array of results for all test
- *   specifications.
- * @param {UserBenchmarkConfig} userConfig - The user's benchmark configuration.
- * @param {ReporterFormat} format - The format of the report.
- * @returns {string} The formatted report as a string.
+ * @param results - An array of results for all test specifications.
+ * @param userConfig - The user's benchmark configuration.
+ * @param format - The format of the report.
+ * @returns The formatted report as a string.
  */
 export async function createReporter(
   results: TestSpecResult[],

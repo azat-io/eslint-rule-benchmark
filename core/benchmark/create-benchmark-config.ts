@@ -36,9 +36,8 @@ interface CreateBenchmarkConfigParameters {
 /**
  * Creates a benchmark configuration with default settings.
  *
- * @param {CreateBenchmarkConfigParameters} parameters - Parameters for the
- *   benchmark configuration.
- * @returns {BenchmarkConfig} A configured benchmark configuration.
+ * @param parameters - Parameters for the benchmark configuration.
+ * @returns A configured benchmark configuration.
  */
 export function createBenchmarkConfig(
   parameters: CreateBenchmarkConfigParameters,

@@ -37,11 +37,9 @@ const EMPTY_ROW_VALUES = [
 /**
  * Creates a console-friendly string representation of benchmark results.
  *
- * @param {TestSpecResult[]} results - An array of results for all test
- *   specifications.
- * @param {UserBenchmarkConfig} _userConfig - The user's benchmark configuration
- *   (currently unused).
- * @returns {Promise<string>} Formatted string for console output.
+ * @param results - An array of results for all test specifications.
+ * @param _userConfig - The user's benchmark configuration (currently unused).
+ * @returns Formatted string for console output.
  */
 export async function useConsoleReport(
   results: TestSpecResult[],
@@ -97,12 +95,10 @@ export async function useConsoleReport(
 /**
  * Renders a table with fixed column widths for consistency across all tables.
  *
- * @param {string[][]} rows - Array of rows, where each row is an array of
- *   strings.
- * @param {number[]} fixedColumnWidths - Array of fixed column widths.
- * @param {Alignment[]} columnAlignments - Optional array of alignments for each
- *   column.
- * @returns {string} Formatted table as a string.
+ * @param rows - Array of rows, where each row is an array of strings.
+ * @param fixedColumnWidths - Array of fixed column widths.
+ * @param columnAlignments - Optional array of alignments for each column.
+ * @returns Formatted table as a string.
  */
 function renderTable(
   rows: string[][],
@@ -152,9 +148,8 @@ function renderTable(
 /**
  * Calculates uniform column widths across all tables to ensure consistency.
  *
- * @param {TestSpecResult[]} results - An array of results for all test
- *   specifications.
- * @returns {number[]} Array of column widths for the result tables.
+ * @param results - An array of results for all test specifications.
+ * @returns Array of column widths for the result tables.
  */
 function calculateUniformColumnWidths(results: TestSpecResult[]): number[] {
   let columnWidths = TABLE_HEADERS.map(header => header.length)
@@ -188,8 +183,8 @@ function calculateUniformColumnWidths(results: TestSpecResult[]): number[] {
 /**
  * Formats system information into a compact, grouped display.
  *
- * @param {SystemInfo} systemInfo - System information to format.
- * @returns {string} Formatted system information string.
+ * @param systemInfo - System information to format.
+ * @returns Formatted system information string.
  */
 function formatSystemInfo(systemInfo: SystemInfo): string {
   let runTime = [
@@ -226,10 +221,10 @@ function formatSystemInfo(systemInfo: SystemInfo): string {
  * target width, it will be returned as is. If the value is shorter, it will be
  * padded with spaces. The alignment can be either 'left' or 'center'.
  *
- * @param {string} value - Value to pad.
- * @param {number} targetWidth - Target width of the cell after padding.
- * @param {Alignment} alignment - Alignment of the cell content.
- * @returns {string} Padded cell value.
+ * @param value - Value to pad.
+ * @param targetWidth - Target width of the cell after padding.
+ * @param alignment - Alignment of the cell content.
+ * @returns Padded cell value.
  */
 function padCell(
   value: string,
@@ -253,10 +248,9 @@ function padCell(
 /**
  * Formats metrics from a benchmark result into table row values.
  *
- * @param {string} sampleName - Name of the sample (extracted from the full task
- *   name).
- * @param {ProcessedBenchmarkTask} sample - Processed benchmark task.
- * @returns {string[]} Array of formatted values for the metrics row.
+ * @param sampleName - Name of the sample (extracted from the full task name).
+ * @param sample - Processed benchmark task.
+ * @returns Array of formatted values for the metrics row.
  */
 function formatMetricsRow(
   sampleName: string,
@@ -276,10 +270,10 @@ function formatMetricsRow(
 /**
  * Builds a separator line for the table based on the column widths and padding.
  *
- * @param {number[]} columnWidths - Array of column widths.
- * @param {number[]} leftPads - Array of left padding sizes.
- * @param {number[]} rightPads - Array of right padding sizes.
- * @returns {string} Separator line for the table.
+ * @param columnWidths - Array of column widths.
+ * @param leftPads - Array of left padding sizes.
+ * @param rightPads - Array of right padding sizes.
+ * @returns Separator line for the table.
  */
 function buildSeparator(
   columnWidths: number[],
@@ -294,10 +288,10 @@ function buildSeparator(
 /**
  * Extracts the sample name from the full task name.
  *
- * @param {string} fullName - Full name of the benchmark task, typically in the
- *   format <testCaseName> on <sampleName>.
- * @param {string} testCaseName - Name of the test case to use for extraction.
- * @returns {string} Extracted sample name.
+ * @param fullName - Full name of the benchmark task, typically in the format
+ *   <testCaseName> on <sampleName>.
+ * @param testCaseName - Name of the test case to use for extraction.
+ * @returns Extracted sample name.
  */
 function extractSampleName(fullName: string, testCaseName: string): string {
   return fullName.replace(`${testCaseName} on `, '')

@@ -36,7 +36,7 @@ interface RunBenchmarksFromConfigParameters {
   /** Optional path to custom ESLint config file. */
   eslintConfigFile?: string
 
-  /** User configuration directory path */
+  /** User configuration directory path. */
   configDirectory: string
 }
 
@@ -50,25 +50,25 @@ interface RunBenchmarksFromConfigParameters {
  * 1. **Parallel Preparation**: a. For each test specification (`testSpec`) in
  *    `userConfig.tests`: i. Determines the specific benchmark settings
  *    (`specBenchmarkConfig`) by merging global `userConfig` settings with any
- *    overrides from the current `testSpec`. ii. For each `caseItem` within the
+ *    overrides from the current `testSpec`. Ii. For each `caseItem` within the
  *    `testSpec.cases` array: - Loads code samples using `loadCodeSamples` based
  *    on `caseItem.testPath`. - Creates a `RuleConfig` using the `testSpec`'s
  *    rule information (`ruleId`, `rulePath`) and the `caseItem`'s specific
  *    `options` and `severity`. - Generates a `TestCase` object which includes
- *    the loaded samples and the `RuleConfig`. b. All these preparation tasks
+ *    the loaded samples and the `RuleConfig`. B. All these preparation tasks
  *    (for all `testSpec`s and their `caseItem`s) are executed in parallel using
  *    `Promise.all`. Errors during individual case processing are caught, and
  *    problematic cases are skipped.
  * 2. **Sequential Benchmarking**: a. After all test cases are prepared, the
- *    function iterates through the data मौसम for each `testSpec`. b. For each
+ *    function iterates through the data मौसम for each `testSpec`. B. For each
  *    `testSpec` that has valid `TestCase`s, it calls `runBenchmark`
  *    _sequentially_. This ensures that benchmark runs for different test
  *    specifications do not interfere with each other. The call to
  *    `runBenchmark` uses the `testCases` prepared for that specific `testSpec`
  *    and its determined `specBenchmarkConfig`.
  * 3. **Reporting**: a. All `Task` results from all `runBenchmark` calls are
- *    aggregated. b. For each `Task` result, the corresponding `TestCase` (which
- *    contains the rule context) is identified. c. `runReporters` is called for
+ *    aggregated. B. For each `Task` result, the corresponding `TestCase` (which
+ *    contains the rule context) is identified. C. `runReporters` is called for
  *    each task to output or save the benchmark results.
  *
  * If no valid `TestCase` objects can be generated from the entire
@@ -82,12 +82,12 @@ interface RunBenchmarksFromConfigParameters {
  *     reporterOptions: reporterOpts,
  *   })
  *
- * @param {RunBenchmarksFromConfigParameters} parameters - An object containing
- *   the `userConfig` (the UserBenchmarkConfig object) and `reporterOptions` (an
- *   array of reporter configurations).
- * @returns {Promise<void>} A promise that resolves when all benchmarks have
- *   been run and reported, or when the process exits due to critical errors
- *   (e.g., no valid test cases).
+ * @param parameters - An object containing the `userConfig` (the
+ *   UserBenchmarkConfig object) and `reporterOptions` (an array of reporter
+ *   configurations).
+ * @returns A promise that resolves when all benchmarks have been run and
+ *   reported, or when the process exits due to critical errors (e.g., no valid
+ *   test cases).
  */
 export async function runBenchmarksFromConfig(
   parameters: RunBenchmarksFromConfigParameters,
@@ -253,13 +253,11 @@ export async function runBenchmarksFromConfig(
  *     './src/b.ts',
  *   ])
  *
- * @param {string | string[]} testPath - A single path (string) or an array of
- *   paths to files or directories containing code samples.
- * @param {string} configDirectory - The path to the user configuration
- *   directory.
- * @returns {Promise<CodeSample[]>} A promise that resolves to an array of
- *   CodeSample objects. Each object represents a successfully loaded code
- *   sample.
+ * @param testPath - A single path (string) or an array of paths to files or
+ *   directories containing code samples.
+ * @param configDirectory - The path to the user configuration directory.
+ * @returns A promise that resolves to an array of CodeSample objects. Each
+ *   object represents a successfully loaded code sample.
  * @throws {Error} If no supported source files are found across all provided
  *   paths, or if no valid code samples could be loaded from the found files.
  */

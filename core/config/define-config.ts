@@ -60,8 +60,8 @@ import type { UserBenchmarkConfig } from '../../types/user-benchmark-config'
  *     ],
  *   })
  *
- * @param {UserBenchmarkConfig} config - User configuration object.
- * @returns {UserBenchmarkConfig} The same configuration with proper typing.
+ * @param config - User configuration object.
+ * @returns The same configuration with proper typing.
  */
 export function defineConfig(config: UserBenchmarkConfig): UserBenchmarkConfig {
   return config

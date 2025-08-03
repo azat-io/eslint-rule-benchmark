@@ -7,12 +7,10 @@
  *   // filteredSamples might be [10, 12, 15, 11, 13, 9, 14]
  *   // outliersRemovedCount would be 1
  *
- * @param {number[]} samples - The array of numbers (e.g., execution times in
- *   ns).
- * @param {number} [multiplier] - The multiplier for the IQR (Interquartile
- *   Range).
- * @returns {{ filteredSamples: number[]; outliersRemovedCount: number }} An
- *   object containing the filtered samples and the count of removed outliers.
+ * @param samples - The array of numbers (e.g., execution times in ns).
+ * @param [multiplier] - The multiplier for the IQR (Interquartile Range).
+ * @returns An object containing the filtered samples and the count of removed
+ *   outliers.
  */
 export function filterOutliers(
   samples: number[],

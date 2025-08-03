@@ -11,7 +11,7 @@ import path from 'node:path'
  *
  * - Direct rule export (with meta and create properties)
  * - Rules collection export (module.rules object with rule IDs as keys)
- * - Default export patterns (either a direct rule or an object containing rules)
+ * - Default export patterns (either a direct rule or an object containing rules).
  *
  * The flexible structure allows for proper typing of dynamically imported
  * modules regardless of their export format.
@@ -59,9 +59,9 @@ interface RuleLoadResult {
 /**
  * Loads an ESLint rule from the specified file path.
  *
- * @param {Jiti} jiti - Jiti instance for dynamic imports.
- * @param {LoadRuleFromFileOptions} options - Options for loading the rule.
- * @returns {Promise<RuleLoadResult>} Promise resolving to the rule load result.
+ * @param jiti - Jiti instance for dynamic imports.
+ * @param options - Options for loading the rule.
+ * @returns Promise resolving to the rule load result.
  */
 export async function loadRuleFromFile(
   jiti: Jiti,
@@ -92,12 +92,11 @@ export async function loadRuleFromFile(
  *
  * 1. Direct export where the module itself is a rule (has meta and create)
  * 2. Named export in module.rules[ruleId]
- * 3. Default export that could either be a rule or an object with rules
+ * 3. Default export that could either be a rule or an object with rules.
  *
- * @param {ESLintRuleImport} moduleExport - The imported module.
- * @param {string} ruleId - ID of the rule to extract.
- * @returns {Rule.RuleModule | undefined} The ESLint rule if found, undefined
- *   otherwise.
+ * @param moduleExport - The imported module.
+ * @param ruleId - ID of the rule to extract.
+ * @returns The ESLint rule if found, undefined otherwise.
  */
 function extractRule(
   moduleExport: ESLintRuleImport,

@@ -2,8 +2,7 @@
  * Checks if the script is running in a GitHub Actions environment and if the
  * event is a pull request.
  *
- * @returns {boolean} - Returns true if the script is running in a GitHub
- *   Actions
+ * @returns - Returns true if the script is running in a GitHub Actions.
  */
 export function isGithubPullRequest(): boolean {
   return (

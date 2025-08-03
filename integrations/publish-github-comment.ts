@@ -85,9 +85,9 @@ interface BotCommentInfo {
 /**
  * Type definition for a configured GraphQL client function.
  *
- * @param query - The GraphQL query string to execute
- * @param variables - Optional variables to pass to the query
- * @returns Promise that resolves to the query result
+ * @param query - The GraphQL query string to execute.
+ * @param variables - Optional variables to pass to the query.
+ * @returns Promise that resolves to the query result.
  */
 type GraphQLClient = (
   query: string,
@@ -105,7 +105,7 @@ const BOT_COMMENT_MARKER = '<!-- eslint-rule-benchmark-report -->'
  * - Checks if running in a GitHub Pull Request context
  * - Searches for existing bot comments to update instead of creating duplicates
  * - Uses GraphQL API for efficient comment management
- * - Includes error handling for all GitHub API operations
+ * - Includes error handling for all GitHub API operations.
  *
  * @example
  *   const report = `
@@ -120,10 +120,8 @@ const BOT_COMMENT_MARKER = '<!-- eslint-rule-benchmark-report -->'
  *   // Simple usage with plain text
  *   await publishGithubComment('All benchmarks passed! ✅')
  *
- * @param {string} markdownReport - The benchmark report formatted as markdown
- *   string
- * @returns {Promise<void>} Promise that resolves when the comment operation
- *   completes
+ * @param markdownReport - The benchmark report formatted as markdown string.
+ * @returns Promise that resolves when the comment operation completes.
  */
 export async function publishGithubComment(
   markdownReport: string,
@@ -194,16 +192,13 @@ export async function publishGithubComment(
  *     context,
  *   )
  *
- * @param {GraphQLClient} gql - Configured GraphQL client instance for GitHub
- *   API calls
- * @param {PullRequestContext} context - Pull request context containing
- *   repository and PR information
- * @returns {Promise<{
- *   botCommentInfo: BotCommentInfo | null
- *   pullRequestNodeId: string | null
- * }>}
- *   Promise resolving to bot comment info and PR node ID, or null if not found
- * @throws Will throw an error if the GraphQL query fails
+ * @param gql - Configured GraphQL client instance for GitHub API calls.
+ * @param context - Pull request context containing repository and PR
+ *   information.
+ * @returns
+ *
+ *   Promise resolving to bot comment info and PR node ID, or null if not found.
+ * @throws Will throw an error if the GraphQL query fails.
  */
 async function findBotComment(
   gql: GraphQLClient,
@@ -297,10 +292,10 @@ async function findBotComment(
  *     console.log(`Processing PR #${context.pullRequestNumber}`)
  *   }
  *
- * @returns {Promise<PullRequestContext | null>} Promise resolving to pull
- *   request context or null if extraction fails
+ * @returns Promise resolving to pull request context or null if extraction
+ *   fails.
  * @throws Will log error and return null if event payload cannot be read or
- *   parsed
+ *   parsed.
  */
 async function getPullRequestContext(): Promise<PullRequestContext | null> {
   try {
@@ -340,14 +335,12 @@ async function getPullRequestContext(): Promise<PullRequestContext | null> {
  *   const gql = createGraphQLClient()
  *   await createBotComment(gql, 'PR_123456', '# Benchmark Results\n...')
  *
- * @param {GraphQLClient} gql - Configured GraphQL client instance for GitHub
- *   API calls
- * @param {string} pullRequestNodeId - The GraphQL Node ID of the pull request
- *   to comment on
- * @param {string} body - The markdown content of the comment to create
- * @returns {string} Promise that resolves when the comment is successfully
- *   created
- * @throws Will throw an error if the GraphQL mutation fails
+ * @param gql - Configured GraphQL client instance for GitHub API calls.
+ * @param pullRequestNodeId - The GraphQL Node ID of the pull request to comment
+ *   on.
+ * @param body - The markdown content of the comment to create.
+ * @returns Promise that resolves when the comment is successfully created.
+ * @throws Will throw an error if the GraphQL mutation fails.
  */
 async function createBotComment(
   gql: GraphQLClient,
@@ -384,13 +377,11 @@ async function createBotComment(
  *     '# Updated Benchmark Results\n...',
  *   )
  *
- * @param {GraphQLClient} gql - Configured GraphQL client instance for GitHub
- *   API calls
- * @param {string} commentId - The GraphQL Node ID of the comment to update
- * @param {string} body - The new markdown content for the comment
- * @returns {Promise<void>} Promise that resolves when the comment is
- *   successfully updated
- * @throws Will throw an error if the GraphQL mutation fails
+ * @param gql - Configured GraphQL client instance for GitHub API calls.
+ * @param commentId - The GraphQL Node ID of the comment to update.
+ * @param body - The new markdown content for the comment.
+ * @returns Promise that resolves when the comment is successfully updated.
+ * @throws Will throw an error if the GraphQL mutation fails.
  */
 async function updateBotComment(
   gql: GraphQLClient,
@@ -422,9 +413,8 @@ async function updateBotComment(
  *   const gql = createGraphQLClient()
  *   const result = await gql('query { viewer { login } }')
  *
- * @returns {GraphQLClient} Configured GraphQL client function ready for GitHub
- *   API calls
- * @throws Will throw an error if GITHUB_TOKEN is not available
+ * @returns Configured GraphQL client function ready for GitHub API calls.
+ * @throws Will throw an error if GITHUB_TOKEN is not available.
  */
 function createGraphQLClient(): GraphQLClient {
   let githubToken = process.env['GITHUB_TOKEN']

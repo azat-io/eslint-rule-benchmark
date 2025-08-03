@@ -30,9 +30,8 @@ interface CreateTestCaseParameters {
 /**
  * Creates a test case for benchmarking an ESLint rule.
  *
- * @param {CreateTestCaseParameters} parameters - Parameters for creating a test
- *   case.
- * @returns {TestCase} A configured test case.
+ * @param parameters - Parameters for creating a test case.
+ * @returns A configured test case.
  */
 export function createTestCase(parameters: CreateTestCaseParameters): TestCase {
   return {

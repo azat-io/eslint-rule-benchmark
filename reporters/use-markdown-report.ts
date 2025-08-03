@@ -10,11 +10,9 @@ import { formatHz } from './format-hz'
 /**
  * Creates a markdown reporter for aggregated benchmark results.
  *
- * @param {TestSpecResult[]} results - An array of results for all test
- *   specifications.
- * @param {UserBenchmarkConfig} _userConfig - The user's benchmark
- *   configuration.
- * @returns {Promise<string>} Formatted markdown report as a string.
+ * @param results - An array of results for all test specifications.
+ * @param _userConfig - The user's benchmark configuration.
+ * @returns Formatted markdown report as a string.
  */
 export async function useMarkdownReport(
   results: TestSpecResult[],
@@ -88,8 +86,8 @@ export async function useMarkdownReport(
 /**
  * Formats system information into markdown format.
  *
- * @param {SystemInfo} systemInfo - System information to format.
- * @returns {string} Formatted system information in markdown.
+ * @param systemInfo - System information to format.
+ * @returns Formatted system information in markdown.
  */
 function formatSystemInfoMarkdown(systemInfo: SystemInfo): string {
   let runTime = [

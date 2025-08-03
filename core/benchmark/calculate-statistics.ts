@@ -4,10 +4,9 @@ import type { BenchmarkMetrics } from '../../types/benchmark-metrics'
  * Calculates various statistical metrics from an array of numbers. Assumes
  * input samples are in nanoseconds for time-based metrics.
  *
- * @param {number[]} samples - The array of numbers (e.g., execution times in
- *   ns). Should not be empty. If it might be, the caller should handle that
- *   case.
- * @returns {BenchmarkMetrics} An object containing calculated metrics.
+ * @param samples - The array of numbers (e.g., execution times in ns). Should
+ *   not be empty. If it might be, the caller should handle that case.
+ * @returns An object containing calculated metrics.
  */
 export function calculateStatistics(samples: number[]): BenchmarkMetrics {
   if (samples.length === 0) {

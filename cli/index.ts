@@ -99,9 +99,6 @@ interface RunCommandOptions {
  *
  * It parses command-line arguments and delegates to the appropriate command
  * actions.
- *
- * @returns {void} This function does not return a value but may exit the
- *   process.
  */
 export function run(): void {
   let cli = cac('eslint-rule-benchmark')

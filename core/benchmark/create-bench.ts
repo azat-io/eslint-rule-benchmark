@@ -25,8 +25,8 @@ interface CreateBenchOptions {
 /**
  * Creates a Tinybench benchmark instance with the specified configuration.
  *
- * @param {CreateBenchOptions} options - Benchmark configuration options.
- * @returns {Bench} Configured Tinybench instance ready for use.
+ * @param options - Benchmark configuration options.
+ * @returns Configured Tinybench instance ready for use.
  */
 export function createBench(options: CreateBenchOptions = {}): Bench {
   return new Bench({

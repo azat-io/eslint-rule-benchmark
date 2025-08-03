@@ -23,14 +23,13 @@ import { createReporter } from './create-reporter'
  * This GitHub integration works seamlessly without requiring additional
  * configuration from the user.
  *
- * @param {TestSpecResult[]} allTestSpecResults - An array containing the
- *   results for all test specifications.
- * @param {UserBenchmarkConfig} userConfig - The user's benchmark configuration,
- *   used for global settings.
- * @param {ReporterOptions[]} reporterOptionsFromCli - An array of reporter
- *   options specifying format and output.
- * @returns {Promise<void>} A promise that resolves when all reports have been
- *   processed.
+ * @param allTestSpecResults - An array containing the results for all test
+ *   specifications.
+ * @param userConfig - The user's benchmark configuration, used for global
+ *   settings.
+ * @param reporterOptionsFromCli - An array of reporter options specifying
+ *   format and output.
+ * @returns A promise that resolves when all reports have been processed.
  */
 export async function runReporters(
   allTestSpecResults: TestSpecResult[],

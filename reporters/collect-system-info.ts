@@ -38,7 +38,7 @@ export interface SystemInfo {
 /**
  * Collects system information that may affect benchmark results.
  *
- * @returns {SystemInfo} Object containing system specifications and versions.
+ * @returns Object containing system specifications and versions.
  */
 export async function collectSystemInfo(): Promise<SystemInfo> {
   let require = createRequire(import.meta.url)

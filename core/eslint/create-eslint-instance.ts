@@ -42,9 +42,8 @@ let jiti = createJiti(import.meta.url, {
 /**
  * Creates an ESLint instance configured to test a specific rule.
  *
- * @param {CreateESLintInstanceOptions} instanceOptions - Options for creating
- *   the ESLint instance.
- * @returns {Promise<ESLint>} Promise resolving to configured ESLint instance.
+ * @param instanceOptions - Options for creating the ESLint instance.
+ * @returns Promise resolving to configured ESLint instance.
  */
 export async function createESLintInstance(
   instanceOptions: CreateESLintInstanceOptions,

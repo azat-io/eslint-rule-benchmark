@@ -18,9 +18,9 @@ let jiti = createJiti(import.meta.url, {
 /**
  * Loader for JavaScript and TypeScript files using jiti.
  *
- * @param {string} filepath - Path to the file to load.
- * @param {string} _content - Content of the file (not used).
- * @returns {Promise<UserBenchmarkConfig>} Loaded and processed configuration.
+ * @param filepath - Path to the file to load.
+ * @param _content - Content of the file (not used).
+ * @returns Loaded and processed configuration.
  */
 export let jitiLoader: Loader = async (filepath: string, _content: string) => {
   try {

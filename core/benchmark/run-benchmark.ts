@@ -34,7 +34,7 @@ interface RunBenchmarkParameters {
   testCases: TestCase[]
 }
 
-/** Language type for benchmarking */
+/** Language type for benchmarking. */
 type Language = (typeof LANGUAGES)[number]
 
 /**
@@ -61,13 +61,11 @@ type Language = (typeof LANGUAGES)[number]
  *     })
  *   }
  *
- * @param {RunBenchmarkParameters} parameters - The parameters for running the
- *   benchmark, including the overall benchmark configuration and an array of
- *   test cases.
- * @returns {Promise<ProcessedBenchmarkTask[] | null>} A promise that resolves
- *   to an array of ProcessedBenchmarkTask objects, each containing the name and
- *   calculated metrics for a benchmarked code sample. Returns null if no tasks
- *   were run.
+ * @param parameters - The parameters for running the benchmark, including the
+ *   overall benchmark configuration and an array of test cases.
+ * @returns A promise that resolves to an array of ProcessedBenchmarkTask
+ *   objects, each containing the name and calculated metrics for a benchmarked
+ *   code sample. Returns null if no tasks were run.
  */
 export async function runBenchmark(
   parameters: RunBenchmarkParameters,

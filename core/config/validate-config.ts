@@ -23,12 +23,11 @@ import type {
  * - Existence of `testPath` files/directories.
  * - Correct types and values for `severity` and `options` within `caseItem`.
  *
- * @param {Partial<UserBenchmarkConfig>} config - The user benchmark
- *   configuration object to validate.
- * @param {string} configDirectory - The absolute path to the directory
- *   containing the configuration file. Used for resolving relative paths.
- * @returns {Promise<string[]>} A promise that resolves to an array of
- *   validation error messages. An empty array indicates a valid configuration.
+ * @param config - The user benchmark configuration object to validate.
+ * @param configDirectory - The absolute path to the directory containing the
+ *   configuration file. Used for resolving relative paths.
+ * @returns A promise that resolves to an array of validation error messages. An
+ *   empty array indicates a valid configuration.
  */
 export async function validateConfig(
   config: Partial<UserBenchmarkConfig>,
@@ -158,9 +157,9 @@ export async function validateConfig(
 /**
  * Validates BaseBenchmarkSettings (iterations, timeout, warmup).
  *
- * @param {Partial<BaseBenchmarkSettings>} [settings] - The settings object to
- *   validate. Defaults to an empty object if not provided.
- * @returns {string[]} Array of validation error messages.
+ * @param [settings] - The settings object to validate. Defaults to an empty
+ *   object if not provided.
+ * @returns Array of validation error messages.
  */
 function validateBaseBenchmarkSettings(
   settings: Partial<BaseBenchmarkSettings> = {},
