@@ -24,7 +24,7 @@ export function calculateStatistics(samples: number[]): BenchmarkMetrics {
     }
   }
 
-  let sortedSamples = [...samples].sort((a, b) => a - b)
+  let sortedSamples = [...samples].toSorted((a, b) => a - b)
   let count = sortedSamples.length
 
   let sum = sortedSamples.reduce((accumulator, value) => accumulator + value, 0)
