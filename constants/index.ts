@@ -58,6 +58,9 @@ export const SUPPORTED_EXTENSIONS = [
   'astro',
   'svelte',
   'vue',
+  'json',
+  'jsonc',
+  'json5',
 ] as const
 
 /**
@@ -72,4 +75,5 @@ export const LANGUAGES = [
   'svelte',
   'astro',
   'vue',
+  'json',
 ] as const

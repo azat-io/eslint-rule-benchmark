@@ -26,6 +26,7 @@ const LANGUAGE_PARSER_MAP = {
   typescript: '@typescript-eslint/parser',
   svelte: 'svelte-eslint-parser',
   astro: 'astro-eslint-parser',
+  json: 'jsonc-eslint-parser',
   vue: 'vue-eslint-parser',
   'javascript-react': null,
   javascript: null,

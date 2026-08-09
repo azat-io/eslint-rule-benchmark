@@ -4,6 +4,7 @@ export default {
   ignoreDependencies: [
     '@typescript-eslint/parser',
     'astro-eslint-parser',
+    'jsonc-eslint-parser',
     'svelte-eslint-parser',
     'vue-eslint-parser',
   ],

@@ -454,6 +454,7 @@ describe('createESLintInstance', () => {
       'vue',
       'svelte',
       'astro',
+      'json',
     ] as Language[]
 
     await Promise.all(

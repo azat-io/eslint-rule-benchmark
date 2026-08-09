@@ -11,11 +11,13 @@ describe('isSupportedExtension', () => {
     expect(isSupportedExtension('vue')).toBeTruthy()
     expect(isSupportedExtension('svelte')).toBeTruthy()
     expect(isSupportedExtension('astro')).toBeTruthy()
+    expect(isSupportedExtension('json')).toBeTruthy()
+    expect(isSupportedExtension('jsonc')).toBeTruthy()
+    expect(isSupportedExtension('json5')).toBeTruthy()
   })
 
   it('should return false for unsupported extensions', () => {
     expect(isSupportedExtension('txt')).toBeFalsy()
-    expect(isSupportedExtension('json')).toBeFalsy()
     expect(isSupportedExtension('html')).toBeFalsy()
   })
 })

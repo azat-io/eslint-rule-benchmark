@@ -24,6 +24,9 @@ let extensionMap = {
   ts: 'typescript',
   svelte: 'svelte',
   astro: 'astro',
+  jsonc: 'json',
+  json5: 'json',
+  json: 'json',
   vue: 'vue',
 } satisfies Record<Extensions, Language>
 

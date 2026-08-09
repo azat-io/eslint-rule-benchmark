@@ -58,6 +58,23 @@ describe('loadLanguageParser', () => {
     expect(result.error).toBeUndefined()
   })
 
+  it('loads JSON parser (jsonc-eslint-parser) successfully', async () => {
+    let mockParser: WithParseForESLintMethod = {
+      parseForESLint: () => ({}),
+    }
+
+    vi.mocked(mockJiti.import).mockResolvedValueOnce(mockParser)
+
+    let result = await loadLanguageParser(mockJiti, 'json')
+
+    expect(vi.mocked(mockJiti.import)).toHaveBeenCalledWith(
+      'jsonc-eslint-parser',
+    )
+    expect(result.parser).toBeDefined()
+    expect('parseForESLint' in result.parser!).toBeTruthy()
+    expect(result.error).toBeUndefined()
+  })
+
   it('loads parser with parseForESLint method successfully', async () => {
     let mockParser: WithParseForESLintMethod = {
       parseForESLint: () => ({}),

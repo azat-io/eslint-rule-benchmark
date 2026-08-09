@@ -11,10 +11,12 @@ describe('getLanguageByFileName', () => {
     expect(getLanguageByFileName('example.mts')).toBe('typescript')
     expect(getLanguageByFileName('example.astro')).toBe('astro')
     expect(getLanguageByFileName('example.vue')).toBe('vue')
+    expect(getLanguageByFileName('example.json')).toBe('json')
+    expect(getLanguageByFileName('example.jsonc')).toBe('json')
+    expect(getLanguageByFileName('example.json5')).toBe('json')
   })
 
   it("should return 'javascript' for unsupported extensions", () => {
     expect(getLanguageByFileName('example.txt')).toBe('javascript')
-    expect(getLanguageByFileName('example.json')).toBe('javascript')
   })
 })
