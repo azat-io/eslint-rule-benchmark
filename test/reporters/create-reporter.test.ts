@@ -50,8 +50,7 @@ describe('createReporter', () => {
       mockUserConfig,
       'console',
     )
-    expect(mockedUseConsoleReport).toHaveBeenCalledOnce()
-    expect(mockedUseConsoleReport).toHaveBeenCalledWith(
+    expect(mockedUseConsoleReport).toHaveBeenCalledExactlyOnceWith(
       mockTestSpecResults,
       mockUserConfig,
     )
@@ -62,8 +61,7 @@ describe('createReporter', () => {
 
   it('should call useConsoleReport by default if no format is specified', async () => {
     let result = await createReporter(mockTestSpecResults, mockUserConfig)
-    expect(mockedUseConsoleReport).toHaveBeenCalledOnce()
-    expect(mockedUseConsoleReport).toHaveBeenCalledWith(
+    expect(mockedUseConsoleReport).toHaveBeenCalledExactlyOnceWith(
       mockTestSpecResults,
       mockUserConfig,
     )
@@ -76,8 +74,7 @@ describe('createReporter', () => {
       mockUserConfig,
       'markdown',
     )
-    expect(mockedUseMarkdownReport).toHaveBeenCalledOnce()
-    expect(mockedUseMarkdownReport).toHaveBeenCalledWith(
+    expect(mockedUseMarkdownReport).toHaveBeenCalledExactlyOnceWith(
       mockTestSpecResults,
       mockUserConfig,
     )
@@ -92,8 +89,7 @@ describe('createReporter', () => {
       mockUserConfig,
       'json',
     )
-    expect(mockedUseJsonReport).toHaveBeenCalledOnce()
-    expect(mockedUseJsonReport).toHaveBeenCalledWith(
+    expect(mockedUseJsonReport).toHaveBeenCalledExactlyOnceWith(
       mockTestSpecResults,
       mockUserConfig,
     )

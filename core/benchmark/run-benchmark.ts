@@ -134,14 +134,14 @@ export async function runBenchmark(
   let processedResults: ProcessedBenchmarkTask[] = []
 
   for (let task of tinybenchTasks) {
-    if (!task.result?.samples) {
+    if (task.result.state !== 'completed' || !task.result.latency.samples) {
       console.warn(
         `Task "${task.name}" ran but has no samples or result. Skipping.`,
       )
       continue
     }
 
-    let originalSamples = task.result.samples
+    let originalSamples: number[] = task.result.latency.samples
     let { outliersRemovedCount: _outliersRemovedCount, filteredSamples } =
       filterOutliers(originalSamples)
 

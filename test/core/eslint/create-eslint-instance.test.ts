@@ -27,6 +27,10 @@ interface ESLintForTesting extends ESLint {
   allowInlineConfig: boolean
 }
 
+type TestOverrideConfig = NonNullable<
+  ESLintForTesting['overrideConfig']
+>[number]
+
 type Language = (typeof LANGUAGES)[number]
 
 let constructorOptions: Record<string, unknown> = {}
@@ -387,9 +391,10 @@ describe('createESLintInstance', () => {
 
     let config = (
       constructorOptions['overrideConfig'] as Record<string, unknown>[]
-    )[0] as Linter.Config
+    )[0] as TestOverrideConfig
+    let { languageOptions } = config
 
-    expect(config.languageOptions?.parser).toBeDefined()
+    expect(languageOptions?.parser).toBeDefined()
   })
 
   it('adds JSX support for React languages', async () => {
@@ -403,11 +408,10 @@ describe('createESLintInstance', () => {
 
     let config = (
       constructorOptions['overrideConfig'] as Record<string, unknown>[]
-    )[0] as Linter.Config
+    )[0] as TestOverrideConfig
+    let { languageOptions } = config
 
-    expect(
-      config.languageOptions?.parserOptions?.ecmaFeatures?.jsx,
-    ).toBeTruthy()
+    expect(languageOptions?.parserOptions?.ecmaFeatures?.jsx).toBeTruthy()
   })
 
   it('combines parser and JSX support for TypeScript React', async () => {
@@ -421,12 +425,11 @@ describe('createESLintInstance', () => {
 
     let config = (
       constructorOptions['overrideConfig'] as Record<string, unknown>[]
-    )[0] as Linter.Config
+    )[0] as TestOverrideConfig
+    let { languageOptions } = config
 
-    expect(config.languageOptions?.parser).toBeDefined()
-    expect(
-      config.languageOptions?.parserOptions?.ecmaFeatures?.jsx,
-    ).toBeTruthy()
+    expect(languageOptions?.parser).toBeDefined()
+    expect(languageOptions?.parserOptions?.ecmaFeatures?.jsx).toBeTruthy()
   })
 
   it('handles multiple languages with parsers', async () => {
@@ -440,9 +443,10 @@ describe('createESLintInstance', () => {
 
     let config = (
       constructorOptions['overrideConfig'] as Record<string, unknown>[]
-    )[0] as Linter.Config
+    )[0] as TestOverrideConfig
+    let { languageOptions } = config
 
-    expect(config.languageOptions?.parser).toBeDefined()
+    expect(languageOptions?.parser).toBeDefined()
   })
 
   it('supports all language types', async () => {

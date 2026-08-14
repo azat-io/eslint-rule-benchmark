@@ -45,11 +45,11 @@ export async function useConsoleReport(
   results: TestSpecResult[],
   _userConfig?: UserBenchmarkConfig,
 ): Promise<string> {
-  let outputLines: string[] = []
-
   if (results.length === 0) {
     return 'No benchmark results available.'
   }
+
+  let outputLines: string[] = []
 
   let uniformColumnWidths = calculateUniformColumnWidths(results)
 
@@ -122,7 +122,7 @@ function renderTable(
   let processedRows = rows
   let [titleRow] = processedRows
 
-  if (titleRow && titleRow.length === 1) {
+  if (titleRow?.length === 1) {
     lines.push(
       separator,
       padCell(titleRow[0]!, tableWidth, 'center'),

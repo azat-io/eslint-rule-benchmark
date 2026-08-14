@@ -274,10 +274,10 @@ async function loadCodeSamples(
 
         if (stats.isDirectory()) {
           let filesInDirectory = await fs.readdir(resolvedPath)
-          for (let fileName of filesInDirectory.filter(item =>
-            isSupportedExtension(getFileExtension(item)),
-          )) {
-            filesForCurrentPath.push(path.join(resolvedPath, fileName))
+          for (let fileName of filesInDirectory) {
+            if (isSupportedExtension(getFileExtension(fileName))) {
+              filesForCurrentPath.push(path.join(resolvedPath, fileName))
+            }
           }
         } else if (
           stats.isFile() &&

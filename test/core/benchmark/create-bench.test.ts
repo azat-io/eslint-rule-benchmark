@@ -15,10 +15,10 @@ describe('createBench', () => {
 
     expect(bench).toBeInstanceOf(Bench)
 
-    expect(bench.opts.iterations).toBe(DEFAULT_ITERATIONS)
-    expect(bench.opts.time).toBe(DEFAULT_TIMEOUT_MS)
-    expect(bench.opts.warmupTime).toBe(0)
-    expect(bench.opts.warmupIterations).toBe(0)
+    expect(bench.iterations).toBe(DEFAULT_ITERATIONS)
+    expect(bench.time).toBe(DEFAULT_TIMEOUT_MS)
+    expect(bench.warmupTime).toBe(0)
+    expect(bench.warmupIterations).toBe(0)
   })
 
   it('should create a bench instance with custom values', () => {
@@ -32,10 +32,10 @@ describe('createBench', () => {
     })
 
     expect(bench).toBeInstanceOf(Bench)
-    expect(bench.opts.iterations).toBe(customIterations)
-    expect(bench.opts.time).toBe(customTimeout)
-    expect(bench.opts.warmupTime).toBe(0)
-    expect(bench.opts.warmupIterations).toBe(0)
+    expect(bench.iterations).toBe(customIterations)
+    expect(bench.time).toBe(customTimeout)
+    expect(bench.warmupTime).toBe(0)
+    expect(bench.warmupIterations).toBe(0)
   })
 
   it('should enable warmup with default values when warmup=true', () => {
@@ -44,8 +44,8 @@ describe('createBench', () => {
     })
 
     expect(bench).toBeInstanceOf(Bench)
-    expect(bench.opts.warmupTime).toBe(DEFAULT_WARMUP_TIME_MS)
-    expect(bench.opts.warmupIterations).toBe(DEFAULT_WARMUP_ITERATIONS)
+    expect(bench.warmupTime).toBe(DEFAULT_WARMUP_TIME_MS)
+    expect(bench.warmupIterations).toBe(DEFAULT_WARMUP_ITERATIONS)
   })
 
   it('should enable warmup with custom iterations', () => {
@@ -57,8 +57,8 @@ describe('createBench', () => {
     })
 
     expect(bench).toBeInstanceOf(Bench)
-    expect(bench.opts.warmupTime).toBe(DEFAULT_WARMUP_TIME_MS)
-    expect(bench.opts.warmupIterations).toBe(customWarmupIterations)
+    expect(bench.warmupTime).toBe(DEFAULT_WARMUP_TIME_MS)
+    expect(bench.warmupIterations).toBe(customWarmupIterations)
   })
 
   it('should ignore warmupIterations when warmup=false', () => {
@@ -70,7 +70,7 @@ describe('createBench', () => {
     })
 
     expect(bench).toBeInstanceOf(Bench)
-    expect(bench.opts.warmupTime).toBe(0)
-    expect(bench.opts.warmupIterations).toBe(0)
+    expect(bench.warmupTime).toBe(0)
+    expect(bench.warmupIterations).toBe(0)
   })
 })

@@ -92,7 +92,7 @@ function extractParser(moduleExport: unknown): Linter.Parser | undefined {
     typeof moduleExport === 'object' &&
     'default' in moduleExport
   ) {
-    let defaultExport = (moduleExport as { default: unknown }).default
+    let defaultExport = moduleExport.default
 
     if (
       defaultExport &&

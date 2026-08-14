@@ -149,8 +149,7 @@ describe('runBenchmarksFromConfig', () => {
     expect(mockedFsStat).toHaveBeenCalledWith(resolvedTestPath)
     expect(mockedFsReadFile).toHaveBeenCalledWith(resolvedTestPath, 'utf8')
 
-    expect(mockedCreateTestCase).toHaveBeenCalledOnce()
-    expect(mockedCreateTestCase).toHaveBeenCalledWith({
+    expect(mockedCreateTestCase).toHaveBeenCalledExactlyOnceWith({
       rule: {
         severity: constants.DEFAULT_SEVERITY,
         ruleId: testSpec.ruleId,
@@ -164,8 +163,7 @@ describe('runBenchmarksFromConfig', () => {
       samples: mockCodeSamples,
     })
 
-    expect(mockedRunBenchmark).toHaveBeenCalledOnce()
-    expect(mockedRunBenchmark).toHaveBeenCalledWith({
+    expect(mockedRunBenchmark).toHaveBeenCalledExactlyOnceWith({
       config: {
         warmup: {
           iterations: mockUserConfig.warmup!.iterations,
@@ -179,8 +177,6 @@ describe('runBenchmarksFromConfig', () => {
       testCases: [mockTestCase],
       configDirectory,
     })
-
-    expect(mockedRunReporters).toHaveBeenCalledOnce()
 
     let expectedTestSpecResult: TestSpecResult = {
       benchmarkConfig: {
@@ -208,7 +204,7 @@ describe('runBenchmarksFromConfig', () => {
       name: testSpec.name,
     }
 
-    expect(mockedRunReporters).toHaveBeenCalledWith(
+    expect(mockedRunReporters).toHaveBeenCalledExactlyOnceWith(
       [expectedTestSpecResult],
       mockUserConfig,
       mockReporterOptions,
@@ -224,10 +220,10 @@ describe('runBenchmarksFromConfig', () => {
       'file1.js',
       'file2.ts',
       'file3.txt',
-    ] as unknown as Dirent<Buffer>[])
+    ] as unknown as Dirent<Buffer<ArrayBuffer>>[])
 
-    mockedGetFileExtension.mockImplementation(
-      filename => filename.split('.').pop()!,
+    mockedGetFileExtension.mockImplementation(filename =>
+      filename.split('.').pop()!,
     )
 
     mockedIsSupportedExtension.mockImplementation(
@@ -256,7 +252,11 @@ describe('runBenchmarksFromConfig', () => {
       ),
     )
     expect(mockedFsReadFile).toHaveBeenCalledTimes(2)
-    expect(mockedCreateTestCase).toHaveBeenCalledOnce()
+    expect(mockedCreateTestCase).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        samples: expect.any(Array) as CodeSample[],
+      }) as object,
+    )
   })
 
   it('should handle errors in fs.stat when loading samples for a case', async () => {
@@ -554,11 +554,11 @@ describe('runBenchmarksFromConfig', () => {
     let mockTaskSpec1Case1: ProcessedBenchmarkTask = {
       ...mockTask,
       name: `${testSpec1Case1Name} on sample1.js`,
-    } as unknown as ProcessedBenchmarkTask
+    }
     let mockTaskSpec2Case1: ProcessedBenchmarkTask = {
       ...mockTask,
       name: `${testSpec2Case1Name} on sample2.js`,
-    } as unknown as ProcessedBenchmarkTask
+    }
 
     mockedRunBenchmark
       .mockResolvedValueOnce([mockTaskSpec1Case1])
@@ -591,8 +591,6 @@ describe('runBenchmarksFromConfig', () => {
         testCases: [mockTestCaseSpec2Case1],
       }),
     )
-
-    expect(mockedRunReporters).toHaveBeenCalledOnce()
 
     let testSpec1 = mockUserConfig.tests[0]!
     let expectedTestSpecResult1: TestSpecResult = {
@@ -651,7 +649,7 @@ describe('runBenchmarksFromConfig', () => {
       name: testSpec2.name,
     }
 
-    expect(mockedRunReporters).toHaveBeenCalledWith(
+    expect(mockedRunReporters).toHaveBeenCalledExactlyOnceWith(
       [expectedTestSpecResult1, expectedTestSpecResult2],
       mockUserConfig,
       mockReporterOptions,
@@ -695,7 +693,7 @@ describe('runBenchmarksFromConfig', () => {
     let noNameTask = {
       ...mockTask,
       name: '',
-    } as unknown as ProcessedBenchmarkTask
+    }
     mockedRunBenchmark.mockResolvedValue([noNameTask])
 
     await runBenchmarksFromConfig({
@@ -768,7 +766,11 @@ describe('runBenchmarksFromConfig', () => {
 
     expect(mockedFsStat).toHaveBeenCalledTimes(2)
     expect(mockedFsReadFile).toHaveBeenCalledTimes(2)
-    expect(mockedCreateTestCase).toHaveBeenCalledOnce()
+    expect(mockedCreateTestCase).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        samples: expect.any(Array) as CodeSample[],
+      }) as object,
+    )
   })
 
   it('should use custom severity and options for a case when provided', async () => {
@@ -821,6 +823,7 @@ describe('runBenchmarksFromConfig', () => {
       configDirectory,
     })
 
+    let expectedTestCases = expect.any(Array) as TestCase[]
     expect(mockedRunBenchmark).toHaveBeenCalledWith({
       config: expect.objectContaining({
         warmup: {
@@ -829,7 +832,7 @@ describe('runBenchmarksFromConfig', () => {
         },
         name: 'Test Spec 1',
       }) as object,
-      testCases: expect.any(Array) as unknown as TestCase[],
+      testCases: expectedTestCases,
       configDirectory,
     })
   })
@@ -844,13 +847,14 @@ describe('runBenchmarksFromConfig', () => {
       configDirectory,
     })
 
+    let expectedTestCases = expect.any(Array) as TestCase[]
     expect(mockedRunBenchmark).toHaveBeenCalledWith({
       config: expect.objectContaining({
         warmup: expect.any(Object) as object,
         name: expect.any(String) as string,
       }) as object,
-      testCases: expect.any(Array) as unknown as TestCase[],
       eslintConfigFile: customEslintConfigPath,
+      testCases: expectedTestCases,
       configDirectory,
     })
   })

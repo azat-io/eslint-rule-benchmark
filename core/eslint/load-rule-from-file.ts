@@ -106,8 +106,9 @@ function extractRule(
     return moduleExport as Rule.RuleModule
   }
 
-  if (moduleExport.rules?.[ruleId]) {
-    return moduleExport.rules[ruleId]
+  let namedRule = moduleExport.rules?.[ruleId]
+  if (namedRule) {
+    return namedRule
   }
 
   let defaultExport = moduleExport.default
@@ -117,8 +118,8 @@ function extractRule(
       return defaultExport
     }
 
-    if ('rules' in defaultExport && defaultExport.rules?.[ruleId]) {
-      return defaultExport.rules[ruleId]
+    if ('rules' in defaultExport) {
+      return defaultExport.rules?.[ruleId]
     }
   }
 

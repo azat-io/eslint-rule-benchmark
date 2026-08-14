@@ -16,7 +16,7 @@ import { createBench } from '../../../core/benchmark/create-bench'
 vi.mock('../../../core/eslint/create-eslint-instance', () => ({
   createESLintInstance: vi.fn().mockResolvedValue({
     lintText: vi.fn().mockResolvedValue([{ warningCount: 0, errorCount: 0 }]),
-  } as unknown as ESLint),
+  }),
 }))
 
 const MOCK_SAMPLES_NS_RAW = [52700, 52800, 54300, 54800, 57700, 200000, 10000]
@@ -34,7 +34,10 @@ vi.mock('../../../core/benchmark/create-bench', async importOriginal => {
           await Promise.all(addedTasks.map(task => task.fn()))
           return addedTasks.map(task => ({
             result: {
-              samples: [...MOCK_SAMPLES_MS_RAW],
+              latency: {
+                samples: [...MOCK_SAMPLES_MS_RAW],
+              },
+              state: 'completed',
             } as unknown as TaskResult,
             name: task.name,
           }))
@@ -166,7 +169,7 @@ describe('runBenchmark', () => {
         run: vi.fn(async () => {
           await Promise.all(addedTasks.map(task => task.fn()))
           return addedTasks.map(task => ({
-            result: undefined,
+            result: { state: 'aborted' } as unknown as TaskResult,
             name: task.name,
           }))
         }),
@@ -200,7 +203,10 @@ describe('runBenchmark', () => {
           await Promise.all(addedTasks.map(task => task.fn()))
           return addedTasks.map(task => ({
             result: {
-              samples: [Number.NaN, Number.NaN],
+              latency: {
+                samples: [Number.NaN, Number.NaN],
+              },
+              state: 'completed',
             } as unknown as TaskResult,
             name: task.name,
           }))
@@ -269,7 +275,8 @@ describe('runBenchmark', () => {
       testCases[0]!.samples.length + 1,
     )
     expect(mockLintTextSpy1).toHaveBeenCalledWith('/* eslint-disable */')
-    for (let sample of testCases[0]!.samples) {
+    let firstCaseSamples = testCases[0]!.samples
+    for (let sample of firstCaseSamples) {
       expect(mockLintTextSpy1).toHaveBeenCalledWith(sample.code, {
         filePath: sample.filename,
       })
@@ -283,7 +290,8 @@ describe('runBenchmark', () => {
       testCases[1]!.samples.length + 1,
     )
     expect(mockLintTextSpy2).toHaveBeenCalledWith('/* eslint-disable */')
-    for (let sample of testCases[1]!.samples) {
+    let secondCaseSamples = testCases[1]!.samples
+    for (let sample of secondCaseSamples) {
       expect(mockLintTextSpy2).toHaveBeenCalledWith(sample.code, {
         filePath: sample.filename,
       })

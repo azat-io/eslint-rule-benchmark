@@ -205,9 +205,9 @@ describe('useJsonReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec1]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
-    let jsonOutput = await useJsonReport(mockTestSpecResults, mockUserCfg)
+    let jsonOutput = await useJsonReport(mockTestSpecResults, mockUserConfig)
     let parsedReport = JSON.parse(jsonOutput) as JsonBenchmarkReport
 
     expect(parsedReport.testSpecifications).toBeDefined()

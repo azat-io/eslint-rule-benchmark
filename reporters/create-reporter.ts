@@ -28,15 +28,15 @@ export async function createReporter(
   userConfig: UserBenchmarkConfig,
   format: ReporterFormat = 'console',
 ): Promise<string> {
-  if (!(format in reporters)) {
+  if (!Object.hasOwn(reporters, format)) {
+    let listFormatter = new Intl.ListFormat('en', {
+      type: 'conjunction',
+      style: 'long',
+    })
     throw new Error(
-      `Unknown reporter format "${format}". Available formats: ${new Intl.ListFormat(
-        'en',
-        {
-          type: 'conjunction',
-          style: 'long',
-        },
-      ).format(Object.keys(reporters))}`,
+      `Unknown reporter format "${format}". Available formats: ${listFormatter.format(
+        Object.keys(reporters),
+      )}`,
     )
   }
 

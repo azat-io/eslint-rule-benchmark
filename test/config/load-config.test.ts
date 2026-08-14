@@ -37,7 +37,7 @@ describe('loadConfig', () => {
     vi.mocked(createJiti).mockReturnValue({
       import: jitiImportMock,
     } as unknown as Jiti)
-    globalThis.JSON.parse = originalJsonParse
+    JSON.parse = originalJsonParse
   })
 
   it('should load configuration from default directory', async () => {

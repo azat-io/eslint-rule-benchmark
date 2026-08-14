@@ -344,8 +344,8 @@ describe('validateConfig', () => {
           cases: [
             {
               options: ['option1', 'option2'],
-              severity: 2 as Linter.Severity,
               testPath: 'valid-test.js',
+              severity: 2,
             },
             {
               testPath: ['another-valid-test.js'],
@@ -380,7 +380,7 @@ describe('validateConfig', () => {
           cases: [
             {
               testPath: ['test1.js', 'test2.js', 'test3.js'],
-              severity: 1 as Linter.Severity,
+              severity: 1,
             },
           ],
           rulePath: 'valid-rule.js',

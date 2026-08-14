@@ -13,7 +13,7 @@ export function formatMs(milliseconds?: number): string {
   }
 
   let fixed = milliseconds.toFixed(3)
-  let [integerPart, decimalPart] = fixed.split('.')
+  let [integerPart, decimalPart] = fixed.split('.', 2)
   let formattedInteger = formatNumber(Number(integerPart))
   return `${formattedInteger}.${decimalPart} ms`
 }

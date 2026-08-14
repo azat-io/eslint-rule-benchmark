@@ -180,9 +180,12 @@ describe('useConsoleReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec1]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
-    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(
+      mockTestSpecResults,
+      mockUserConfig,
+    )
 
     expect(consoleOutput).toContain('My Rule Benchmarks')
     expect(consoleOutput).toContain('Sample')
@@ -280,9 +283,12 @@ describe('useConsoleReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec1, testSpec2]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
-    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(
+      mockTestSpecResults,
+      mockUserConfig,
+    )
 
     let lines = consoleOutput.split('\n')
     let emptyLineCount = lines.filter(line => line === '').length
@@ -298,9 +304,12 @@ describe('useConsoleReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
-    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(
+      mockTestSpecResults,
+      mockUserConfig,
+    )
 
     expect(consoleOutput).toContain(
       'No test cases found or all failed for this specification.',
@@ -319,9 +328,12 @@ describe('useConsoleReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
-    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(
+      mockTestSpecResults,
+      mockUserConfig,
+    )
 
     expect(consoleOutput).toContain('No samples')
     expect(consoleOutput).toContain('N/A')
@@ -329,9 +341,12 @@ describe('useConsoleReport', () => {
 
   it('handles empty results array', async () => {
     let mockTestSpecResults: TestSpecResult[] = []
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
-    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(
+      mockTestSpecResults,
+      mockUserConfig,
+    )
 
     expect(consoleOutput).toBe('No benchmark results available.')
   })
@@ -358,9 +373,12 @@ describe('useConsoleReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
-    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(
+      mockTestSpecResults,
+      mockUserConfig,
+    )
 
     let naCount = consoleOutput.match(/N\/A/gu)!.length
     expect(naCount).toBe(6)
@@ -404,9 +422,12 @@ describe('useConsoleReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec1, testSpec2]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
-    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(
+      mockTestSpecResults,
+      mockUserConfig,
+    )
 
     let lines = consoleOutput.split('\n')
     let separatorLines = lines.filter(line => line.includes('---'))
@@ -430,7 +451,7 @@ describe('useConsoleReport', () => {
 
     let testSpec = createMockTestSpecResult({
       testCaseResults: [testCase],
-      name: '   ',
+      name: ' '.repeat(3),
     })
 
     let consoleOutput = await useConsoleReport(
@@ -472,9 +493,12 @@ describe('useConsoleReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
-    let consoleOutput = await useConsoleReport(mockTestSpecResults, mockUserCfg)
+    let consoleOutput = await useConsoleReport(
+      mockTestSpecResults,
+      mockUserConfig,
+    )
 
     let dataLines = consoleOutput
       .split('\n')

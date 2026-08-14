@@ -64,18 +64,18 @@ describe('runReporters', () => {
     ]
     await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
 
-    expect(mockedCreateReporter).toHaveBeenCalledOnce()
-    expect(mockedCreateReporter).toHaveBeenCalledWith(
+    expect(mockedCreateReporter).toHaveBeenCalledExactlyOnceWith(
       mockTestSpecResults,
       mockUserConfig,
       'markdown',
     )
-    expect(mockedFsMkdir).toHaveBeenCalledOnce()
-    expect(mockedFsMkdir).toHaveBeenCalledWith(path.resolve('output'), {
-      recursive: true,
-    })
-    expect(mockedFsWriteFile).toHaveBeenCalledOnce()
-    expect(mockedFsWriteFile).toHaveBeenCalledWith(
+    expect(mockedFsMkdir).toHaveBeenCalledExactlyOnceWith(
+      path.resolve('output'),
+      {
+        recursive: true,
+      },
+    )
+    expect(mockedFsWriteFile).toHaveBeenCalledExactlyOnceWith(
       path.resolve('output/report.md'),
       'mocked report content',
       'utf8',
@@ -125,8 +125,7 @@ describe('runReporters', () => {
 
     await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
 
-    expect(consoleErrorSpy).toHaveBeenCalledOnce()
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(consoleErrorSpy).toHaveBeenCalledExactlyOnceWith(
       expect.stringContaining(
         'Error generating report for format "console": Create reporter error',
       ),
@@ -140,8 +139,7 @@ describe('runReporters', () => {
 
     await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
 
-    expect(consoleErrorSpy).toHaveBeenCalledOnce()
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(consoleErrorSpy).toHaveBeenCalledExactlyOnceWith(
       expect.stringContaining(
         'Error generating report for format "markdown": File system error',
       ),
@@ -155,14 +153,14 @@ describe('runReporters', () => {
 
     await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
 
-    expect(mockedCreateReporter).toHaveBeenCalledOnce()
-    expect(mockedCreateReporter).toHaveBeenCalledWith(
+    expect(mockedCreateReporter).toHaveBeenCalledExactlyOnceWith(
       mockTestSpecResults,
       mockUserConfig,
       'console',
     )
-    expect(consoleInfoSpy).toHaveBeenCalledOnce()
-    expect(consoleInfoSpy).toHaveBeenCalledWith('Console report content')
+    expect(consoleInfoSpy).toHaveBeenCalledExactlyOnceWith(
+      'Console report content',
+    )
     expect(mockedFsWriteFile).not.toHaveBeenCalled()
     expect(consoleWarnSpy).not.toHaveBeenCalled()
   })
@@ -173,8 +171,7 @@ describe('runReporters', () => {
 
     await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
 
-    expect(mockedCreateReporter).toHaveBeenCalledOnce()
-    expect(mockedCreateReporter).toHaveBeenCalledWith(
+    expect(mockedCreateReporter).toHaveBeenCalledExactlyOnceWith(
       mockTestSpecResults,
       mockUserConfig,
       'markdown',
@@ -194,7 +191,7 @@ describe('runReporters', () => {
 
     await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
 
-    expect(mockedIsGithubPullRequest).toHaveBeenCalledOnce()
+    expect(mockedIsGithubPullRequest).toHaveBeenCalledExactlyOnceWith()
     expect(mockedPublishGithubComment).not.toHaveBeenCalled()
   })
 
@@ -206,7 +203,7 @@ describe('runReporters', () => {
 
     await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
 
-    expect(mockedIsGithubPullRequest).toHaveBeenCalledOnce()
+    expect(mockedIsGithubPullRequest).toHaveBeenCalledExactlyOnceWith()
     expect(mockedCreateReporter).toHaveBeenCalledTimes(2)
     expect(mockedCreateReporter).toHaveBeenNthCalledWith(
       1,
@@ -220,8 +217,7 @@ describe('runReporters', () => {
       mockUserConfig,
       'markdown',
     )
-    expect(mockedPublishGithubComment).toHaveBeenCalledOnce()
-    expect(mockedPublishGithubComment).toHaveBeenCalledWith(
+    expect(mockedPublishGithubComment).toHaveBeenCalledExactlyOnceWith(
       'GitHub markdown report',
     )
     expect(consoleInfoSpy).toHaveBeenCalledWith(
@@ -238,8 +234,10 @@ describe('runReporters', () => {
 
     await runReporters(mockTestSpecResults, mockUserConfig, mockReporterOptions)
 
-    expect(mockedIsGithubPullRequest).toHaveBeenCalledOnce()
-    expect(mockedPublishGithubComment).toHaveBeenCalledOnce()
+    expect(mockedIsGithubPullRequest).toHaveBeenCalledExactlyOnceWith()
+    expect(mockedPublishGithubComment).toHaveBeenCalledExactlyOnceWith(
+      'GitHub markdown report',
+    )
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Error publishing GitHub comment: GitHub API error',
     )

@@ -18,13 +18,11 @@ export async function useMarkdownReport(
   results: TestSpecResult[],
   _userConfig?: UserBenchmarkConfig,
 ): Promise<string> {
-  let outputLines: string[] = []
-
   if (results.length === 0) {
     return 'No benchmark results available.'
   }
 
-  outputLines.push('## ESLint Rule Benchmark Report')
+  let outputLines: string[] = ['## ESLint Rule Benchmark Report']
 
   for (let i = 0; i < results.length; i++) {
     let testSpecResult = results[i]!
@@ -38,12 +36,10 @@ export async function useMarkdownReport(
       continue
     }
 
-    let tableRows: string[] = []
-
-    tableRows.push(
+    let tableRows: string[] = [
       '| Sample | Ops/sec | Avg Time | Median | Min | Max | StdDev |',
       '| ------ | ------- | -------- | ------ | --- | --- | ------ |',
-    )
+    ]
 
     for (let testCaseResult of testSpecResult.testCaseResults) {
       if (testCaseResult.samplesResults.length === 0) {

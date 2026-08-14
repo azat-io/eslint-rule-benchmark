@@ -306,9 +306,9 @@ async function getPullRequestContext(): Promise<PullRequestContext | null> {
     let eventPayload = JSON.parse(eventPayloadString) as PullRequestEvent
 
     let pullRequestNumber = eventPayload.pull_request.number
-    let [owner, repository] = process.env['GITHUB_REPOSITORY']!.split('/')
+    let [owner, repo] = process.env['GITHUB_REPOSITORY']!.split('/', 2)
 
-    if (!pullRequestNumber || !owner || !repository) {
+    if (!pullRequestNumber || !owner || !repo) {
       console.warn(
         'GitHub PR Commenter: Could not determine PR number, owner, or repo.',
       )
@@ -318,7 +318,7 @@ async function getPullRequestContext(): Promise<PullRequestContext | null> {
     return {
       pullRequestNodeId: '',
       pullRequestNumber,
-      repository,
+      repository: repo,
       owner,
     }
   } catch (error) {

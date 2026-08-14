@@ -96,7 +96,7 @@ describe('loadLanguageParser', () => {
     let mockModule = {
       default: {
         parse: () => ({}),
-      } as WithParseMethod,
+      },
     }
 
     vi.mocked(mockJiti.import).mockResolvedValueOnce(mockModule)
@@ -112,7 +112,7 @@ describe('loadLanguageParser', () => {
     let mockModule = {
       default: {
         parseForESLint: () => ({}),
-      } as WithParseForESLintMethod,
+      },
     }
 
     vi.mocked(mockJiti.import).mockResolvedValueOnce(mockModule)

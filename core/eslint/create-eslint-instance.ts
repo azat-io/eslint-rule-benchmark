@@ -72,7 +72,7 @@ export async function createESLintInstance(
 
   let uniqueNamespace = 'eslint-rule-benchmark'
 
-  let localName = ruleId.includes('/') ? ruleId.split('/')[1]! : ruleId
+  let localName = ruleId.includes('/') ? ruleId.split('/', 2)[1]! : ruleId
 
   let severityString = toSeverity(severity)
   let ruleEntry: Linter.RuleEntry = options
@@ -100,9 +100,11 @@ export async function createESLintInstance(
     .filter(result => !result.error && result.parser)
     .map(result => result.parser!)
 
+  let languageOptions: Linter.LanguageOptions | undefined
+
   if (loadedParsers.length > 0) {
     let [parser] = loadedParsers
-    additionalOptions.languageOptions = {
+    languageOptions = {
       parser,
     }
   }
@@ -111,22 +113,19 @@ export async function createESLintInstance(
     languages.includes('javascript-react') ||
     languages.includes('typescript-react')
   ) {
-    if (additionalOptions.languageOptions) {
-      additionalOptions.languageOptions.parserOptions = {
-        ...additionalOptions.languageOptions.parserOptions,
+    languageOptions = {
+      ...languageOptions,
+      parserOptions: {
+        ...languageOptions?.parserOptions,
         ecmaFeatures: {
           jsx: true,
         },
-      }
-    } else {
-      additionalOptions.languageOptions = {
-        parserOptions: {
-          ecmaFeatures: {
-            jsx: true,
-          },
-        },
-      }
+      },
     }
+  }
+
+  if (languageOptions) {
+    additionalOptions.languageOptions = languageOptions
   }
 
   let flatConfig: Linter.Config = {
@@ -138,9 +137,7 @@ export async function createESLintInstance(
     ...additionalOptions,
   }
 
-  let FlatESLint = await loadESLint({
-    useFlatConfig: true,
-  })
+  let FlatESLint = await loadESLint()
 
   return new FlatESLint({
     ruleFilter: ({ ruleId: currentRuleId }) => currentRuleId === uniqueRuleId,

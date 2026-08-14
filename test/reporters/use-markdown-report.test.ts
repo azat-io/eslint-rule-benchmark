@@ -180,11 +180,11 @@ describe('useMarkdownReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec1]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
     let markdownOutput = await useMarkdownReport(
       mockTestSpecResults,
-      mockUserCfg,
+      mockUserConfig,
     )
 
     expect(markdownOutput).toContain('# ESLint Rule Benchmark Report')
@@ -269,11 +269,11 @@ describe('useMarkdownReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec1, testSpec2]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
     let markdownOutput = await useMarkdownReport(
       mockTestSpecResults,
-      mockUserCfg,
+      mockUserConfig,
     )
 
     expect(markdownOutput).toMatchSnapshot()
@@ -286,11 +286,11 @@ describe('useMarkdownReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
     let markdownOutput = await useMarkdownReport(
       mockTestSpecResults,
-      mockUserCfg,
+      mockUserConfig,
     )
 
     expect(markdownOutput).toContain('## Empty Test Specification')
@@ -311,11 +311,11 @@ describe('useMarkdownReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
     let markdownOutput = await useMarkdownReport(
       mockTestSpecResults,
-      mockUserCfg,
+      mockUserConfig,
     )
 
     expect(markdownOutput).toContain(
@@ -325,11 +325,11 @@ describe('useMarkdownReport', () => {
 
   it('handles empty results array', async () => {
     let mockTestSpecResults: TestSpecResult[] = []
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
     let markdownOutput = await useMarkdownReport(
       mockTestSpecResults,
-      mockUserCfg,
+      mockUserConfig,
     )
 
     expect(markdownOutput).toBe('No benchmark results available.')
@@ -357,11 +357,11 @@ describe('useMarkdownReport', () => {
     })
 
     let mockTestSpecResults: TestSpecResult[] = [testSpec]
-    let mockUserCfg = createMockUserConfig()
+    let mockUserConfig = createMockUserConfig()
 
     let markdownOutput = await useMarkdownReport(
       mockTestSpecResults,
-      mockUserCfg,
+      mockUserConfig,
     )
 
     expect(markdownOutput).toContain(

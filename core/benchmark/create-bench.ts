@@ -36,5 +36,6 @@ export function createBench(options: CreateBenchOptions = {}): Bench {
     warmupTime: options.warmup ? DEFAULT_WARMUP_TIME_MS : 0,
     iterations: options.iterations ?? DEFAULT_ITERATIONS,
     time: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    retainSamples: true,
   })
 }

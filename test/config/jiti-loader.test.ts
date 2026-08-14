@@ -34,7 +34,7 @@ describe('jitiLoader', () => {
   })
 
   it('successfully loads and returns config', async () => {
-    let cfg: UserBenchmarkConfig = {
+    let config: UserBenchmarkConfig = {
       tests: [
         {
           cases: [
@@ -49,12 +49,12 @@ describe('jitiLoader', () => {
       ],
     }
 
-    importMock.mockResolvedValueOnce({ default: cfg })
+    importMock.mockResolvedValueOnce({ default: config })
 
     let result = (await jitiLoader('/conf.ts', '')) as UserBenchmarkConfig
 
     expect(importMock).toHaveBeenCalledWith('/conf.ts')
-    expect(result).toEqual(cfg)
+    expect(result).toEqual(config)
   })
 
   it('wraps import error in a descriptive message', async () => {
