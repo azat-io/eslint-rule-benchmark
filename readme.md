@@ -3,9 +3,8 @@
 <img
   src="https://raw.githubusercontent.com/azat-io/eslint-rule-benchmark/main/assets/logo.svg"
   alt="ESLint Rule Benchmark logo"
-  width="160"
-  height="160"
   align="right"
+  width="160"
 />
 
 [![Version](https://img.shields.io/npm/v/eslint-rule-benchmark.svg?color=ffa500&labelColor=324cc2)](https://npmjs.com/package/eslint-rule-benchmark)
