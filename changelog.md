@@ -1,5 +1,41 @@
 # Changelog
 
+## v0.9.0
+
+[compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.8.0...v0.9.0)
+
+### 🚀 Features
+
+- Add json language support ([935b66a](https://github.com/azat-io/eslint-rule-benchmark/commit/935b66a))
+
+### 📖 Documentation
+
+- Fix showing logo ([a22b502](https://github.com/azat-io/eslint-rule-benchmark/commit/a22b502))
+
+### 🏡 Chore
+
+- Update github actions ([ce2a59f](https://github.com/azat-io/eslint-rule-benchmark/commit/ce2a59f))
+- Move to ts prettier config ([63a594f](https://github.com/azat-io/eslint-rule-benchmark/commit/63a594f))
+- Update dependencies ([debe8a8](https://github.com/azat-io/eslint-rule-benchmark/commit/debe8a8))
+- Move to ts commitlint config ([020934b](https://github.com/azat-io/eslint-rule-benchmark/commit/020934b))
+- Enable postinstall scripts from pnpm store ([dfb35d5](https://github.com/azat-io/eslint-rule-benchmark/commit/dfb35d5))
+- Move to pnpm v11 ([954bee0](https://github.com/azat-io/eslint-rule-benchmark/commit/954bee0))
+- Update dependencies ([8988573](https://github.com/azat-io/eslint-rule-benchmark/commit/8988573))
+- Update github actions ([b271861](https://github.com/azat-io/eslint-rule-benchmark/commit/b271861))
+
+### ✅ Tests
+
+- Improve test coverage ([c7d9fab](https://github.com/azat-io/eslint-rule-benchmark/commit/c7d9fab))
+
+### 🤖 CI
+
+- Switch from npm token to oidc auth ([901b858](https://github.com/azat-io/eslint-rule-benchmark/commit/901b858))
+
+### ❤️ Contributors
+
+- Azat S. ([@azat-io](https://github.com/azat-io))
+- Christopher Buss ([@christopher-buss](https://github.com/christopher-buss))
+
 ## v0.8.0
 
 [compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.7.0...v0.8.0)
