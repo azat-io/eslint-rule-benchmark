@@ -34,9 +34,6 @@ interface RunBenchmarkParameters {
   testCases: TestCase[]
 }
 
-/** Language type for benchmarking. */
-type Language = (typeof LANGUAGES)[number]
-
 /**
  * Runs benchmarks based on the provided test cases and configuration.
  *
@@ -85,7 +82,7 @@ export async function runBenchmark(
 
   for (let testCase of testCases) {
     /* eslint-disable no-await-in-loop */
-    let currentTestCaseLanguages: Language[] = []
+    let currentTestCaseLanguages: (typeof LANGUAGES)[number][] = []
     for (let sample of testCase.samples) {
       if (!currentTestCaseLanguages.includes(sample.language)) {
         currentTestCaseLanguages.push(sample.language)

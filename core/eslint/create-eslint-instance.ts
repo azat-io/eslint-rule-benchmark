@@ -31,8 +31,7 @@ type Language = (typeof LANGUAGES)[number]
 /**
  * Creates a Jiti instance for module loading.
  *
- * This instance is configured to handle ES modules and CommonJS modules
- * seamlessly, allowing for dynamic imports of ESLint rules and plugins.
+ * Loads ESLint rules and plugins written as ES modules or CommonJS modules.
  */
 let jiti = createJiti(import.meta.url, {
   interopDefault: true,

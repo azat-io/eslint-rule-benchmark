@@ -5,12 +5,8 @@ import type { BenchmarkMetrics } from '../../../types/benchmark-metrics'
 import { calculateStatistics } from '../../../core/benchmark/calculate-statistics'
 
 describe('calculateStatistics', () => {
-  function isApproximatelyEqual(
-    value1: number,
-    value2: number,
-    epsilon: number = 1e-9,
-  ): boolean {
-    return Math.abs(value1 - value2) < epsilon
+  function isApproximatelyEqual(value1: number, value2: number): boolean {
+    return Math.abs(value1 - value2) < 1e-9
   }
 
   it('should return zeroed metrics for an empty array', () => {
@@ -54,9 +50,9 @@ describe('calculateStatistics', () => {
     expect(metrics.max).toBe(50)
     expect(metrics.p75).toBe(40)
     expect(metrics.p99).toBe(50)
-    expect(isApproximatelyEqual(metrics.stdDev, Math.sqrt(200))).toBeTruthy()
+    expect(isApproximatelyEqual(metrics.stdDev, Math.sqrt(200))).toBe(true)
     expect(metrics.period).toBe(30 / 1000)
-    expect(isApproximatelyEqual(metrics.hz, 1 / 0.03)).toBeTruthy()
+    expect(isApproximatelyEqual(metrics.hz, 1 / 0.03)).toBe(true)
   })
 
   it('should correctly calculate median for an even number of samples', () => {
@@ -101,14 +97,14 @@ describe('calculateStatistics', () => {
 
     let metrics = calculateStatistics(samples)
     expect(metrics.sampleCount).toBe(samplesCount)
-    expect(isApproximatelyEqual(metrics.mean, mean)).toBeTruthy()
+    expect(isApproximatelyEqual(metrics.mean, mean)).toBe(true)
     expect(metrics.median).toBe(0.0543)
     expect(metrics.min).toBe(0.0527)
     expect(metrics.max).toBe(0.0577)
     expect(metrics.p75).toBe(0.0548)
     expect(metrics.p99).toBe(0.0577)
-    expect(isApproximatelyEqual(metrics.period, period)).toBeTruthy()
-    expect(isApproximatelyEqual(metrics.hz, hz)).toBeTruthy()
+    expect(isApproximatelyEqual(metrics.period, period)).toBe(true)
+    expect(isApproximatelyEqual(metrics.hz, hz)).toBe(true)
   })
 
   it('should correctly calculate hz as 0 if period is 0 or negative', () => {

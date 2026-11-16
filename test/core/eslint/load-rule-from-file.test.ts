@@ -1,14 +1,15 @@
 import type { Jiti } from 'jiti'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createJiti } from 'jiti'
 import path from 'node:path'
 
 import { loadRuleFromFile } from '../../../core/eslint/load-rule-from-file'
 
 function createMockJiti(): Jiti {
-  return {
-    import: vi.fn(),
-  } as unknown as Jiti
+  let jiti = createJiti(import.meta.url)
+  vi.spyOn(jiti, 'import').mockResolvedValue(undefined)
+  return jiti
 }
 
 describe('loadRuleFromFile', () => {

@@ -10,8 +10,9 @@ describe('formatNumber', () => {
   })
 
   it("should return 'N/A' for non-numeric or non-finite values", () => {
-    expect(formatNumber(undefined as unknown as number)).toBe('N/A')
-    expect(formatNumber(null as unknown as number)).toBe('N/A')
+    expect(formatNumber(undefined)).toBe('N/A')
+    // @ts-expect-error Verify runtime handling of a non-numeric value.
+    expect(formatNumber(null)).toBe('N/A')
     expect(formatNumber(Number.NaN)).toBe('N/A')
     expect(formatNumber(Infinity)).toBe('N/A')
     expect(formatNumber(-Infinity)).toBe('N/A')

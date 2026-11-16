@@ -20,8 +20,7 @@ import { createReporter } from './create-reporter'
  * Additionally, when running in a GitHub Actions pull request context, this
  * function automatically generates a markdown report and publishes it as a
  * comment to the pull request, independent of the configured reporter options.
- * This GitHub integration works seamlessly without requiring additional
- * configuration from the user.
+ * This GitHub integration requires no additional user configuration.
  *
  * @param allTestSpecResults - An array containing the results for all test
  *   specifications.

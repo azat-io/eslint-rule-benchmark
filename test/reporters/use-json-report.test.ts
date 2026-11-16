@@ -212,7 +212,7 @@ describe('useJsonReport', () => {
 
     expect(parsedReport.testSpecifications).toBeDefined()
     expect(parsedReport.systemInfo).toBeDefined()
-    expect(Array.isArray(parsedReport.testSpecifications)).toBeTruthy()
+    expect(Array.isArray(parsedReport.testSpecifications)).toBe(true)
     expect(parsedReport.testSpecifications).toHaveLength(1)
 
     expect(parsedReport.systemInfo.nodeVersion).toBe('v20.11.0')

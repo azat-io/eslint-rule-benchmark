@@ -1,5 +1,4 @@
 import type { Mock } from 'vitest'
-import type { Jiti } from 'jiti'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { lilconfig } from 'lilconfig'
@@ -34,9 +33,9 @@ describe('loadConfig', () => {
   beforeEach(() => {
     vi.resetAllMocks()
 
-    vi.mocked(createJiti).mockReturnValue({
+    vi.mocked(createJiti, { partial: true }).mockReturnValue({
       import: jitiImportMock,
-    } as unknown as Jiti)
+    })
     JSON.parse = originalJsonParse
   })
 

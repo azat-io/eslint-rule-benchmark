@@ -1,9 +1,7 @@
-import type { TaskResult, Bench } from 'tinybench'
-import type { ESLint } from 'eslint'
+import type { TaskResult } from 'tinybench'
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, assert, it, vi } from 'vitest'
 
-import type * as CreateBenchModule from '../../../core/benchmark/create-bench'
 import type { BenchmarkConfig } from '../../../types/benchmark-config'
 import type { TestCase } from '../../../types/test-case'
 
@@ -12,6 +10,24 @@ import { calculateStatistics } from '../../../core/benchmark/calculate-statistic
 import { filterOutliers } from '../../../core/benchmark/filter-outliers'
 import { runBenchmark } from '../../../core/benchmark/run-benchmark'
 import { createBench } from '../../../core/benchmark/create-bench'
+
+interface MockBenchmark {
+  run(): Promise<
+    {
+      result: {
+        latency?: { samples: number[] }
+        state: TaskResult['state']
+      }
+      name: string
+    }[]
+  >
+  add(name: string, function_: () => Promise<void>): void
+  tasks: { fn(): Promise<void>; name: string }[]
+}
+
+let { createBenchMock } = vi.hoisted(() => ({
+  createBenchMock: vi.fn<() => MockBenchmark>(),
+}))
 
 vi.mock('../../../core/eslint/create-eslint-instance', () => ({
   createESLintInstance: vi.fn().mockResolvedValue({
@@ -22,37 +38,32 @@ vi.mock('../../../core/eslint/create-eslint-instance', () => ({
 const MOCK_SAMPLES_NS_RAW = [52700, 52800, 54300, 54800, 57700, 200000, 10000]
 const MOCK_SAMPLES_MS_RAW = MOCK_SAMPLES_NS_RAW.map(ns => ns / 1000)
 
-vi.mock('../../../core/benchmark/create-bench', async importOriginal => {
-  let orig = await importOriginal<typeof CreateBenchModule>()
-
-  return {
-    ...orig,
-    createBench: vi.fn().mockImplementation(() => {
-      let addedTasks: { fn(): Promise<void>; name: string }[] = []
-      return {
-        run: vi.fn(async () => {
-          await Promise.all(addedTasks.map(task => task.fn()))
-          return addedTasks.map(task => ({
-            result: {
-              latency: {
-                samples: [...MOCK_SAMPLES_MS_RAW],
-              },
-              state: 'completed',
-            } as unknown as TaskResult,
-            name: task.name,
-          }))
-        }),
-        add: vi.fn((name: string, function_: () => Promise<void>) => {
-          addedTasks.push({ fn: function_, name })
-        }),
-        opts: { warmupIterations: 0, iterations: 1, warmupTime: 0, time: 0 },
-        get tasks() {
-          return addedTasks
-        },
-      }
-    }),
-  }
-})
+vi.mock('../../../core/benchmark/create-bench', () => ({
+  createBench: createBenchMock.mockImplementation(() => {
+    let addedTasks: { fn(): Promise<void>; name: string }[] = []
+    return {
+      run: vi.fn(async () => {
+        await Promise.all(addedTasks.map(task => task.fn()))
+        return addedTasks.map(task => ({
+          result: {
+            latency: {
+              samples: [...MOCK_SAMPLES_MS_RAW],
+            },
+            state: 'completed' as const,
+          },
+          name: task.name,
+        }))
+      }),
+      add: vi.fn((name: string, function_: () => Promise<void>) => {
+        addedTasks.push({ fn: function_, name })
+      }),
+      opts: { warmupIterations: 0, iterations: 1, warmupTime: 0, time: 0 },
+      get tasks() {
+        return addedTasks
+      },
+    }
+  }),
+}))
 
 let testCase: TestCase
 let config: BenchmarkConfig
@@ -94,7 +105,9 @@ describe('runBenchmark', () => {
       timeoutMs: config.timeout,
     })
 
-    let benchInstance = vi.mocked(createBench).mock.results[0]!.value as Bench
+    let benchResult = createBenchMock.mock.results[0]!
+    assert(benchResult.type === 'return')
+    let benchInstance = benchResult.value
     expect(benchInstance.add).toHaveBeenCalledTimes(testCase.samples.length)
     for (let sample of testCase.samples) {
       expect(benchInstance.add).toHaveBeenCalledWith(
@@ -163,13 +176,13 @@ describe('runBenchmark', () => {
   })
 
   it('skips tasks without samples and returns null when nothing is processed', async () => {
-    vi.mocked(createBench).mockImplementationOnce(() => {
+    createBenchMock.mockImplementationOnce(() => {
       let addedTasks: { fn(): Promise<void>; name: string }[] = []
       return {
         run: vi.fn(async () => {
           await Promise.all(addedTasks.map(task => task.fn()))
           return addedTasks.map(task => ({
-            result: { state: 'aborted' } as unknown as TaskResult,
+            result: { state: 'aborted' as const },
             name: task.name,
           }))
         }),
@@ -180,7 +193,7 @@ describe('runBenchmark', () => {
         get tasks() {
           return addedTasks
         },
-      } as unknown as Bench
+      }
     })
 
     let result = await runBenchmark({
@@ -196,7 +209,7 @@ describe('runBenchmark', () => {
   })
 
   it('warns when all samples are filtered out as outliers', async () => {
-    vi.mocked(createBench).mockImplementationOnce(() => {
+    createBenchMock.mockImplementationOnce(() => {
       let addedTasks: { fn(): Promise<void>; name: string }[] = []
       return {
         run: vi.fn(async () => {
@@ -206,8 +219,8 @@ describe('runBenchmark', () => {
               latency: {
                 samples: [Number.NaN, Number.NaN],
               },
-              state: 'completed',
-            } as unknown as TaskResult,
+              state: 'completed' as const,
+            },
             name: task.name,
           }))
         }),
@@ -218,7 +231,7 @@ describe('runBenchmark', () => {
         get tasks() {
           return addedTasks
         },
-      } as unknown as Bench
+      }
     })
 
     let result = await runBenchmark({
@@ -250,16 +263,16 @@ describe('runBenchmark', () => {
       .mockResolvedValue([{ warningCount: 0, errorCount: 0 }])
     let mockESLintInstance1 = {
       lintText: mockLintTextSpy1,
-    } as unknown as ESLint
+    }
 
     let mockLintTextSpy2 = vi
       .fn()
       .mockResolvedValue([{ warningCount: 0, errorCount: 0 }])
     let mockESLintInstance2 = {
       lintText: mockLintTextSpy2,
-    } as unknown as ESLint
+    }
 
-    vi.mocked(createESLintInstance)
+    vi.mocked(createESLintInstance, { partial: true })
       .mockResolvedValueOnce(mockESLintInstance1)
       .mockResolvedValueOnce(mockESLintInstance2)
 
@@ -301,9 +314,9 @@ describe('runBenchmark', () => {
   it('handles error from createESLintInstance gracefully and continues', async () => {
     let error = new Error('boom')
     vi.mocked(createESLintInstance).mockRejectedValueOnce(error)
-    vi.mocked(createESLintInstance).mockResolvedValueOnce({
+    vi.mocked(createESLintInstance, { partial: true }).mockResolvedValueOnce({
       lintText: vi.fn().mockResolvedValue([{ warningCount: 0, errorCount: 0 }]),
-    } as unknown as ESLint)
+    })
 
     let consoleErrorSpy = vi
       .spyOn(console, 'error')

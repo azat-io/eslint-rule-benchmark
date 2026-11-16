@@ -1,6 +1,7 @@
 import type { Jiti } from 'jiti'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createJiti } from 'jiti'
 
 import { loadLanguageParser } from '../../../core/eslint/load-language-parser'
 
@@ -13,9 +14,9 @@ interface WithParseMethod {
 }
 
 function createMockJiti(): Jiti {
-  return {
-    import: vi.fn(),
-  } as unknown as Jiti
+  let jiti = createJiti(import.meta.url)
+  vi.spyOn(jiti, 'import').mockResolvedValue(undefined)
+  return jiti
 }
 
 describe('loadLanguageParser', () => {
@@ -54,7 +55,7 @@ describe('loadLanguageParser', () => {
       '@typescript-eslint/parser',
     )
     expect(result.parser).toBeDefined()
-    expect('parse' in result.parser!).toBeTruthy()
+    expect('parse' in result.parser!).toBe(true)
     expect(result.error).toBeUndefined()
   })
 
@@ -71,7 +72,7 @@ describe('loadLanguageParser', () => {
       'jsonc-eslint-parser',
     )
     expect(result.parser).toBeDefined()
-    expect('parseForESLint' in result.parser!).toBeTruthy()
+    expect('parseForESLint' in result.parser!).toBe(true)
     expect(result.error).toBeUndefined()
   })
 
@@ -88,7 +89,7 @@ describe('loadLanguageParser', () => {
       '@typescript-eslint/parser',
     )
     expect(result.parser).toBeDefined()
-    expect('parseForESLint' in result.parser!).toBeTruthy()
+    expect('parseForESLint' in result.parser!).toBe(true)
     expect(result.error).toBeUndefined()
   })
 
@@ -104,7 +105,7 @@ describe('loadLanguageParser', () => {
     let result = await loadLanguageParser(mockJiti, 'typescript')
 
     expect(result.parser).toBeDefined()
-    expect('parse' in result.parser!).toBeTruthy()
+    expect('parse' in result.parser!).toBe(true)
     expect(result.error).toBeUndefined()
   })
 
@@ -120,7 +121,7 @@ describe('loadLanguageParser', () => {
     let result = await loadLanguageParser(mockJiti, 'typescript')
 
     expect(result.parser).toBeDefined()
-    expect('parseForESLint' in result.parser!).toBeTruthy()
+    expect('parseForESLint' in result.parser!).toBe(true)
     expect(result.error).toBeUndefined()
   })
 
@@ -166,7 +167,7 @@ describe('loadLanguageParser', () => {
 
     let result1 = await loadLanguageParser(mockJiti, 'typescript')
     expect(result1.parser).toBeDefined()
-    expect('parse' in result1.parser!).toBeTruthy()
+    expect('parse' in result1.parser!).toBe(true)
 
     vi.mocked(mockJiti.import).mockResolvedValueOnce({
       parseForESLint: () => ({}),
@@ -174,6 +175,6 @@ describe('loadLanguageParser', () => {
 
     let result2 = await loadLanguageParser(mockJiti, 'svelte')
     expect(result2.parser).toBeDefined()
-    expect('parseForESLint' in result2.parser!).toBeTruthy()
+    expect('parseForESLint' in result2.parser!).toBe(true)
   })
 })

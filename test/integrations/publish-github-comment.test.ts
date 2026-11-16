@@ -241,7 +241,7 @@ describe('publishGithubComment (GraphQL)', () => {
       graphqlMock.mock.calls.some(
         ([query]) => typeof query === 'string' && query.includes('addComment'),
       ),
-    ).toBeFalsy()
+    ).toBe(false)
 
     errorSpy.mockRestore()
   })

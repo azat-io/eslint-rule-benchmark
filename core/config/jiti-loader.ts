@@ -7,8 +7,7 @@ import type { UserBenchmarkConfig } from '../../types/user-benchmark-config'
 /**
  * Creates a Jiti instance for module loading.
  *
- * This instance is configured to handle ES modules and CommonJS modules
- * seamlessly, allowing for dynamic imports of configuration files.
+ * Loads configuration files written as ES modules or CommonJS modules.
  */
 let jiti = createJiti(import.meta.url, {
   interopDefault: true,

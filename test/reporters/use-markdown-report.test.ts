@@ -119,19 +119,6 @@ function createMockMetrics(
   }
 }
 
-function createMockRuleConfig(
-  ruleId: string = 'test-rule',
-  path?: string,
-  options?: unknown[],
-): RuleConfig {
-  return {
-    options: options ?? undefined,
-    severity: 2,
-    ruleId,
-    path,
-  }
-}
-
 function createMockProcessedTask(
   name: string,
   metricOverrides: Partial<BenchmarkMetrics> = {},
@@ -142,12 +129,21 @@ function createMockProcessedTask(
   }
 }
 
-function createMockUserConfig(
-  overrides: Partial<UserBenchmarkConfig> = {},
-): UserBenchmarkConfig {
+function createMockRuleConfig(
+  ruleId: string = 'test-rule',
+  path?: string,
+): RuleConfig {
+  return {
+    options: undefined,
+    severity: 2,
+    ruleId,
+    path,
+  }
+}
+
+function createMockUserConfig(): UserBenchmarkConfig {
   return {
     tests: [],
-    ...overrides,
   }
 }
 

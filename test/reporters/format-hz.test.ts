@@ -9,8 +9,9 @@ describe('formatHz', () => {
   })
 
   it("should return 'N/A' for non-numeric or non-finite values", () => {
-    expect(formatHz(undefined as unknown as number)).toBe('N/A')
-    expect(formatHz(null as unknown as number)).toBe('N/A')
+    expect(formatHz(undefined)).toBe('N/A')
+    // @ts-expect-error Verify runtime handling of a non-numeric value.
+    expect(formatHz(null)).toBe('N/A')
     expect(formatHz(Number.NaN)).toBe('N/A')
     expect(formatHz(Infinity)).toBe('N/A')
     expect(formatHz(-Infinity)).toBe('N/A')

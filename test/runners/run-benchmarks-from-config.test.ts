@@ -1,4 +1,4 @@
-import type { PathLike, Dirent, Stats } from 'node:fs'
+import type { PathLike, Stats } from 'node:fs'
 
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import * as fsPromises from 'node:fs/promises'
@@ -42,7 +42,9 @@ describe('runBenchmarksFromConfig', () => {
 
   let mockedFsReadFile = vi.mocked(fsPromises.readFile)
   let mockedFsStat = vi.mocked(fsPromises.stat)
-  let mockedFsReaddir = vi.mocked(fsPromises.readdir)
+  let mockedFsReaddir = vi.mocked<(directory: PathLike) => Promise<string[]>>(
+    fsPromises.readdir,
+  )
   let mockedGetLanguageByFileName = vi.mocked(getLanguageByFileName)
   let mockedIsSupportedExtension = vi.mocked(isSupportedExtension)
   let mockedGetFileExtension = vi.mocked(getFileExtension)
@@ -78,21 +80,20 @@ describe('runBenchmarksFromConfig', () => {
     }
 
     mockTask = {
-      result: {
+      metrics: {
+        sampleCount: 5,
+        period: 0.01,
         median: 9.5,
-        samples: 5,
         p75: 10.5,
         p99: 11.5,
         stdDev: 1,
         mean: 10,
-        rme: 0.1,
         hz: 100,
         max: 12,
         min: 8,
       },
       name: `${mockTestCase.name} on ${mockCodeSamples[0]!.filename}`,
-      samples: [10, 9.5, 8, 12, 10.5],
-    } as unknown as ProcessedBenchmarkTask
+    }
 
     mockUserConfig = {
       tests: [
@@ -216,11 +217,7 @@ describe('runBenchmarksFromConfig', () => {
       isDirectory: () => true,
       isFile: () => false,
     } as Stats)
-    mockedFsReaddir.mockResolvedValue([
-      'file1.js',
-      'file2.ts',
-      'file3.txt',
-    ] as unknown as Dirent<Buffer<ArrayBuffer>>[])
+    mockedFsReaddir.mockResolvedValue(['file1.js', 'file2.ts', 'file3.txt'])
 
     mockedGetFileExtension.mockImplementation(filename =>
       filename.split('.').pop()!,

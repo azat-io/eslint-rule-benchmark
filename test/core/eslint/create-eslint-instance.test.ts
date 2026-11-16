@@ -3,8 +3,6 @@ import type { ESLint, Linter } from 'eslint'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import path from 'node:path'
 
-import type { LANGUAGES } from '../../../constants'
-
 import { createESLintInstance } from '../../../core/eslint/create-eslint-instance'
 
 interface ESLintForTesting extends ESLint {
@@ -20,19 +18,12 @@ interface ESLintForTesting extends ESLint {
       parser?: unknown
     }
     plugins?: Record<string, unknown>
-    rules?: Record<string, unknown>
+    rules?: Linter.RulesRecord
   }[]
   ruleFilter(rule: { ruleId: string }): boolean
   overrideConfigFile: string | null
   allowInlineConfig: boolean
 }
-
-type TestOverrideConfig = NonNullable<
-  ESLintForTesting['overrideConfig']
->[number]
-
-type Language = (typeof LANGUAGES)[number]
-
 let constructorOptions: Record<string, unknown> = {}
 
 vi.mock('eslint', () => {
@@ -55,12 +46,12 @@ vi.mock('eslint', () => {
       this.overrideConfigFile = options.overrideConfigFile
     }
 
-    public static lintText(): Promise<Linter.LintMessage[]> {
+    public static lintText(): Promise<Pick<ESLint.LintResult, 'messages'>[]> {
       return Promise.resolve([
         {
           messages: [],
         },
-      ] as unknown as Linter.LintMessage[])
+      ])
     }
   }
 
@@ -141,9 +132,8 @@ let collectionRulePath: string
 let defaultRulePath: string
 let defaultCollectionRulePath: string
 
-function getRules(eslint: unknown): Linter.RuleEntry[] {
-  return (eslint as ESLintForTesting).overrideConfig?.[0]!
-    .rules as unknown as Linter.RuleEntry[]
+function getRules(eslint: ESLintForTesting): Linter.RulesRecord {
+  return eslint.overrideConfig![0]!.rules!
 }
 
 function firstKey(object?: Record<string, unknown>): string {
@@ -151,6 +141,9 @@ function firstKey(object?: Record<string, unknown>): string {
 }
 
 describe('createESLintInstance', () => {
+  type TestOverrideConfig = NonNullable<
+    ESLintForTesting['overrideConfig']
+  >[number]
   beforeAll(() => {
     temporaryDirectory = '/mock-temp-dir'
     directRulePath = `${temporaryDirectory}/direct.mjs`
@@ -237,7 +230,7 @@ describe('createESLintInstance', () => {
       configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })) as ESLintForTesting
-    let rules = getRules(eslint) as unknown as Record<string, unknown>
+    let rules = getRules(eslint)
     let key = firstKey(rules)
     expect(rules[key]).toEqual(['error', { x: true }])
   })
@@ -249,9 +242,9 @@ describe('createESLintInstance', () => {
       configDirectory: temporaryDirectory,
       languages: ['javascript'],
     })) as ESLintForTesting
-    let rules = getRules(eslint) as unknown as Record<string, unknown>
+    let rules = getRules(eslint)
     let key = firstKey(rules)
-    expect(key.endsWith(`/${local}`)).toBeTruthy()
+    expect(key.endsWith(`/${local}`)).toBe(true)
   })
 
   it('throws if rule file missing', async () => {
@@ -360,15 +353,12 @@ describe('createESLintInstance', () => {
     })
 
     expect(constructorOptions['ruleFilter']).toBeDefined()
-    expect(constructorOptions['allowInlineConfig']).toBeFalsy()
+    expect(constructorOptions['allowInlineConfig']).toBe(false)
     expect(constructorOptions['overrideConfigFile']).toBeNull()
 
-    let rules = (
-      constructorOptions['overrideConfig'] as Record<
-        string,
-        { rules: Linter.RuleEntry[] }
-      >
-    )[0]!.rules as unknown as Record<string, Linter.RuleEntry>
+    let { rules } = (
+      constructorOptions['overrideConfig'] as { rules: Linter.RulesRecord }[]
+    )[0]!
 
     let [targetRuleId] = Object.keys(rules)
 
@@ -376,8 +366,8 @@ describe('createESLintInstance', () => {
       ruleId: string
     }) => boolean
 
-    expect(ruleFilter({ ruleId: targetRuleId! })).toBeTruthy()
-    expect(ruleFilter({ ruleId: 'some-other-rule' })).toBeFalsy()
+    expect(ruleFilter({ ruleId: targetRuleId! })).toBe(true)
+    expect(ruleFilter({ ruleId: 'some-other-rule' })).toBe(false)
   })
 
   it('loads TypeScript parser for typescript language', async () => {
@@ -411,7 +401,7 @@ describe('createESLintInstance', () => {
     )[0] as TestOverrideConfig
     let { languageOptions } = config
 
-    expect(languageOptions?.parserOptions?.ecmaFeatures?.jsx).toBeTruthy()
+    expect(languageOptions?.parserOptions?.ecmaFeatures?.jsx).toBe(true)
   })
 
   it('combines parser and JSX support for TypeScript React', async () => {
@@ -429,7 +419,7 @@ describe('createESLintInstance', () => {
     let { languageOptions } = config
 
     expect(languageOptions?.parser).toBeDefined()
-    expect(languageOptions?.parserOptions?.ecmaFeatures?.jsx).toBeTruthy()
+    expect(languageOptions?.parserOptions?.ecmaFeatures?.jsx).toBe(true)
   })
 
   it('handles multiple languages with parsers', async () => {
@@ -459,7 +449,7 @@ describe('createESLintInstance', () => {
       'svelte',
       'astro',
       'json',
-    ] as Language[]
+    ] as const
 
     await Promise.all(
       supportedLanguages.map(async language => {

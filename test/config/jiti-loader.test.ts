@@ -1,32 +1,20 @@
 import type { Loader } from 'lilconfig'
-import type { Jiti } from 'jiti'
 
 import { beforeEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import { createJiti } from 'jiti'
 
 import type { UserBenchmarkConfig } from '../../types/user-benchmark-config'
 
-interface JitiMock extends Jiti {
-  __importMock__: ReturnType<typeof vi.fn>
-}
+let { importMock } = vi.hoisted(() => ({ importMock: vi.fn() }))
 
-vi.mock('jiti', () => {
-  let importMock = vi.fn()
-  let createJitiMock = vi.fn(() => ({ import: importMock }))
+vi.mock('jiti', () => ({
+  createJiti: vi.fn(() => ({ import: importMock })),
+}))
 
-  ;(createJitiMock as unknown as JitiMock).__importMock__ = importMock
-
-  return { createJiti: createJitiMock }
-})
-
-let importMock: ReturnType<typeof vi.fn>
 let jitiLoader: Loader
 
 describe('jitiLoader', () => {
   beforeAll(async () => {
     ;({ jitiLoader } = await import('../../core/config/jiti-loader'))
-
-    importMock = (createJiti as JitiMock).__importMock__
   })
 
   beforeEach(() => {

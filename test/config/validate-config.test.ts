@@ -1,5 +1,3 @@
-import type { JSRuleDefinitionTypeOptions, Linter } from 'eslint'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -92,7 +90,8 @@ describe('validateConfig', () => {
           name: 'test',
         },
       ],
-      warmup: 'not-an-object' as UserBenchmarkConfig['warmup'],
+      // @ts-expect-error Verify validation rejects non-object warmup settings.
+      warmup: 'not-an-object',
     }
     let errors = await validateConfig(configInvalid, '')
     expect(errors).toContain('"warmup" must be an object')
@@ -107,7 +106,8 @@ describe('validateConfig', () => {
         },
       ],
       warmup: {
-        iterations: 'not-a-number' as unknown as number,
+        // @ts-expect-error Verify validation rejects non-numeric iterations.
+        iterations: 'not-a-number',
       },
     }
     errors = await validateConfig(configInvalid, '')
@@ -124,7 +124,8 @@ describe('validateConfig', () => {
           name: 'test',
         },
       ],
-      warmup: { enabled: 'not-a-boolean' as unknown as boolean },
+      // @ts-expect-error Verify validation rejects non-boolean warmup settings.
+      warmup: { enabled: 'not-a-boolean' },
     }
     errors = await validateConfig(configInvalid, '')
     expect(errors).toContain('"warmup.enabled" must be a boolean')
@@ -148,7 +149,8 @@ describe('validateConfig', () => {
       tests: [
         {
           cases: [
-            {} as unknown as UserBenchmarkConfig['tests'][number]['cases'][number],
+            // @ts-expect-error Verify validation detects a missing testPath.
+            {},
           ],
           rulePath: 'rule.js',
           ruleId: 'my-rule',
@@ -226,7 +228,8 @@ describe('validateConfig', () => {
     let config: Partial<UserBenchmarkConfig> = {
       tests: [
         {
-          cases: [{ severity: 3 as Linter.Severity, testPath: 'test.js' }],
+          // @ts-expect-error Verify validation rejects unsupported severity levels.
+          cases: [{ testPath: 'test.js', severity: 3 }],
           rulePath: 'rule.js',
           ruleId: 'rule',
           name: 'test',
@@ -245,8 +248,8 @@ describe('validateConfig', () => {
         {
           cases: [
             {
-              options:
-                'not-an-array' as unknown as JSRuleDefinitionTypeOptions['RuleOptions'],
+              // @ts-expect-error Verify validation rejects non-array rule options.
+              options: 'not-an-array',
               testPath: 'test.js',
             },
           ],
@@ -294,8 +297,9 @@ describe('validateConfig', () => {
     configInvalid = {
       tests: [
         {
-          warmup: 'not-an-object' as UserBenchmarkConfig['warmup'],
           cases: [{ testPath: 'test.js' }],
+          // @ts-expect-error Verify validation rejects non-object warmup settings.
+          warmup: 'not-an-object',
           rulePath: 'rule.js',
           ruleId: 'rule',
           name: 'test',
@@ -324,7 +328,8 @@ describe('validateConfig', () => {
     configInvalid = {
       tests: [
         {
-          warmup: { enabled: 'false-string' as unknown as boolean },
+          // @ts-expect-error Verify validation rejects non-boolean warmup settings.
+          warmup: { enabled: 'false-string' },
           cases: [{ testPath: 'test.js' }],
           rulePath: 'rule.js',
           ruleId: 'rule',
@@ -394,7 +399,7 @@ describe('validateConfig', () => {
   })
 
   it('should validate multiple testSpecs at once', async () => {
-    let config: Partial<UserBenchmarkConfig> = {
+    let config = {
       tests: [
         {
           cases: [{ testPath: 'valid-test.js' }],
@@ -405,14 +410,15 @@ describe('validateConfig', () => {
         {
           cases: [
             {
-              severity: 5 as unknown as Linter.Severity,
               testPath: 'another-test.js',
+              severity: 5,
             },
           ],
           rulePath: 'another-rule.js',
-        } as unknown as UserBenchmarkConfig['tests'][number],
+        },
       ],
     }
+    // @ts-expect-error Verify validation reports missing fields and invalid severity.
     let errors = await validateConfig(config, '')
     expect(errors).toContain('Test at index 1: "name" is required.')
     expect(errors).toContain('Test "at index 1": "ruleId" is required.')
@@ -426,7 +432,8 @@ describe('validateConfig', () => {
     let config: Partial<UserBenchmarkConfig> = {
       tests: [
         {
-          cases: [{ testPath: { foo: 'bar' } as unknown as string }],
+          // @ts-expect-error Verify validation rejects non-string paths.
+          cases: [{ testPath: { foo: 'bar' } }],
           rulePath: 'rule.js',
           ruleId: 'rule',
           name: 'test',
