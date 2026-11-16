@@ -36,6 +36,7 @@ export default defineConfig({
       insertTypesEntry: true,
       copyDtsFiles: true,
       strictOutput: true,
+      bundleTypes: true,
     }),
     prettierFormat(),
   ],
