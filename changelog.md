@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.10.0
+
+[compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.9.0...v0.10.0)
+
+### 🐞 Bug Fixes
+
+- Bundle type declarations for node16 and nodenext compatibility ([5fb5f20](https://github.com/azat-io/eslint-rule-benchmark/commit/5fb5f20))
+
+### 🏡 Chore
+
+- Update dependencies ([1088b62](https://github.com/azat-io/eslint-rule-benchmark/commit/1088b62))
+
+### 🤖 CI
+
+- Move to pnpm v12 ([83c4420](https://github.com/azat-io/eslint-rule-benchmark/commit/83c4420))
+
+### ❤️ Contributors
+
+- Azat S. ([@azat-io](https://github.com/azat-io))
+
 ## v0.9.0
 
 [compare changes](https://github.com/azat-io/eslint-rule-benchmark/compare/v0.8.0...v0.9.0)
